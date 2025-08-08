@@ -1,0 +1,106 @@
+.branch-register {
+  padding: 0 24px;
+  margin: 0 auto;
+}
+
+.branch-register-header {
+  margin-bottom: 32px;
+}
+
+.branch-register-header h1 {
+  font-size: 28px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.branch-register-header p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.register-form-container {
+  background: white;
+
+}
+
+.form-section {
+  margin-bottom: 50px;
+}
+
+.form-section h2 {
+  font-size: 20px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 20px;
+  padding: 8px 0px;
+  border-bottom: 1px solid #b6b9bd;
+  
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--gray-700);
+  
+}
+
+.form-group input::placeholder {
+  color: #9ca3af;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .branch-register {
+    padding: 16px;
+  }
+  
+  .register-form-container {
+    padding: 20px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+} 

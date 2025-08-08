@@ -1,0 +1,385 @@
+.branch-users {
+  padding: 0 24px;
+  margin: 0 auto;
+}
+
+.branch-users-header {
+  margin-bottom: 32px;
+}
+
+.branch-users-header h1 {
+  font-size: 28px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.branch-users-header p {
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.branch-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.branch-selector label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.branch-select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  min-width: 200px;
+  background-color: white;
+}
+
+.branch-select:focus {
+  outline: none;
+  border-color: #4876EE;
+  box-shadow: 0 0 0 3px rgba(72, 118, 238, 0.1);
+}
+
+.users-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.users-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.users-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-box {
+  flex: 1;
+  width: 270px;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  width: 20px;
+  height: 20px;
+  z-index: 1;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #4876EE;
+  box-shadow: 0 0 0 3px rgba(72, 118, 238, 0.1);
+}
+
+.users-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.users-list {
+  padding: 0;
+}
+
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: center;
+  table-layout: fixed; /* 테이블 레이아웃 고정 */
+}
+
+.users-table th {
+  padding: 12px 16px;
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.users-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
+  color: #374151;
+  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
+  overflow: hidden; /* 넘치는 텍스트 숨김 */
+  text-overflow: ellipsis; /* 넘치는 텍스트를 ...으로 표시 */
+}
+
+.users-table-header {
+  border-bottom: 1px solid #b6b9bd;
+  border-top: 1px solid #b6b9bd;
+}
+
+.users-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.status-select {
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  cursor: pointer;
+}
+
+.status-select.status-active {
+  background-color: #dcfce7;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.status-select.status-inactive {
+  background-color: #fee2e2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.status-select.status-suspended {
+  background-color: #fef3c7;
+  color: #92400e;
+  border-color: #fed7aa;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-small {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.users-table th:nth-child(1),
+.users-table td:nth-child(1) {
+  width: 10%; /* 사용자명 */
+}
+
+.users-table th:nth-child(2),
+.users-table td:nth-child(2) {
+  width: 10%; /* 이름 */
+}
+
+.users-table th:nth-child(3),
+.users-table td:nth-child(3) {
+  width: 10%; /* 이메일 */
+}
+
+.users-table th:nth-child(4),
+.users-table td:nth-child(4) {
+  width: 10%; /* 권한 */
+}
+
+.users-table th:nth-child(5),
+.users-table td:nth-child(5) {
+  width: 10%; /* 상태 */
+}
+
+.users-table th:nth-child(6),
+.users-table td:nth-child(6) {
+  width: 10%; /* 마지막 로그인 */
+}
+
+.users-table th:nth-child(7),
+.users-table td:nth-child(7) {
+  width: 15%; /* 지점 */
+}
+
+.users-table th:nth-child(8),
+.users-table td:nth-child(8) {
+  width: 10%; /* 작업 */
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.modal-close:hover {
+  background-color: #f3f4f6;
+}
+
+.add-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #4876EE;
+  box-shadow: 0 0 0 3px rgba(72, 118, 238, 0.1);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .branch-users {
+    padding: 16px;
+  }
+  
+  .branch-selector {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .branch-select {
+    width: 100%;
+    min-width: auto;
+  }
+  
+  .users-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .search-box {
+    max-width: none;
+    width: 100%;
+  }
+  
+  .users-table {
+    font-size: 12px;
+  }
+  
+  .users-table th,
+  .users-table td {
+    padding: 8px 12px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .modal-content {
+    width: 95%;
+    padding: 16px;
+  }
+  
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+} 
