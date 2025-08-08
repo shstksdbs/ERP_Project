@@ -1,0 +1,191 @@
+.erp-sidebar {
+  width: 250px;
+  background: #fafafa;
+  color: var(--gray-700);
+  height: calc(100vh - 80px);
+  /* 헤더 높이를 제외한 높이 */
+  position: fixed;
+  left: 0;
+  top: 80px;
+  /* 헤더 높이만큼 아래로 이동 */
+  overflow-y: auto;
+  z-index: 20;
+  border-right: 1px solid #d1d1d1;
+}
+
+.sidebar-header {
+  padding: 24px;
+  border-bottom: 1px solid #374151;
+}
+
+.sidebar-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.sidebar-nav {
+  padding: 16px 0;
+}
+
+.nav-section {
+  margin-bottom: 24px;
+}
+
+.nav-section-title {
+  padding: 0 24px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-item {
+  margin: 0;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  color: #d1d5db;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+}
+
+.nav-link:hover {
+  background-color: #374151;
+  color: white;
+  border-left-color: #4876EE;
+}
+
+.nav-link.active {
+  background-color: #374151;
+  color: white;
+  border-left-color: #4876EE;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.nav-text {
+  flex: 1;
+}
+
+.nav-arrow {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+}
+
+.nav-arrow.expanded {
+  transform: rotate(90deg);
+}
+
+.submenu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.submenu-item {
+  margin: 0;
+}
+
+.submenu-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 24px 8px 48px;
+  color: #9ca3af;
+  text-decoration: none;
+  font-size: 13px;
+  transition: all 0.2s;
+}
+
+.submenu-link:hover {
+  background-color: #374151;
+  color: white;
+}
+
+.submenu-link.active {
+  background-color: #374151;
+  color: white;
+}
+
+/* 추가 클래스들 */
+.sidebar-ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidebar-button {
+  width: 90%;
+  padding: 10px 20px;
+  border-radius: 10px;
+  margin-left: 10px;
+}
+
+
+.sidebar-button.btn-selected {
+  background-color: #374151;
+  color: white;
+  border-left-color: #4876EE;
+}
+
+.sidebar-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
+.submenu-ul {
+  list-style: none;
+  padding: 0;
+  overflow: hidden;
+  margin: 5px 0px 5px 40px;
+  border-left: 1px solid #d1d1d1;
+  transition: max-height 0.3s ease;
+}
+
+.submenu-button {
+  width: 85%;
+  justify-content: flex-start;
+  margin-left: 10px;
+  margin-bottom: 5px;
+  padding: 0.5rem 0.5rem;
+}
+
+.submenu-button:hover {
+  background-color: #E9EBEF;
+}
+
+.submenu-button.btn-selected {
+  background-color: #F0F0F0;
+  color: var(--gray-700);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .erp-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
+}

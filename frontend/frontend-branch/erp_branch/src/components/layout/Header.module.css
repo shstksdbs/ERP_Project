@@ -1,0 +1,179 @@
+.erp-header {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  background: #fafafa;
+  color: #1E293B;
+  z-index: 10;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #d1d1d1;
+}
+
+.header-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 100%;
+}
+
+/* 로고 영역 */
+.header-logo {
+  display: flex;
+  align-items: center;
+}
+
+.logo-image {
+  height: 25px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* 메인 메뉴 영역 */
+.header-nav {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.header-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  gap: 8px;
+}
+
+.header-menu-item {
+  position: relative;
+}
+
+.header-menu-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.2s;
+}
+
+.header-menu-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.header-menu-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+/* 하위 메뉴 */
+.header-submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  padding: 8px 0;
+  margin-top: 4px;
+  list-style: none;
+  z-index: 1000;
+  border: 1px solid #e5e7eb;
+}
+
+.header-submenu-button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: #374151;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.header-submenu-button:hover {
+  background-color: #f3f4f6;
+}
+
+/* 사용자 영역 */
+.header-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.logout-button {
+  background: #e0e0e0;
+  border: none;
+  color: #1E293B;
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+  background: #dddddd;
+}
+
+.header-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.header-icon-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-right: 10px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .header-container {
+    padding: 0 16px;
+  }
+  
+  .header-nav {
+    display: none;
+  }
+  
+  .user-name {
+    display: none;
+  }
+} 
