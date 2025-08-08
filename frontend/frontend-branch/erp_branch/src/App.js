@@ -1,111 +1,136 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import Dashboard from './components/Dashboard/Dashboard';
-import BranchRegister from './components/BranchManagement/BranchRegister';
-import BranchStatus from './components/BranchManagement/BranchStatus';
-import BranchUsers from './components/BranchManagement/BranchUsers';
-import ProductRegister from './components/ProductManagement/ProductRegister';
-import ProductList from './components/ProductManagement/ProductList';
-import ProductCategory from './components/ProductManagement/ProductCategory';
-import ProductCost from './components/ProductManagement/ProductCost';
-import ProductRecipe from './components/ProductManagement/ProductRecipe';
-import ProductLifecycle from './components/ProductManagement/ProductLifecycle';
-import ProductPromotion from './components/ProductManagement/ProductPromotion';
-import OrderStatus from './components/OrderingManagement/OrderStatus';
-import OrderHistory from './components/OrderingManagement/OrderHistory';
-import BranchComparison from './components/SalesManagement/BranchComparison';
-import FranchiseSalesInquiry from './components/SalesManagement/FranchiseSalesInquiry';
-import ProductSalesAnalysis from './components/SalesManagement/ProductSalesAnalysis';
-import NoticeRegister from './components/Notice/NoticeRegister';
+import OrderList from './components/OrderManagement/OrderList';
+import OrderStatus from './components/OrderManagement/OrderStatus';
+import OrderHistory from './components/OrderManagement/OrderHistory';
+import InventoryStatus from './components/InventoryManagement/InventoryStatus';
+import InventoryAlert from './components/InventoryManagement/InventoryAlert';
+import InventoryHistory from './components/InventoryManagement/InventoryHistory';
+import OrderRequest from './components/OrderingManagement/OrderRequest';
+import OrderingStatus from './components/OrderingManagement/OrderingStatus';
+import OrderingHistory from './components/OrderingManagement/OrderingHistory';
+import DailySales from './components/SalesManagement/DailySales';
+import MonthlySales from './components/SalesManagement/MonthlySales';
+import ProductSales from './components/SalesManagement/ProductSales';
+import EmployeeList from './components/EmployeeManagement/EmployeeList';
+import EmployeeSchedule from './components/EmployeeManagement/EmployeeSchedule';
+import EmployeeAttendance from './components/EmployeeManagement/EmployeeAttendance';
 import NoticeList from './components/Notice/NoticeList';
-import NoticeTargetSetting from './components/Notice/NoticeTargetSetting';
+import NoticeDetail from './components/Notice/NoticeDetail';
+import SettingsBasic from './components/Settings/SettingsBasic';
 import SettingsLog from './components/Settings/SettingsLog';
 import SettingsBackup from './components/Settings/SettingsBackup';
 import './App.css';
 
-function App() {
+// 지점 ID를 받는 컴포넌트
+function AppContent() {
+  const { branchId } = useParams();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(['dashboard']);
+
+  // 지점 ID가 없으면 기본값으로 리다이렉트
+  useEffect(() => {
+    if (!branchId) {
+      navigate('/branch/1');
+    }
+  }, [branchId, navigate]);
 
   // 라우팅 로직
   const renderContent = () => {
     // 마지막으로 선택된 "콘텐츠 탭"(하위메뉴)을 우선으로 사용
     const allTabs = Array.isArray(activeTab) ? activeTab : (activeTab ? [activeTab] : []);
     const contentTabKeys = [
-      'branch-register',
-      'branch-status',
-      'branch-users',
-      'product-register',
-      'product-list',
-      'product-category',
-      'product-cost',
-      'product-recipe',
-      'product-lifecycle',
-      'product-promotion',
+      'order-list',
       'order-status',
+      'order-history',
+      'inventory-status',
+      'inventory-alert',
       'inventory-history',
-      'branch-comparison',
-      'franchise-sales-inquiry',
-      'sales-analysis',
-      'notice-register',
+      'order-request',
+      'ordering-status',
+      'ordering-history',
+      'daily-sales',
+      'monthly-sales',
+      'product-sales',
+      'employee-list',
+      'employee-schedule',
+      'employee-attendance',
       'notice-list',
-      'notice-target-setting',
+      'notice-detail',
+      'settings-basic',
       'settings-log',
       'settings-backup',
     ];
     const currentTab = [...allTabs].reverse().find((key) => contentTabKeys.includes(key)) || 'dashboard';
     
+    // 모든 컴포넌트에 branchId prop 전달
+    const commonProps = { branchId: parseInt(branchId) };
+    
     switch (currentTab) {
       case 'dashboard':
-        return <Dashboard />;
-      case 'branch-register':
-        return <BranchRegister />;
-      case 'branch-status':
-        return <BranchStatus />;
-      case 'branch-users':
-        return <BranchUsers />;
-      case 'product-register':
-        return <ProductRegister />;
-      case 'product-list':
-        return <ProductList />;
-      case 'product-category':
-        return <ProductCategory />;
-      case 'product-cost':
-        return <ProductCost />;
-      case 'product-recipe':
-        return <ProductRecipe />;
-      case 'product-lifecycle':
-        return <ProductLifecycle />;
-      case 'product-promotion':
-        return <ProductPromotion />;
+        return <Dashboard {...commonProps} />;
+      case 'order-list':
+        return <OrderList {...commonProps} />;
       case 'order-status':
-        return <OrderStatus />;
+        return <OrderStatus {...commonProps} />;
+      case 'order-history':
+        return <OrderHistory {...commonProps} />;
+      case 'inventory-status':
+        return <InventoryStatus {...commonProps} />;
+      case 'inventory-alert':
+        return <InventoryAlert {...commonProps} />;
       case 'inventory-history':
-        return <OrderHistory />;
-      case 'branch-comparison':
-        return <BranchComparison />;
-      case 'franchise-sales-inquiry':
-        return <FranchiseSalesInquiry />;
-      case 'sales-analysis':
-        return <ProductSalesAnalysis />;
-      case 'notice-register':
-        return <NoticeRegister />;
+        return <InventoryHistory {...commonProps} />;
+      case 'order-request':
+        return <OrderRequest {...commonProps} />;
+      case 'ordering-status':
+        return <OrderingStatus {...commonProps} />;
+      case 'ordering-history':
+        return <OrderingHistory {...commonProps} />;
+      case 'daily-sales':
+        return <DailySales {...commonProps} />;
+      case 'monthly-sales':
+        return <MonthlySales {...commonProps} />;
+      case 'product-sales':
+        return <ProductSales {...commonProps} />;
+      case 'employee-list':
+        return <EmployeeList {...commonProps} />;
+      case 'employee-schedule':
+        return <EmployeeSchedule {...commonProps} />;
+      case 'employee-attendance':
+        return <EmployeeAttendance {...commonProps} />;
       case 'notice-list':
-        return <NoticeList />;
-      case 'notice-target-setting':
-        return <NoticeTargetSetting />;
+        return <NoticeList {...commonProps} />;
+      case 'notice-detail':
+        return <NoticeDetail {...commonProps} />;
+      case 'settings-basic':
+        return <SettingsBasic {...commonProps} />;
       case 'settings-log':
-        return <SettingsLog />;
+        return <SettingsLog {...commonProps} />;
       case 'settings-backup':
-        return <SettingsBackup />;
+        return <SettingsBackup {...commonProps} />;
       default:
-        return <Dashboard />;
+        return <Dashboard {...commonProps} />;
     }
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} branchId={branchId}>
       {renderContent()}
     </Layout>
+  );
+}
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/branch/:branchId" element={<AppContent />} />
+        <Route path="/" element={<AppContent />} />
+      </Routes>
+    </Router>
   );
 }
 

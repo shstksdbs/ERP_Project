@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../ProductManagement/ProductList.module.css';
+import styles from './Dashboard.module.css';
 import dollorIcon from '../../assets/dollor_icon.png';
 import packageInIcon from '../../assets/packageIn_icon.png';
 import storeIcon from '../../assets/store_icon.png';
