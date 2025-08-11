@@ -161,7 +161,6 @@ export default function OrderHistory({ branchId }) {
             <thead className={styles.tableHeader}>
               <tr>
                 <th>주문번호</th>
-                <th>고객명</th>
                 <th>주문내용</th>
                 <th>총 금액</th>
                 <th>상태</th>
@@ -175,7 +174,6 @@ export default function OrderHistory({ branchId }) {
               {filteredOrders.map((order) => (
                 <tr key={order.id} className={styles.tableRow}>
                   <td>{order.orderNumber}</td>
-                  <td>{order.customerName}</td>
                   <td>
                     <div className={styles.orderItems}>
                       {order.items.map((item, index) => (

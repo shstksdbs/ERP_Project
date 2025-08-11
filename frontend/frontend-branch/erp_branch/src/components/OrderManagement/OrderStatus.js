@@ -150,7 +150,6 @@ export default function OrderStatus({ branchId }) {
             <thead className={styles['orders-table-header']}>
               <tr>
                 <th>주문번호</th>
-                <th>고객명</th>
                 <th>주문내용</th>
                 <th>총 금액</th>
                 <th>상태</th>
@@ -163,11 +162,6 @@ export default function OrderStatus({ branchId }) {
               {filteredOrders.map((order) => (
                 <tr key={order.id}>
                   <td>{order.orderNumber}</td>
-                  <td>
-                    <div className={styles['customer-info']}>
-                      <span className={styles['customer-name']}>{order.customerName}</span>
-                    </div>
-                  </td>
                   <td>
                     <div className={styles['order-items']}>
                       {order.items.map((item, index) => (

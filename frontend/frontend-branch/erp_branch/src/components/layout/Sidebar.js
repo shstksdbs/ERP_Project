@@ -215,22 +215,14 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             {/* 주문관리 하위 메뉴 */}
             {(activeTabs.includes('order') || activeTabs.some(tab => isOrderSubmenu(tab))) && (
               <ul className={styles['submenu-ul']}>
-                <li>
-                  <button
-                    className={`btn ${styles['submenu-button']} ${activeTabs.includes('order-list') ? 'btn-selected' : 'btn-secondary'}`}
-                    onClick={() => handleSubmenuClick('order-list')}
-                  >
-                    <img src={searchIcon} alt="주문목록" className={styles['sidebar-icon']} />
-                    주문목록
-                  </button>
-                </li>
+                
                 <li>
                   <button
                     className={`btn ${styles['submenu-button']} ${activeTabs.includes('order-status') ? 'btn-selected' : 'btn-secondary'}`}
                     onClick={() => handleSubmenuClick('order-status')}
                   >
-                    <img src={pencilIcon} alt="주문상태" className={styles['sidebar-icon']} />
-                    주문상태
+                    <img src={pencilIcon} alt="주문목록" className={styles['sidebar-icon']} />
+                    주문목록
                   </button>
                 </li>
                 <li>

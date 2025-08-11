@@ -652,7 +652,7 @@ export default function EmployeeAttendance() {
                             <th>종료 시간</th>
                             <th>근무 시간</th>
                             <th>상태</th>
-                            <th>메모</th>
+                            
                           </tr>
                         </thead>
                         <tbody>
@@ -672,7 +672,6 @@ export default function EmployeeAttendance() {
                                   {getScheduleStatusText(schedule.status)}
                                 </span>
                               </td>
-                              <td>{schedule.notes}</td>
                             </tr>
                           ))}
                         </tbody>
