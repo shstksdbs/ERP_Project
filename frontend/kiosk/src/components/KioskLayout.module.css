@@ -1,0 +1,35 @@
+.layoutContainer {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f4e4c1 0%, #e6d5b8 100%);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header {
+  background: linear-gradient(135deg, #d4a574 0%, #c19a6b 100%);
+  border-bottom: 3px solid #b8860b;
+  box-shadow: 0 4px 20px rgba(184, 134, 11, 0.3);
+  padding: 20px 0;
+  text-align: center;
+}
+
+.title {
+  color: #8b4513;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 2px 2px 4px rgba(139, 69, 19, 0.2);
+}
+
+.subtitle {
+  color: #a0522d;
+  font-size: 1.2rem;
+  font-weight: 500;
+  margin: 10px 0 0 0;
+  text-shadow: 1px 1px 2px rgba(160, 82, 45, 0.2);
+}
+
+.mainContent {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}

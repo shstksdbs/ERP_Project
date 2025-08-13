@@ -1,0 +1,13 @@
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\config\JpaConfig.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\config\SecurityConfig.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\controller\AuthController.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\dto\LoginRequest.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\dto\LoginResponse.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\entity\Branches.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\entity\Roles.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\entity\Users.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\ErpProjectApplication.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\repository\RolesRepository.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\repository\UsersRepository.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\service\AuthService.java
+C:\Users\TJ-BU-707-P04\Desktop\erp_project\src\main\java\erp_project\erp_project\util\JwtUtil.java

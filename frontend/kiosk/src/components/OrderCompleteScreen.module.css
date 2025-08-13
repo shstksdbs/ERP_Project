@@ -1,0 +1,195 @@
+.completeContainer {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+}
+
+.successIcon {
+  width: 100px;
+  height: 100px;
+  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 30px;
+  box-shadow: 0 6px 25px rgba(39, 174, 96, 0.3);
+}
+
+.successIconText {
+  color: white;
+  font-size: 3rem;
+  font-weight: bold;
+}
+
+.completeTitle {
+  margin: 0 0 20px 0;
+  color: #2c3e50;
+  font-size: 2.2rem;
+  font-weight: 300;
+  letter-spacing: -0.5px;
+}
+
+.completeMessage {
+  margin: 0 0 40px 0;
+  color: #6c757d;
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.orderInfo {
+  background: #f8f9fa;
+  border-radius: 15px;
+  padding: 30px;
+  margin-bottom: 30px;
+  border: 1px solid #e9ecef;
+}
+
+.orderNumber {
+  background: #2c3e50;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 25px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 25px;
+  display: inline-block;
+}
+
+.orderDetails {
+  margin-bottom: 25px;
+}
+
+.detailItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detailItem:last-child {
+  border-bottom: none;
+}
+
+.detailLabel {
+  color: #6c757d;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.detailValue {
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.totalAmount {
+  background: white;
+  border-radius: 12px;
+  padding: 25px;
+  border: 2px solid #e9ecef;
+  margin-bottom: 25px;
+}
+
+.totalLabel {
+  color: #6c757d;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.totalPrice {
+  color: #e74c3c;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.newOrderButton, .homeButton {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 25px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 140px;
+}
+
+.newOrderButton {
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  color: white;
+}
+
+.newOrderButton:hover {
+  background: linear-gradient(135deg, #34495e, #2c3e50);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+}
+
+.homeButton {
+  background: #6c757d;
+  color: white;
+}
+
+.homeButton:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+.countdown {
+  color: #6c757d;
+  font-size: 0.95rem;
+  font-weight: 400;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+}
+
+@media (max-width: 768px) {
+  .completeContainer {
+    margin: 10px;
+    padding: 30px 20px;
+    border-radius: 15px;
+  }
+  
+  .completeTitle {
+    font-size: 1.8rem;
+  }
+  
+  .successIcon {
+    width: 80px;
+    height: 80px;
+  }
+  
+  .successIconText {
+    font-size: 2.5rem;
+  }
+  
+  .orderInfo {
+    padding: 20px;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .newOrderButton, .homeButton {
+    width: 100%;
+    max-width: 250px;
+  }
+}
