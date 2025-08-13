@@ -44,7 +44,7 @@ public class Users {
     private Roles role;
     
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id")
+    @JoinColumn(name = "branch_id", referencedColumnName = "branch_id")
     private Branches branch;
     
     @Enumerated(EnumType.STRING)

@@ -1,0 +1,155 @@
+.branchSelector {
+  position: relative;
+  display: inline-block;
+}
+
+.selectorButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: #495057;
+  transition: all 0.2s ease;
+  min-width: 140px;
+}
+
+.selectorButton:hover {
+  background: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.selectorButton:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.selectedBranch {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.arrow {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  color: #6c757d;
+}
+
+.arrow.up {
+  transform: rotate(180deg);
+}
+
+.arrow.down {
+  transform: rotate(0deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-top: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.branchOption {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background-color 0.2s ease;
+  border-bottom: 1px solid #f1f3f4;
+}
+
+.branchOption:last-child {
+  border-bottom: none;
+}
+
+.branchOption:hover {
+  background-color: #f8f9fa;
+}
+
+.branchOption.selected {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.branchCode {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  margin-bottom: 2px;
+}
+
+.branchName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+  margin-bottom: 2px;
+}
+
+.branchType {
+  font-size: 11px;
+  color: #868e96;
+  background: #f1f3f4;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 스크롤바 스타일링 */
+.dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.dropdown::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.dropdown::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .selectorButton {
+    min-width: 120px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .branchOption {
+    padding: 10px 12px;
+  }
+  
+  .branchName {
+    font-size: 13px;
+  }
+}

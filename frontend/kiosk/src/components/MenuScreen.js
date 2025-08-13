@@ -31,7 +31,6 @@ const MenuScreen = () => {
         throw new Error('메뉴 데이터를 가져오는데 실패했습니다');
       }
       const allMenus = await response.json();
-      console.log(allMenus);
       // 카테고리별로 메뉴 분류
       const categorizedMenus = {
         burger: allMenus.filter(menu => menu.category === 'burger'),
@@ -149,23 +148,27 @@ const MenuScreen = () => {
           </div>
           <div className={styles.cartPreviewItems}>
             {cart.map((item, index) => (
-              <div key={`${item.id}-${index}`} className={styles.cartPreviewItem}>
+              <div key={item.cartItemId || `${item.id}-${index}`} className={styles.cartPreviewItem}>
                 <div className={styles.cartPreviewItemInfo}>
                   <div className={styles.cartPreviewItemIcon}>
                     <div className={styles.cartPreviewItemIconText}>
-                      {item.customName ? item.customName.charAt(0) : item.name.charAt(0)}
+                      {item.displayName ? item.displayName.charAt(0) : (item.menu?.name || item.name || 'M').charAt(0)}
                     </div>
                   </div>
                   <div className={styles.cartPreviewItemDetails}>
                     <h4 className={styles.cartPreviewItemName}>
-                      {item.customName || item.name}
+                      {item.displayName || item.menu?.name || item.name}
                     </h4>
                     <p className={styles.cartPreviewItemPrice}>
                       ₩{(item.totalPrice || item.price * item.quantity).toLocaleString()}
                     </p>
-                    {item.selectedOptions && (
+                    {item.displayOptions && item.displayOptions.length > 0 && (
                       <div className={styles.cartPreviewItemOptions}>
-                        {renderCartItemOptions(item)}
+                        {item.displayOptions.map((option, optIndex) => (
+                          <span key={optIndex} className={styles.cartPreviewOption}>
+                            {option}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -187,7 +190,7 @@ const MenuScreen = () => {
           </div>
           <div className={styles.cartPreviewFooter}>
             <div className={styles.cartPreviewTotal}>
-              총 금액: ₩{cart.reduce((total, item) => total + (item.totalPrice || item.price * item.quantity), 0).toLocaleString()}
+              총 금액: ₩{cart.reduce((total, item) => total + (item.totalPrice || 0), 0).toLocaleString()}
             </div>
             <button className={styles.cartPreviewOrderButton} onClick={goToCart}>
               주문하기
@@ -222,8 +225,22 @@ const MenuScreen = () => {
   );
 };
 
-// 장바구니 아이템 옵션 렌더링 함수
+// 장바구니 아이템 옵션 렌더링 함수 (기존 구조 호환용)
 const renderCartItemOptions = (item) => {
+  // 새로운 구조에서는 displayOptions를 사용
+  if (item.displayOptions && item.displayOptions.length > 0) {
+    return (
+      <div className={styles.cartPreviewOptions}>
+        {item.displayOptions.map((option, index) => (
+          <span key={index} className={styles.cartPreviewOption}>
+            {option}
+          </span>
+        ))}
+      </div>
+    );
+  }
+
+  // 기존 구조 호환성 유지
   if (!item.selectedOptions) return null;
 
   const { addOptions, removeOptions, side, drink } = item.selectedOptions;
@@ -255,7 +272,7 @@ const renderCartItemOptions = (item) => {
         </span>
       ))}
     </div>
-  );
+    );
 };
 
 const getOptionName = (key) => {

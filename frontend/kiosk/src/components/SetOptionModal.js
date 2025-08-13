@@ -65,7 +65,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
   };
 
   const calculateTotalPrice = () => {
-    const basePrice = menuItem.basePrice;
+    const basePrice = menuItem.price || menuItem.basePrice || 0;
     // 추가 옵션만 가격에 반영 (제거 옵션은 가격에 영향 없음)
     const addOptionsPrice = Object.entries(addOptions).reduce((total, [key, value]) => {
       if (value && options[key]) {
@@ -84,18 +84,88 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
   };
 
   const handleAddToCart = () => {
-    const cartItem = {
-      ...menuItem,
-      quantity,
-      selectedOptions: {
-        addOptions,
-        removeOptions,
-        side: selectedSide,
-        drink: selectedDrink
-      },
-      totalPrice: calculateTotalPrice(),
-      customName: `${menuItem.baseItem} 세트 (${sideOptions[selectedSide].name}, ${drinkOptions[selectedDrink].name})`
+    // 기본 메뉴 정보
+    const baseMenuInfo = {
+      id: menuItem.id,
+      name: menuItem.name,
+      category: menuItem.category,
+      basePrice: menuItem.price || menuItem.basePrice || 0,
+      description: menuItem.description,
+      image: menuItem.image
     };
+
+    // 선택된 옵션 정보
+    const selectedOptions = {
+      toppings: {
+        add: Object.entries(addOptions)
+          .filter(([key, value]) => value)
+          .map(([key, value]) => ({
+            id: key,
+            name: options[key].name,
+            price: options[key].price
+          })),
+        remove: Object.entries(removeOptions)
+          .filter(([key, value]) => value)
+          .map(([key, value]) => ({
+            id: key,
+            name: options[key].name
+          }))
+      },
+      side: {
+        id: selectedSide,
+        name: sideOptions[selectedSide].name,
+        price: sideOptions[selectedSide].price
+      },
+      drink: {
+        id: selectedDrink,
+        name: drinkOptions[selectedDrink].name,
+        price: drinkOptions[selectedDrink].price
+      }
+    };
+
+    // 가격 계산
+    const optionsPrice = selectedOptions.toppings.add.reduce((total, topping) => total + topping.price, 0);
+    const sidePrice = selectedOptions.side.price;
+    const drinkPrice = selectedOptions.drink.price;
+    const totalPrice = (baseMenuInfo.basePrice + optionsPrice + sidePrice + drinkPrice) * quantity;
+
+    // 장바구니 아이템 생성
+    const cartItem = {
+      // 기본 식별 정보
+      cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 고유 ID
+      timestamp: new Date().toISOString(),
+      
+      // 메뉴 기본 정보
+      menu: baseMenuInfo,
+      
+      // 수량 및 가격
+      quantity: quantity,
+      unitPrice: baseMenuInfo.basePrice + optionsPrice + sidePrice + drinkPrice,
+      totalPrice: totalPrice,
+      
+      // 선택된 옵션들
+      options: selectedOptions,
+      
+      // 표시용 정보
+      displayName: `${menuItem.name} 세트 (${selectedOptions.side.name}, ${selectedOptions.drink.name})`,
+      displayOptions: [
+        ...selectedOptions.toppings.add.map(t => `+${t.name}`),
+        ...selectedOptions.toppings.remove.map(t => `-${t.name}`),
+        `사이드: ${selectedOptions.side.name}`,
+        `음료: ${selectedOptions.drink.name}`
+      ],
+      
+      // 메타데이터
+      metadata: {
+        isSet: true,
+        hasCustomOptions: selectedOptions.toppings.add.length > 0 || selectedOptions.toppings.remove.length > 0,
+        originalPrice: baseMenuInfo.basePrice,
+        optionsPrice: optionsPrice,
+        sidePrice: sidePrice,
+        drinkPrice: drinkPrice
+      }
+    };
+
     onAddToCart(cartItem);
     onClose();
   };
@@ -112,12 +182,12 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
         <div className={styles.menuPreview}>
           <div className={styles.menuIcon}>
-            <div className={styles.menuIconText}>{menuItem.baseItem.charAt(0)}</div>
+            <div className={styles.menuIconText}>{menuItem.name ? menuItem.name.charAt(0) : 'M'}</div>
           </div>
           <div className={styles.menuInfo}>
             <h3 className={styles.menuName}>{menuItem.name}</h3>
-            <p className={styles.menuDescription}>{menuItem.description}</p>
-            <p className={styles.basePrice}>기본 가격: ₩{menuItem.basePrice.toLocaleString()}</p>
+            <p className={styles.menuDescription}>{menuItem.description || '맛있는 세트 메뉴입니다'}</p>
+            <p className={styles.basePrice}>기본 가격: ₩{(menuItem.price || menuItem.basePrice || 0).toLocaleString()}</p>
           </div>
         </div>
 

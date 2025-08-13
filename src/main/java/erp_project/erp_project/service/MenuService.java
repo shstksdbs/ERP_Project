@@ -7,7 +7,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -83,5 +85,34 @@ public class MenuService {
         
         menu.setIsAvailable(!menu.getIsAvailable());
         menuRepository.save(menu);
+    }
+    
+    // 메뉴 옵션 조회
+    public Optional<Map<String, Object>> getMenuOptions(Long menuId) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElse(null);
+        
+        if (menu == null) {
+            return Optional.empty();
+        }
+        
+        // 여기서는 간단한 예시를 위해 하드코딩된 옵션을 반환
+        // 실제로는 MenuOptionRelation을 조회해야 함
+        Map<String, Object> options = new HashMap<>();
+        
+        if ("burger".equals(menu.getCategory())) {
+            Map<String, Object> toppingOptions = new HashMap<>();
+            toppingOptions.put("tomato", Map.of("name", "토마토", "price", 300, "default", true, "removable", true, "addable", true, "quantitySelectable", false));
+            toppingOptions.put("onion", Map.of("name", "양파", "price", 300, "default", true, "removable", true, "addable", true, "quantitySelectable", false));
+            toppingOptions.put("lettuce", Map.of("name", "양상추", "price", 300, "default", true, "removable", true, "addable", true, "quantitySelectable", false));
+            toppingOptions.put("cheese", Map.of("name", "치즈", "price", 300, "default", true, "removable", true, "addable", true, "quantitySelectable", true, "maxQuantity", 5, "description", "개수 선택 가능 (최대 5개)"));
+            toppingOptions.put("pickle", Map.of("name", "피클", "price", 0, "default", false, "removable", true, "addable", true, "quantitySelectable", false));
+            toppingOptions.put("sauce", Map.of("name", "소스", "price", 0, "default", true, "removable", true, "addable", true, "quantitySelectable", false, "description", "마요네즈, 케찹, 머스타드 중 선택"));
+            toppingOptions.put("bacon", Map.of("name", "베이컨", "price", 500, "default", false, "removable", true, "addable", true, "quantitySelectable", true, "maxQuantity", 3, "description", "개수 선택 가능 (최대 3개)"));
+            
+            options.put("toppings", toppingOptions);
+        }
+        
+        return Optional.of(options);
     }
 }

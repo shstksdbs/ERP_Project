@@ -9,7 +9,15 @@
   border-bottom: 3px solid #b8860b;
   box-shadow: 0 4px 20px rgba(184, 134, 11, 0.3);
   padding: 20px 0;
-  text-align: center;
+}
+
+.headerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .title {
@@ -32,4 +40,35 @@
   padding: 40px 20px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 15px;
+    padding: 0 15px;
+  }
+  
+  .title {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 15px 0;
+  }
+  
+  .headerContent {
+    padding: 0 10px;
+  }
+  
+  .title {
+    font-size: 1.8rem;
+  }
+  
+  .mainContent {
+    padding: 30px 15px;
+  }
 }

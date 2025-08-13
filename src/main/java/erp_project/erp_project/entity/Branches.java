@@ -1,15 +1,12 @@
 package erp_project.erp_project.entity;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.LocalDate;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,18 +15,22 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
 public class Branches {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "branch_id")
     private Long id;
     
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @Column(name = "branch_code", unique = true, nullable = false, length = 10)
+    private String branchCode;
     
-    @Column(name = "code", unique = true, nullable = false, length = 20)
-    private String code;
+    @Column(name = "branch_name", nullable = false, length = 100)
+    private String branchName;
+    
+    @Enumerated(EnumType.STRING)
+    @Column(name = "branch_type", columnDefinition = "ENUM('headquarters', 'branch', 'franchise') DEFAULT 'branch'")
+    private BranchType branchType;
     
     @Column(name = "address", columnDefinition = "TEXT")
     private String address;
@@ -37,26 +38,40 @@ public class Branches {
     @Column(name = "phone", length = 20)
     private String phone;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "manager_id")
-    private Users manager;
+    @Column(name = "manager_name", length = 100)
+    private String managerName;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status")
+    @Column(name = "status", columnDefinition = "ENUM('active', 'inactive', 'maintenance') DEFAULT 'active'")
     private BranchStatus status;
     
-    @Column(name = "opening_date")
-    private LocalDate openingDate;
+    @Column(name = "opening_hours", columnDefinition = "JSON")
+    private String openingHours;
     
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime createdAt;
     
-    @LastModifiedDate
-    @Column(name = "updated_at")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column(name = "updated_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime updatedAt;
     
+    public enum BranchType {
+        headquarters, branch, franchise
+    }
+    
     public enum BranchStatus {
-        OPERATING, CLOSED, SUSPENDED
+        active, inactive, maintenance
+    }
+    
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+    
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }

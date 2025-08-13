@@ -62,7 +62,7 @@ const CartScreen = () => {
   const renderOptions = (item) => {
     if (!item.selectedOptions) return null;
 
-    const { addOptions, removeOptions, side, drink } = item.selectedOptions;
+    const { addOptions, removeOptions, side, drink, optionQuantities } = item.selectedOptions;
     
     // 햄버거 옵션들
     const addOptionsList = Object.entries(addOptions || {})
@@ -81,12 +81,25 @@ const CartScreen = () => {
       return null;
     }
 
+    // 개수 정보가 있는 옵션들을 표시
+    const renderAddOptionsWithQuantity = () => {
+      return addOptionsList.map(key => {
+        const optionName = getOptionName(key);
+        const quantity = optionQuantities && optionQuantities[key];
+        
+        if (quantity && quantity > 1) {
+          return `${optionName} ${quantity}개`;
+        }
+        return optionName;
+      }).join(', ');
+    };
+
     return (
       <div className={styles.itemOptions}>
         {addOptionsList.length > 0 && (
           <div className={styles.optionsRow}>
             <span className={styles.optionsLabel}>추가:</span>
-            <span className={styles.optionsList}>{addOptionsList.map(key => getOptionName(key)).join(', ')}</span>
+            <span className={styles.optionsList}>{renderAddOptionsWithQuantity()}</span>
           </div>
         )}
         {removeOptionsList.length > 0 && (
@@ -117,7 +130,9 @@ const CartScreen = () => {
       onion: '양파',
       cheese: '치즈',
       lettuce: '양상추',
-      sauce: '소스'
+      sauce: '소스',
+      pickle: '피클',
+      bacon: '베이컨'
     };
     return optionNames[key] || key;
   };

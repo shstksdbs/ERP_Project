@@ -39,6 +39,14 @@ public class MenuController {
                 .orElse(ResponseEntity.notFound().build());
     }
     
+    // 메뉴 옵션 조회
+    @GetMapping("/{id}/options")
+    public ResponseEntity<?> getMenuOptions(@PathVariable Long id) {
+        return menuService.getMenuOptions(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+    
     // 메뉴명으로 검색
     @GetMapping("/search")
     public ResponseEntity<List<Menu>> searchMenusByName(@RequestParam String name) {
