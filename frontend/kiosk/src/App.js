@@ -17,6 +17,7 @@ function App() {
             <Route path="cart" element={<CartScreen />} />
             <Route path="payment" element={<PaymentScreen />} />
             <Route path="complete" element={<OrderCompleteScreen />} />
+            <Route path="order-complete" element={<OrderCompleteScreen />} />
           </Route>
         </Routes>
       </div>

@@ -1,6 +1,26 @@
 -- 00_init.sql
 -- 지점별 키오스크 주문 + ERP 연동 + 본사 할인 프로모션 시스템 초기화
 
+-- 🚨 기존 테이블 강제 삭제 (데이터 초기화)
+SET FOREIGN_KEY_CHECKS = 0;
+
+DROP TABLE IF EXISTS system_logs;
+DROP TABLE IF EXISTS hourly_sales;
+DROP TABLE IF EXISTS daily_sales_summary;
+DROP TABLE IF EXISTS payments;
+DROP TABLE IF EXISTS order_item_options;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS branch_menus;
+DROP TABLE IF EXISTS branches;
+DROP TABLE IF EXISTS menu_template_relations;
+DROP TABLE IF EXISTS template_option_relations;
+DROP TABLE IF EXISTS option_templates;
+DROP TABLE IF EXISTS menu_options;
+DROP TABLE IF EXISTS menus;
+
+SET FOREIGN_KEY_CHECKS = 1;
+
 -- 시스템 초기화 시작
 SELECT '지점별 키오스크 주문 + ERP 연동 + 본사 할인 프로모션 시스템 초기화를 시작합니다...' AS message;
 

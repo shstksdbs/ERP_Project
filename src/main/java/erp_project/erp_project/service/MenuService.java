@@ -63,6 +63,7 @@ public class MenuService {
         menu.setBasePrice(menuDetails.getBasePrice());
         menu.setIsAvailable(menuDetails.getIsAvailable());
         menu.setDisplayOrder(menuDetails.getDisplayOrder());
+        menu.setImageUrl(menuDetails.getImageUrl());
         
         return menuRepository.save(menu);
     }
@@ -85,6 +86,16 @@ public class MenuService {
         
         menu.setIsAvailable(!menu.getIsAvailable());
         menuRepository.save(menu);
+    }
+    
+    // 메뉴 이미지 URL 업데이트
+    @Transactional
+    public Menu updateMenuImage(Long id, String imageUrl) {
+        Menu menu = menuRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
+        
+        menu.setImageUrl(imageUrl);
+        return menuRepository.save(menu);
     }
     
     // 메뉴 옵션 조회

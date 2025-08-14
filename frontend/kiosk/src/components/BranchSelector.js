@@ -6,7 +6,7 @@ const BranchSelector = ({ selectedBranch, onBranchChange, branches = [] }) => {
 
   // 기본 지점 데이터 (props로 전달되지 않은 경우)
   const defaultBranches = [
-    { id: 1, code: 'HQ001', name: '버거킹 본사점', type: 'headquarters' },
+    { id: 1, code: 'HQ001', name: '본사점', type: 'headquarters' },
     { id: 2, code: 'BR001', name: '강남점', type: 'branch' },
     { id: 3, code: 'BR002', name: '홍대점', type: 'branch' }
   ];

@@ -10,41 +10,28 @@ INSERT INTO menu_options (name, display_name, category, price, is_available, dis
 ('tomato', '토마토', 'topping', 300.00, true, 1, '신선한 토마토 슬라이스', NOW(), NOW()),
 ('onion', '양파', 'topping', 300.00, true, 2, '아삭한 양파 슬라이스', NOW(), NOW()),
 ('lettuce', '양상추', 'topping', 300.00, true, 3, '신선한 양상추', NOW(), NOW()),
-('cheese', '치즈', 'topping', 300.00, true, 4, '녹는 치즈 (개수 선택 가능)', NOW(), NOW()),
-('pickle', '피클', 'topping', 0.00, true, 5, '신맛 피클', NOW(), NOW()),
-('bacon', '베이컨', 'topping', 500.00, true, 6, '바삭한 베이컨 (개수 선택 가능)', NOW(), NOW()),
-('egg', '계란', 'topping', 400.00, true, 7, '신선한 계란', NOW(), NOW()),
-('avocado', '아보카도', 'topping', 800.00, true, 8, '신선한 아보카도', NOW(), NOW());
+('pickle', '피클', 'topping', 300.00, true, 5, '신맛 피클', NOW(), NOW()),
+('cheese', '치즈', 'topping', 500.00, true, 4, '녹는 치즈 (개수 선택 가능)', NOW(), NOW()),
+('bacon', '베이컨', 'topping', 700.00, true, 6, '바삭한 베이컨 (개수 선택 가능)', NOW(), NOW());
 
--- 소스 옵션
+-- 사이드 변경 옵션
 INSERT INTO menu_options (name, display_name, category, price, is_available, display_order, description, created_at, updated_at) VALUES
-('ketchup', '케찹', 'sauce', 0.00, true, 1, '클래식 케찹', NOW(), NOW()),
-('mustard', '머스타드', 'sauce', 0.00, true, 2, '매콤한 머스타드', NOW(), NOW()),
-('mayo', '마요네즈', 'sauce', 0.00, true, 3, '부드러운 마요네즈', NOW(), NOW()),
-('bbq', 'BBQ소스', 'sauce', 0.00, true, 4, '달콤한 BBQ소스', NOW(), NOW()),
-('hot', '핫소스', 'sauce', 0.00, true, 5, '매운 핫소스', NOW(), NOW()),
-('ranch', '랜치소스', 'sauce', 0.00, true, 6, '고소한 랜치소스', NOW(), NOW()),
-('sweet', '스위트칠리', 'sauce', 0.00, true, 7, '달콤한 스위트칠리', NOW(), NOW()),
-('garlic', '갈릭소스', 'sauce', 0.00, true, 8, '향긋한 갈릭소스', NOW(), NOW());
+('frenchFries', '프렌치프라이', 'side', 0.00, true, 1, '바삭한 프렌치프라이', NOW(), NOW()),
+('seasonedFries', '양념감자', 'side', 500.00, true, 2, '매콤달콤한 양념감자', NOW(), NOW()),
+('cornSalad', '콘샐러드', 'side', 700.00, true, 3, '신선한 콘샐러드', NOW(), NOW()),
+('onionRings', '어니언링', 'side', 800.00, true, 4, '고소한 어니언링 6개', NOW(), NOW()),
+('chickenNuggets', '치킨너겟', 'side', 1000.00, true, 5, '바삭한 치킨너겟 8개', NOW(), NOW()),
+('cheeseSticks', '치즈스틱', 'side', 1500.00, true, 6, '치즈가 가득한 치즈스틱 2개', NOW(), NOW());
 
--- 사이드 옵션
+-- 음료 변경 옵션
 INSERT INTO menu_options (name, display_name, category, price, is_available, display_order, description, created_at, updated_at) VALUES
-('size_small', '소사이즈', 'size', -500.00, true, 1, '소사이즈 (500원 할인)', NOW(), NOW()),
-('size_large', '대사이즈', 'size', 500.00, true, 2, '대사이즈 (500원 추가)', NOW(), NOW()),
-('extra_sauce', '소스 추가', 'extra', 200.00, true, 3, '소스 추가', NOW(), NOW()),
-('extra_cheese', '치즈 추가', 'extra', 300.00, true, 4, '치즈 추가', NOW(), NOW()),
-('extra_meat', '고기 추가', 'extra', 1000.00, true, 5, '고기 패티 추가', NOW(), NOW());
-
--- 음료 옵션
-INSERT INTO menu_options (name, display_name, category, price, is_available, display_order, description, created_at, updated_at) VALUES
-('ice_none', '얼음 없음', 'ice', 0.00, true, 1, '얼음 없이', NOW(), NOW()),
-('ice_less', '얼음 적게', 'ice', 0.00, true, 2, '얼음 적게', NOW(), NOW()),
-('ice_normal', '얼음 보통', 'ice', 0.00, true, 3, '얼음 보통', NOW(), NOW()),
-('ice_more', '얼음 많이', 'ice', 0.00, true, 4, '얼음 많이', NOW(), NOW()),
-('sugar_none', '당도 0%', 'sugar', 0.00, true, 5, '당도 0%', NOW(), NOW()),
-('sugar_less', '당도 30%', 'sugar', 0.00, true, 6, '당도 30%', NOW(), NOW()),
-('sugar_normal', '당도 100%', 'sugar', 0.00, true, 7, '당도 100%', NOW(), NOW()),
-('sugar_more', '당도 130%', 'sugar', 0.00, true, 8, '당도 130%', NOW(), NOW());
+('cola', '콜라', 'drink', 0.00, true, 1, '시원한 콜라', NOW(), NOW()),
+('sprite', '스프라이트', 'drink', 0.00, true, 2, '상큼한 스프라이트', NOW(), NOW()),
+('zeroCola', '제로콜라', 'drink', 0.00, true, 3, '칼로리 0 콜라', NOW(), NOW()),
+('zeroSprite', '제로스프라이트', 'drink', 0.00, true, 4, '칼로리 0 스프라이트', NOW(), NOW()),
+('americano', '아메리카노', 'drink', 1000.00, true, 5, '깊은 맛의 아메리카노', NOW(), NOW()),
+('orangeJuice', '오렌지주스', 'drink', 1200.00, true, 6, '신선한 오렌지주스', NOW(), NOW()),
+('milkShake', '밀크쉐이크', 'drink', 1800.00, true, 7, '부드러운 밀크쉐이크', NOW(), NOW());
 
 -- =====================================================
 -- 2. 템플릿-옵션 관계 데이터

@@ -90,4 +90,11 @@ public class MenuController {
         menuService.toggleMenuAvailability(id);
         return ResponseEntity.ok().build();
     }
+    
+    // 메뉴 이미지 URL 업데이트 (관리자용)
+    @PatchMapping("/{id}/image")
+    public ResponseEntity<Menu> updateMenuImage(@PathVariable Long id, @RequestBody String imageUrl) {
+        Menu updatedMenu = menuService.updateMenuImage(id, imageUrl);
+        return ResponseEntity.ok(updatedMenu);
+    }
 }

@@ -84,7 +84,7 @@ export default function Dashboard() {
   return (
     <div className={styles['product-list']}>
       <div className={styles['product-list-header']}>
-        <h1>본사 대시보드</h1>
+        <h1>가맹점 대시보드</h1>
         <p style={{ color: '#6b7280' }}>전사 KPI와 핵심 지표 요약</p>
       </div>
 

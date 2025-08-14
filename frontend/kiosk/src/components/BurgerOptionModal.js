@@ -89,7 +89,7 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       category: menuItem.category,
       basePrice: menuItem.price || 0,
       description: menuItem.description,
-      image: menuItem.image
+      imageUrl: menuItem.imageUrl
     };
 
     // 선택된 옵션 정보
@@ -166,8 +166,21 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         </div>
 
         <div className={styles.menuPreview}>
-          <div className={styles.menuIcon}>
-            <div className={styles.menuIconText}>{menuItem.name.charAt(0)}</div>
+          <div className={styles.menuImageContainer}>
+            {menuItem.imageUrl ? (
+              <img 
+                src={menuItem.imageUrl.startsWith('http') ? menuItem.imageUrl : `http://localhost:8080${menuItem.imageUrl}`}
+                alt={menuItem.name} 
+                className={styles.menuImage}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`${styles.menuIcon} ${menuItem.imageUrl ? styles.menuIconFallback : ''}`}>
+              <div className={styles.menuIconText}>{menuItem.name.charAt(0)}</div>
+            </div>
           </div>
           <div className={styles.menuInfo}>
             <h3 className={styles.menuName}>{menuItem.name}</h3>

@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS menus (
     
     INDEX idx_category (category),
     INDEX idx_available (is_available),
-    INDEX idx_display_order (display_order)
+    INDEX idx_display_order (display_order),
+    UNIQUE KEY unique_menu_name (name)
 );
 
 -- 메뉴 옵션 테이블

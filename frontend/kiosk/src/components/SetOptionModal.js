@@ -1,84 +1,111 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './SetOptionModal.module.css';
 
 const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
-  const [addOptions, setAddOptions] = useState({
-    tomato: false,
-    onion: false,
-    cheese: false,
-    lettuce: false,
-    sauce: false
-  });
-
-  const [removeOptions, setRemoveOptions] = useState({
-    tomato: false,
-    onion: false,
-    cheese: false,
-    lettuce: false,
-    sauce: false
-  });
-
-  const [selectedSide, setSelectedSide] = useState('fries');
-  const [selectedDrink, setSelectedDrink] = useState('cola');
+  const [addOptions, setAddOptions] = useState({});
+  const [removeOptions, setRemoveOptions] = useState({});
+  const [selectedSide, setSelectedSide] = useState('');
+  const [selectedDrink, setSelectedDrink] = useState('');
   const [quantity, setQuantity] = useState(1);
+  
+  // 데이터베이스에서 가져온 옵션들
+  const [toppingOptions, setToppingOptions] = useState([]);
+  const [sideOptions, setSideOptions] = useState([]);
+  const [drinkOptions, setDrinkOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const options = {
-    tomato: { name: '토마토', price: 300 },
-    onion: { name: '양파', price: 300 },
-    cheese: { name: '치즈', price: 500 },
-    lettuce: { name: '양상추', price: 300 },
-    sauce: { name: '소스', price: 300 }
-  };
+  // 컴포넌트 마운트 시 옵션들을 데이터베이스에서 가져오기
+  useEffect(() => {
+    if (isOpen) {
+      fetchMenuOptions();
+    }
+  }, [isOpen]);
 
-  const sideOptions = {
-    fries: { name: '감자튀김', price: 0 },
-    nuggets: { name: '치킨너겟', price: 1000 },
-    seasonedFries: { name: '양념감자', price: 500 },
-    cheeseSticks: { name: '치즈스틱', price: 1500 },
-    onionRings: { name: '어니언링', price: 800 },
-    cornSalad: { name: '콘샐러드', price: 200 }
-  };
-
-  const drinkOptions = {
-    cola: { name: '콜라', price: 0 },
-    sprite: { name: '사이다', price: 0 },
-    orangeJuice: { name: '오렌지주스', price: 500 },
-    americano: { name: '아메리카노', price: 1000 },
-    zeroCola: { name: '제로콜라', price: 0 },
-    zeroSprite: { name: '제로사이다', price: 0 }
-  };
-
-  const handleAddOptionChange = (optionName, value) => {
-    setAddOptions(prev => ({ ...prev, [optionName]: value }));
-    // 추가 옵션을 선택하면 제거 옵션에서 해제
-    if (value) {
-      setRemoveOptions(prev => ({ ...prev, [optionName]: false }));
+  // 메뉴 옵션들을 데이터베이스에서 가져오는 함수
+  const fetchMenuOptions = async () => {
+    try {
+      setLoading(true);
+      
+      // 토핑 옵션 가져오기
+      const toppingResponse = await fetch('http://localhost:8080/api/menu-options/category/topping');
+      const toppingData = await toppingResponse.json();
+      setToppingOptions(toppingData);
+      
+      // 사이드 옵션 가져오기
+      const sideResponse = await fetch('http://localhost:8080/api/menu-options/category/side');
+      const sideData = await sideResponse.json();
+      setSideOptions(sideData);
+      
+      // 음료 옵션 가져오기
+      const drinkResponse = await fetch('http://localhost:8080/api/menu-options/category/drink');
+      const drinkData = await drinkResponse.json();
+      setDrinkOptions(drinkData);
+      
+      // 기본값 설정
+      if (sideData.length > 0) {
+        setSelectedSide(sideData[0].id.toString());
+      }
+      if (drinkData.length > 0) {
+        setSelectedDrink(drinkData[0].id.toString());
+      }
+      
+      // 토핑 옵션들의 초기 상태 설정
+      const initialAddOptions = {};
+      const initialRemoveOptions = {};
+      toppingData.forEach(option => {
+        initialAddOptions[option.id] = false;
+        initialRemoveOptions[option.id] = false;
+      });
+      setAddOptions(initialAddOptions);
+      setRemoveOptions(initialRemoveOptions);
+      
+    } catch (error) {
+      console.error('메뉴 옵션을 가져오는 중 오류가 발생했습니다:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveOptionChange = (optionName, value) => {
-    setRemoveOptions(prev => ({ ...prev, [optionName]: value }));
+  // 옵션 ID로 옵션 정보를 찾는 함수
+  const findOptionById = (options, id) => {
+    return options.find(option => option.id.toString() === id);
+  };
+
+  const handleAddOptionChange = (optionId, value) => {
+    setAddOptions(prev => ({ ...prev, [optionId]: value }));
+    // 추가 옵션을 선택하면 제거 옵션에서 해제
+    if (value) {
+      setRemoveOptions(prev => ({ ...prev, [optionId]: false }));
+    }
+  };
+
+  const handleRemoveOptionChange = (optionId, value) => {
+    setRemoveOptions(prev => ({ ...prev, [optionId]: value }));
     // 제거 옵션을 선택하면 추가 옵션에서 해제
     if (value) {
-      setAddOptions(prev => ({ ...prev, [optionName]: false }));
+      setAddOptions(prev => ({ ...prev, [optionId]: false }));
     }
   };
 
   const calculateTotalPrice = () => {
     const basePrice = menuItem.price || menuItem.basePrice || 0;
+    
     // 추가 옵션만 가격에 반영 (제거 옵션은 가격에 영향 없음)
-    const addOptionsPrice = Object.entries(addOptions).reduce((total, [key, value]) => {
-      if (value && options[key]) {
-        return total + options[key].price;
+    const addOptionsPrice = Object.entries(addOptions).reduce((total, [optionId, value]) => {
+      if (value) {
+        const option = findOptionById(toppingOptions, optionId);
+        return total + (option ? Number(option.price) : 0);
       }
       return total;
     }, 0);
 
     // 사이드 변경 가격
-    const sidePrice = sideOptions[selectedSide].price;
+    const selectedSideOption = findOptionById(sideOptions, selectedSide);
+    const sidePrice = selectedSideOption ? Number(selectedSideOption.price) : 0;
     
     // 음료 변경 가격
-    const drinkPrice = drinkOptions[selectedDrink].price;
+    const selectedDrinkOption = findOptionById(drinkOptions, selectedDrink);
+    const drinkPrice = selectedDrinkOption ? Number(selectedDrinkOption.price) : 0;
 
     return (basePrice + addOptionsPrice + sidePrice + drinkPrice) * quantity;
   };
@@ -91,35 +118,41 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       category: menuItem.category,
       basePrice: menuItem.price || menuItem.basePrice || 0,
       description: menuItem.description,
-      image: menuItem.image
+      imageUrl: menuItem.imageUrl
     };
 
     // 선택된 옵션 정보
     const selectedOptions = {
       toppings: {
         add: Object.entries(addOptions)
-          .filter(([key, value]) => value)
-          .map(([key, value]) => ({
-            id: key,
-            name: options[key].name,
-            price: options[key].price
-          })),
+          .filter(([optionId, value]) => value)
+          .map(([optionId, value]) => {
+            const option = findOptionById(toppingOptions, optionId);
+            return {
+              id: optionId,
+              name: option ? option.displayName : '',
+              price: option ? Number(option.price) : 0
+            };
+          }),
         remove: Object.entries(removeOptions)
-          .filter(([key, value]) => value)
-          .map(([key, value]) => ({
-            id: key,
-            name: options[key].name
-          }))
+          .filter(([optionId, value]) => value)
+          .map(([optionId, value]) => {
+            const option = findOptionById(toppingOptions, optionId);
+            return {
+              id: optionId,
+              name: option ? option.displayName : ''
+            };
+          })
       },
       side: {
         id: selectedSide,
-        name: sideOptions[selectedSide].name,
-        price: sideOptions[selectedSide].price
+        name: findOptionById(sideOptions, selectedSide)?.displayName || '',
+        price: findOptionById(sideOptions, selectedSide) ? Number(findOptionById(sideOptions, selectedSide).price) : 0
       },
       drink: {
         id: selectedDrink,
-        name: drinkOptions[selectedDrink].name,
-        price: drinkOptions[selectedDrink].price
+        name: findOptionById(drinkOptions, selectedDrink)?.displayName || '',
+        price: findOptionById(drinkOptions, selectedDrink) ? Number(findOptionById(drinkOptions, selectedDrink).price) : 0
       }
     };
 
@@ -172,6 +205,16 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
   if (!isOpen) return null;
 
+  if (loading) {
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalContent}>
+          <div className={styles.loadingMessage}>옵션을 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -181,8 +224,21 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         </div>
 
         <div className={styles.menuPreview}>
-          <div className={styles.menuIcon}>
-            <div className={styles.menuIconText}>{menuItem.name ? menuItem.name.charAt(0) : 'M'}</div>
+          <div className={styles.menuImageContainer}>
+            {menuItem.imageUrl ? (
+              <img 
+                src={menuItem.imageUrl.startsWith('http') ? menuItem.imageUrl : `http://localhost:8080${menuItem.imageUrl}`}
+                alt={menuItem.name} 
+                className={styles.menuImage}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+              />
+            ) : null}
+            <div className={`${styles.menuIcon} ${menuItem.imageUrl ? styles.menuIconFallback : ''}`}>
+              <div className={styles.menuIconText}>{menuItem.name ? menuItem.name.charAt(0) : 'M'}</div>
+            </div>
           </div>
           <div className={styles.menuInfo}>
             <h3 className={styles.menuName}>{menuItem.name}</h3>
@@ -197,17 +253,17 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
           <div className={styles.optionsSection}>
             <div className={styles.optionsGrid}>
-              {Object.entries(options).map(([key, option]) => (
-                <label key={key} className={`${styles.optionItem} ${removeOptions[key] ? styles.disabled : ''}`}>
+              {toppingOptions.map((option) => (
+                <label key={option.id} className={`${styles.optionItem} ${removeOptions[option.id] ? styles.disabled : ''}`}>
                   <input
                     type="checkbox"
-                    checked={addOptions[key]}
-                    onChange={(e) => handleAddOptionChange(key, e.target.checked)}
-                    disabled={removeOptions[key]}
+                    checked={addOptions[option.id] || false}
+                    onChange={(e) => handleAddOptionChange(option.id.toString(), e.target.checked)}
+                    disabled={removeOptions[option.id]}
                   />
-                  <span className={styles.optionName}>{option.name}</span>
-                  {option.price > 0 && (
-                    <span className={styles.optionPrice}>+₩{option.price.toLocaleString()}</span>
+                  <span className={styles.optionName}>{option.displayName}</span>
+                  {Number(option.price) > 0 && (
+                    <span className={styles.optionPrice}>+₩{Number(option.price).toLocaleString()}</span>
                   )}
                 </label>
               ))}
@@ -218,15 +274,15 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <h3 className={styles.optionsTitle}>햄버거 토핑 제거 옵션 선택</h3>
             <p className={styles.optionsDescription}>제거를 원하는 토핑을 선택해주세요</p>
             <div className={styles.optionsGrid}>
-              {Object.entries(options).map(([key, option]) => (
-                <label key={key} className={`${styles.optionItem} ${addOptions[key] ? styles.disabled : ''}`}>
+              {toppingOptions.map((option) => (
+                <label key={option.id} className={`${styles.optionItem} ${addOptions[option.id] ? styles.disabled : ''}`}>
                   <input
                     type="checkbox"
-                    checked={removeOptions[key]}
-                    onChange={(e) => handleRemoveOptionChange(key, e.target.checked)}
-                    disabled={addOptions[key]}
+                    checked={removeOptions[option.id] || false}
+                    onChange={(e) => handleRemoveOptionChange(option.id.toString(), e.target.checked)}
+                    disabled={addOptions[option.id]}
                   />
-                  <span className={styles.optionName}>{option.name}</span>
+                  <span className={styles.optionName}>{option.displayName}</span>
                 </label>
               ))}
             </div>
@@ -236,20 +292,20 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <h3 className={styles.optionsTitle}>사이드 메뉴 선택</h3>
             <p className={styles.optionsDescription}>원하는 사이드 메뉴로 변경할 수 있습니다</p>
             <div className={styles.optionsGrid}>
-              {Object.entries(sideOptions).map(([key, option]) => (
-                <label key={key} className={styles.optionItem}>
+              {sideOptions.map((option) => (
+                <label key={option.id} className={styles.optionItem}>
                   <input
                     type="radio"
                     name="side"
-                    value={key}
-                    checked={selectedSide === key}
+                    value={option.id.toString()}
+                    checked={selectedSide === option.id.toString()}
                     onChange={(e) => setSelectedSide(e.target.value)}
                   />
-                  <span className={styles.optionName}>{option.name}</span>
-                  {option.price > 0 && (
-                    <span className={styles.optionPrice}>+₩{option.price.toLocaleString()}</span>
+                  <span className={styles.optionName}>{option.displayName}</span>
+                  {Number(option.price) > 0 && (
+                    <span className={styles.optionPrice}>+₩{Number(option.price).toLocaleString()}</span>
                   )}
-                  {option.price === 0 && (
+                  {Number(option.price) === 0 && (
                     <span className={styles.optionNote}>기본</span>
                   )}
                 </label>
@@ -261,20 +317,20 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <h3 className={styles.optionsTitle}>음료 선택</h3>
             <p className={styles.optionsDescription}>원하는 음료로 변경할 수 있습니다</p>
             <div className={styles.optionsGrid}>
-              {Object.entries(drinkOptions).map(([key, option]) => (
-                <label key={key} className={styles.optionItem}>
+              {drinkOptions.map((option) => (
+                <label key={option.id} className={styles.optionItem}>
                   <input
                     type="radio"
                     name="drink"
-                    value={key}
-                    checked={selectedDrink === key}
+                    value={option.id.toString()}
+                    checked={selectedDrink === option.id.toString()}
                     onChange={(e) => setSelectedDrink(e.target.value)}
                   />
-                  <span className={styles.optionName}>{option.name}</span>
-                  {option.price > 0 && (
-                    <span className={styles.optionPrice}>+₩{option.price.toLocaleString()}</span>
+                  <span className={styles.optionName}>{option.displayName}</span>
+                  {Number(option.price) > 0 && (
+                    <span className={styles.optionPrice}>+₩{Number(option.price).toLocaleString()}</span>
                   )}
-                  {option.price === 0 && (
+                  {Number(option.price) === 0 && (
                     <span className={styles.optionNote}>기본</span>
                   )}
                 </label>

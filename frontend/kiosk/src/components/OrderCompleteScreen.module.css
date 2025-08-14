@@ -1,195 +1,173 @@
-.completeContainer {
-  width: 100%;
-  max-width: 600px;
-  margin: 0 auto;
+.container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5e6d3 0%, #e6d5c3 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.content {
   background: white;
   border-radius: 20px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   padding: 40px;
   text-align: center;
+  box-shadow: 0 20px 40px rgba(139, 69, 19, 0.2);
+  max-width: 500px;
+  width: 100%;
 }
 
 .successIcon {
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, #27ae60, #2ecc71);
+  margin-bottom: 30px;
+}
+
+.checkmark {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 30px;
-  box-shadow: 0 6px 25px rgba(39, 174, 96, 0.3);
-}
-
-.successIconText {
+  margin: 0 auto;
   color: white;
-  font-size: 3rem;
+  font-size: 40px;
   font-weight: bold;
+  box-shadow: 0 10px 20px rgba(220, 53, 69, 0.3);
 }
 
-.completeTitle {
-  margin: 0 0 20px 0;
-  color: #2c3e50;
-  font-size: 2.2rem;
-  font-weight: 300;
-  letter-spacing: -0.5px;
-}
-
-.completeMessage {
-  margin: 0 0 40px 0;
-  color: #6c757d;
-  font-size: 1.1rem;
-  line-height: 1.6;
+.title {
+  color: #8b4513;
+  font-size: 28px;
+  font-weight: bold;
+  margin-bottom: 30px;
+  text-shadow: 0 2px 4px rgba(139, 69, 19, 0.1);
 }
 
 .orderInfo {
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 15px;
-  padding: 30px;
+  padding: 25px;
   margin-bottom: 30px;
-  border: 1px solid #e9ecef;
+  border: 2px solid #dee2e6;
 }
 
-.orderNumber {
-  background: #2c3e50;
-  color: white;
-  padding: 15px 25px;
-  border-radius: 25px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 25px;
-  display: inline-block;
-}
-
-.orderDetails {
-  margin-bottom: 25px;
-}
-
-.detailItem {
+.infoRow {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 15px;
+  padding: 10px 0;
+  border-bottom: 1px solid #dee2e6;
 }
 
-.detailItem:last-child {
+.infoRow:last-child {
+  margin-bottom: 0;
   border-bottom: none;
 }
 
-.detailLabel {
+.label {
   color: #6c757d;
-  font-size: 1rem;
-  font-weight: 500;
-}
-
-.detailValue {
-  color: #2c3e50;
-  font-size: 1rem;
   font-weight: 600;
+  font-size: 16px;
 }
 
-.totalAmount {
-  background: white;
-  border-radius: 12px;
-  padding: 25px;
-  border: 2px solid #e9ecef;
-  margin-bottom: 25px;
+.value {
+  color: #8b4513;
+  font-weight: bold;
+  font-size: 16px;
 }
 
-.totalLabel {
-  color: #6c757d;
-  font-size: 1rem;
-  font-weight: 500;
-  margin-bottom: 10px;
+.message {
+  margin-bottom: 30px;
+  color: #495057;
+  line-height: 1.6;
 }
 
-.totalPrice {
-  color: #e74c3c;
-  font-size: 2rem;
-  font-weight: 700;
+.message p {
+  margin: 8px 0;
+  font-size: 16px;
 }
 
-.actionButtons {
+.buttons {
   display: flex;
+  flex-direction: column;
   gap: 15px;
-  justify-content: center;
-  margin-bottom: 20px;
 }
 
-.newOrderButton, .homeButton {
-  padding: 15px 30px;
+.primaryButton {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  color: white;
   border: none;
+  padding: 15px 30px;
   border-radius: 25px;
-  font-size: 1rem;
-  font-weight: 500;
+  font-size: 18px;
+  font-weight: bold;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 140px;
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.3);
 }
 
-.newOrderButton {
-  background: linear-gradient(135deg, #2c3e50, #34495e);
-  color: white;
-}
-
-.newOrderButton:hover {
-  background: linear-gradient(135deg, #34495e, #2c3e50);
+.primaryButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(44, 62, 80, 0.3);
+  box-shadow: 0 8px 20px rgba(220, 53, 69, 0.4);
 }
 
-.homeButton {
-  background: #6c757d;
+.primaryButton:active {
+  transform: translateY(0);
+}
+
+.secondaryButton {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
   color: white;
+  border: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
 }
 
-.homeButton:hover {
-  background: #5a6268;
+.secondaryButton:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4);
 }
 
-.countdown {
-  color: #6c757d;
-  font-size: 0.95rem;
-  font-weight: 400;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border: 1px solid #e9ecef;
+.secondaryButton:active {
+  transform: translateY(0);
 }
 
-@media (max-width: 768px) {
-  .completeContainer {
-    margin: 10px;
+/* 반응형 디자인 */
+@media (max-width: 600px) {
+  .content {
     padding: 30px 20px;
-    border-radius: 15px;
   }
   
-  .completeTitle {
-    font-size: 1.8rem;
+  .title {
+    font-size: 24px;
   }
   
-  .successIcon {
-    width: 80px;
-    height: 80px;
+  .checkmark {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
   }
   
-  .successIconText {
-    font-size: 2.5rem;
-  }
-  
-  .orderInfo {
-    padding: 20px;
-  }
-  
-  .actionButtons {
+  .infoRow {
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
+    gap: 5px;
   }
   
-  .newOrderButton, .homeButton {
-    width: 100%;
-    max-width: 250px;
+  .buttons {
+    gap: 12px;
+  }
+  
+  .primaryButton,
+  .secondaryButton {
+    padding: 12px 25px;
+    font-size: 16px;
   }
 }

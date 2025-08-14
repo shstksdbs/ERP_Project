@@ -12,17 +12,6 @@ INSERT INTO option_templates (name, description, category) VALUES
 ('치킨버거옵션', '치킨버거 전용 옵션', 'burger'),
 ('새우버거옵션', '새우버거 전용 옵션', 'burger');
 
--- 세트용 옵션 템플릿
-INSERT INTO option_templates (name, description, category) VALUES
-('세트옵션', '세트 메뉴 전용 옵션 (사이드, 음료 변경)', 'set');
-
--- 사이드용 옵션 템플릿
-INSERT INTO option_templates (name, description, category) VALUES
-('사이드옵션', '사이드 메뉴 전용 옵션 (소스, 크기 등)', 'side');
-
--- 음료용 옵션 템플릿
-INSERT INTO option_templates (name, description, category) VALUES
-('음료옵션', '음료 전용 옵션 (얼음, 당도 등)', 'drink');
 
 -- =====================================================
 -- 2. 메뉴-템플릿 관계 설정
@@ -61,8 +50,7 @@ INSERT INTO menu_template_relations (menu_id, template_id) VALUES
 (16, 6),  -- 치즈스틱
 (17, 6),  -- 어니언링
 (18, 6),  -- 콘샐러드
-(19, 6),  -- 치킨윙
-(20, 6);  -- 나초
+
 
 -- 음료 메뉴에 템플릿 적용
 INSERT INTO menu_template_relations (menu_id, template_id) VALUES

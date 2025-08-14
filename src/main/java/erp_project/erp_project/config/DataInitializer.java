@@ -69,6 +69,10 @@ public class DataInitializer {
             connection.setAutoCommit(false);
             System.out.println("✅ 데이터베이스 연결 성공");
             
+            // 🚨 강제 데이터 초기화 (기존 데이터 삭제)
+            System.out.println("🧹 기존 데이터 강제 초기화 중...");
+            forceCleanupDatabase(connection);
+            
             // branches 테이블이 존재하는지 확인
             if (!tableExists(connection, "branches")) {
                 System.out.println("⚠️ branches 테이블이 존재하지 않습니다. 수동으로 생성합니다...");
@@ -94,7 +98,7 @@ public class DataInitializer {
             connection.commit();
             System.out.println("🎉 지점별 키오스크 주문 + ERP 연동 + 본사 할인 프로모션 시스템 초기화가 완료되었습니다!");
             System.out.println("🏪 구축된 지점:");
-            System.out.println("   - 본사점 (HQ001): 버거킹 본사점");
+            System.out.println("   - 본사점 (HQ001): 본사점");
             System.out.println("   - 강남점 (BR001): 강남점");
             System.out.println("   - 홍대점 (BR002): 홍대점");
             
@@ -348,6 +352,39 @@ public class DataInitializer {
             
         } catch (Exception e) {
             System.err.println("지점별 데이터 확인 중 오류: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 🚨 기존 데이터베이스 데이터를 강제로 초기화
+     */
+    private void forceCleanupDatabase(Connection connection) throws SQLException {
+        try (Statement stmt = connection.createStatement()) {
+            // 외래키 제약 조건 비활성화
+            stmt.execute("SET FOREIGN_KEY_CHECKS = 0");
+            
+            // 모든 테이블 데이터 삭제 (테이블 구조는 유지)
+            String[] tables = {
+                "system_logs", "hourly_sales", "daily_sales_summary", 
+                "payments", "order_item_options", "order_items", 
+                "orders", "branch_menus", "branches", 
+                "menu_template_relations", "template_option_relations", 
+                "option_templates", "menu_options", "menus"
+            };
+            
+            for (String table : tables) {
+                try {
+                    stmt.execute("TRUNCATE TABLE " + table);
+                    System.out.println("   ✅ " + table + " 테이블 데이터 초기화 완료");
+                } catch (SQLException e) {
+                    // 테이블이 존재하지 않으면 무시
+                    System.out.println("   ⚠️ " + table + " 테이블이 존재하지 않음 (무시)");
+                }
+            }
+            
+            // 외래키 제약 조건 재활성화
+            stmt.execute("SET FOREIGN_KEY_CHECKS = 1");
+            System.out.println("🧹 데이터베이스 강제 초기화 완료");
         }
     }
 }

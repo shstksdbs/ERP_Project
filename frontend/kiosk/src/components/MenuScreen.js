@@ -11,9 +11,13 @@ const MenuScreen = () => {
   const [selectedMenuItem, setSelectedMenuItem] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSetModalOpen, setIsSetModalOpen] = useState(false);
+  const [isQuantityModalOpen, setIsQuantityModalOpen] = useState(false);
+  const [selectedQuantityItem, setSelectedQuantityItem] = useState(null);
+  const [quantity, setQuantity] = useState(1);
   const [menuItems, setMenuItems] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [notification, setNotification] = useState({ show: false, message: '', itemName: '' });
 
   const categories = [
     { id: 'burger', name: '햄버거' },
@@ -61,34 +65,118 @@ const MenuScreen = () => {
     } else if (selectedCategory === 'set') {
       setSelectedMenuItem(item);
       setIsSetModalOpen(true);
-    } else {
-      // 사이드, 음료는 바로 장바구니에 추가
-      addToCart(item);
+    } else if (selectedCategory === 'side' || selectedCategory === 'drink') {
+      // 사이드, 음료는 개수 선택 모달 열기
+      setSelectedQuantityItem(item);
+      setQuantity(1); // 수량 초기화
+      setIsQuantityModalOpen(true);
     }
   };
 
   const addToCart = (item) => {
-    setCart(prev => [...prev, { ...item, quantity: 1 }]);
+    // 직접 추가되는 아이템은 imageUrl을 imageUrl로 복사
+    const cartItem = {
+      ...item,
+      quantity: 1,
+      imageUrl: item.imageUrl || item.menu?.imageUrl, // imageUrl을 명시적으로 복사
+      name: item.name || '상품', // 이름이 없을 경우 기본값 설정
+      displayOptions: [] // 기본 아이템은 옵션 없음
+    };
+    
+    // 디버깅: 이미지 URL 확인
+    console.log('addToCart - item:', item);
+    console.log('addToCart - cartItem:', cartItem);
+    
+    setCart(prev => [...prev, cartItem]);
+    
+    // 알림 표시
+    showNotification(`${cartItem.name}이(가) 장바구니에 담겼습니다.`);
   };
 
   const addToCartFromModal = (item) => {
     setCart(prev => [...prev, item]);
+    
+    // 알림 표시
+    showNotification(`${item.displayName}이(가) 장바구니에 담겼습니다.`);
   };
 
   const addToCartFromSetModal = (item) => {
     setCart(prev => [...prev, item]);
+    
+    // 알림 표시
+    showNotification(`${item.displayName}이(가) 장바구니에 담겼습니다.`);
+  };
+
+  const addToCartWithQuantity = (item, quantity) => {
+    const cartItem = {
+      ...item,
+      quantity: quantity,
+      imageUrl: item.imageUrl || item.menu?.imageUrl,
+      name: item.name || '상품', // 이름이 없을 경우 기본값 설정
+      displayOptions: [] // 기본 아이템은 옵션 없음
+    };
+    
+    // 디버깅: 이미지 URL 확인
+    console.log('addToCartWithQuantity - item:', item);
+    console.log('addToCartWithQuantity - cartItem:', cartItem);
+    
+    setCart(prev => [...prev, cartItem]);
+    
+    // 알림 표시
+    showNotification(`${cartItem.name} ${quantity}개가 장바구니에 담겼습니다.`);
+    
+    // 모달 닫기
+    setIsQuantityModalOpen(false);
+    setSelectedQuantityItem(null);
   };
 
   const removeFromCart = (index) => {
     setCart(prev => prev.filter((_, i) => i !== index));
   };
 
+  const getTotalAmount = () => {
+    return cart.reduce((sum, item) => {
+      if (item.totalPrice) {
+        return sum + item.totalPrice;
+      }
+      return sum + (item.price * item.quantity);
+    }, 0);
+  };
+
+  const showNotification = (message) => {
+    setNotification({ show: true, message, itemName: '' });
+    
+    // 3초 후 자동으로 알림 숨김
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
   const goToCart = () => {
-    navigate('/cart', { state: { cart } });
+    // 디버깅: 장바구니 데이터 확인
+    console.log('MenuScreen - 장바구니로 이동:', cart);
+    
+    // 장바구니로 이동할 때 현재 장바구니 상태와 함께 이동
+    navigate('/cart', { 
+      state: { 
+        cart,
+        totalAmount: getTotalAmount(),
+        itemCount: cart.length
+      } 
+    });
   };
 
   return (
     <div className={styles.menuContainer}>
+      {/* 장바구니 담기 알림 */}
+      {notification.show && (
+        <div className={styles.notification}>
+          <div className={styles.notificationContent}>
+            <div className={styles.notificationIcon}>✓</div>
+            <p className={styles.notificationMessage}>{notification.message}</p>
+          </div>
+        </div>
+      )}
       <div className={styles.categoryTabs}>
         {categories.map(category => (
           <button
@@ -121,17 +209,40 @@ const MenuScreen = () => {
         <div className={styles.menuGrid}>
           {menuItems[selectedCategory]?.map(item => (
             <div key={item.id} className={styles.menuItem} onClick={() => handleMenuItemClick(item)}>
-              <div className={styles.menuImage}>
-                <div className={styles.menuIcon}>{item.name.charAt(0)}</div>
+              <div className={styles.menuImageContainer}>
+                {item.imageUrl ? (
+                  <img 
+                    src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:8080${item.imageUrl}`}
+                    alt={item.name} 
+                    className={styles.menuImage}
+                    onError={(e) => {
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`${styles.menuIcon} ${item.imageUrl ? styles.menuIconFallback : ''}`}>
+                  {item.name.charAt(0)}
+                </div>
               </div>
               <div className={styles.menuInfo}>
                 <h3 className={styles.menuName}>{item.name}</h3>
                 <p className={styles.menuDescription}>{item.description}</p>
                 <p className={styles.menuPrice}>₩{item.price.toLocaleString()}</p>
               </div>
-              {(selectedCategory === 'burger' || selectedCategory === 'set') && (
+              {selectedCategory === 'burger' && (
                 <button className={styles.addButton}>
                   옵션 선택
+                </button>
+              )}
+              {selectedCategory === 'set' && (
+                <button className={styles.addButton}>
+                  옵션 선택
+                </button>
+              )}
+              {(selectedCategory === 'side' || selectedCategory === 'drink') && (
+                <button className={styles.addButton}>
+                  장바구니 담기
                 </button>
               )}
             </div>
@@ -150,9 +261,24 @@ const MenuScreen = () => {
             {cart.map((item, index) => (
               <div key={item.cartItemId || `${item.id}-${index}`} className={styles.cartPreviewItem}>
                 <div className={styles.cartPreviewItemInfo}>
-                  <div className={styles.cartPreviewItemIcon}>
-                    <div className={styles.cartPreviewItemIconText}>
-                      {item.displayName ? item.displayName.charAt(0) : (item.menu?.name || item.name || 'M').charAt(0)}
+                  <div className={styles.cartPreviewItemImageContainer}>
+                    {(item.menu?.imageUrl || item.imageUrl) ? (
+                      <img 
+                        src={(item.menu?.imageUrl || item.imageUrl).startsWith('http') ? 
+                          (item.menu?.imageUrl || item.imageUrl) : 
+                          `http://localhost:8080${item.menu?.imageUrl || item.imageUrl}`}
+                        alt={item.displayName || item.menu?.name || item.name} 
+                        className={styles.cartPreviewItemImage}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`${styles.cartPreviewItemIcon} ${(item.menu?.imageUrl || item.imageUrl) ? styles.cartPreviewItemIconFallback : ''}`}>
+                      <div className={styles.cartPreviewItemIconText}>
+                        {item.displayName ? item.displayName.charAt(0) : (item.menu?.name || item.name || 'M').charAt(0)}
+                      </div>
                     </div>
                   </div>
                   <div className={styles.cartPreviewItemDetails}>
@@ -220,6 +346,90 @@ const MenuScreen = () => {
           menuItem={selectedMenuItem}
           onAddToCart={addToCartFromSetModal}
         />
+      )}
+
+      {/* 개수 선택 모달 */}
+      {isQuantityModalOpen && selectedQuantityItem && (
+        <div className={styles.modalOverlay}>
+          <div className={styles.quantityModal}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>수량 선택</h3>
+              <button 
+                className={styles.closeButton}
+                onClick={() => {
+                  setIsQuantityModalOpen(false);
+                  setSelectedQuantityItem(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalContent}>
+              <div className={styles.itemPreview}>
+                <div className={styles.itemImageContainer}>
+                  {selectedQuantityItem.imageUrl ? (
+                    <img 
+                      src={selectedQuantityItem.imageUrl.startsWith('http') ? selectedQuantityItem.imageUrl : `http://localhost:8080${selectedQuantityItem.imageUrl}`}
+                      alt={selectedQuantityItem.name} 
+                      className={styles.itemImage}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                        e.target.nextSibling.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div className={`${styles.itemIconFallback} ${selectedQuantityItem.imageUrl ? styles.hidden : ''}`}>
+                    <div className={styles.itemIconText}>
+                      {selectedQuantityItem.name.charAt(0)}
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.itemInfo}>
+                  <h4 className={styles.itemName}>{selectedQuantityItem.name}</h4>
+                  <p className={styles.itemPrice}>₩{selectedQuantityItem.price.toLocaleString()}</p>
+                </div>
+              </div>
+              
+              <div className={styles.quantitySelector}>
+                <label className={styles.quantityLabel}>수량</label>
+                <div className={styles.quantityControls}>
+                  <button 
+                    className={styles.quantityButton}
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  >
+                    -
+                  </button>
+                  <span className={styles.quantityDisplay}>{quantity}</span>
+                  <button 
+                    className={styles.quantityButton}
+                    onClick={() => setQuantity(quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className={styles.modalFooter}>
+              <button 
+                className={styles.cancelButton}
+                onClick={() => {
+                  setIsQuantityModalOpen(false);
+                  setSelectedQuantityItem(null);
+                }}
+              >
+                취소
+              </button>
+              <button 
+                className={styles.addToCartButton}
+                onClick={() => addToCartWithQuantity(selectedQuantityItem, quantity)}
+              >
+                장바구니 담기
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

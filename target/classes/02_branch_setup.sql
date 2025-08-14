@@ -7,7 +7,7 @@
 
 -- 본사 (Headquarters)
 INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('HQ001', '버거킹 본사점', 'headquarters', '서울특별시 강남구 테헤란로 123', '02-1234-5678', '김본사', 'active', 
+('HQ001', '본사점', 'headquarters', '서울특별시 강남구 테헤란로 123', '02-1234-5678', '김본사', 'active', 
  JSON_OBJECT(
    'monday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
    'tuesday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
