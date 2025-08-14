@@ -33,6 +33,19 @@ public class JwtUtil {
                 .compact();
     }
 
+    public String generateToken(String username, String branchId) {
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + expiration);
+
+        return Jwts.builder()
+                .setSubject(username)
+                .claim("branchId", branchId)
+                .setIssuedAt(now)
+                .setExpiration(expiryDate)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
     public String getUsernameFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
@@ -67,5 +80,15 @@ public class JwtUtil {
         } catch (JwtException | IllegalArgumentException e) {
             return true;
         }
+    }
+
+    public String getBranchIdFromToken(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+
+        return claims.get("branchId", String.class);
     }
 }

@@ -5,9 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
@@ -17,60 +14,52 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@EntityListeners(AuditingEntityListener.class)
 public class Users {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @Column(name = "username", unique = true, nullable = false, length = 50)
+    @Column(name = "username", nullable = false, unique = true)
     private String username;
     
     @Column(name = "password", nullable = false)
     private String password;
     
-    @Column(name = "name", nullable = false, length = 100)
-    private String name;
+    @Column(name = "real_name", nullable = false)
+    private String realName;
     
-    @Column(name = "email", unique = true, length = 100)
+    @Column(name = "branch_id", nullable = false)
+    private Long branchId;
+    
+    @Column(name = "role", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private UserRole role;
+    
+    @Column(name = "email")
     private String email;
     
-    @Column(name = "phone", length = 20)
+    @Column(name = "phone")
     private String phone;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_id")
-    private Roles role;
+    @Column(name = "is_active", nullable = false)
+    private Boolean isActive;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "branch_id", referencedColumnName = "branch_id")
-    private Branches branch;
+    @Column(name = "last_login")
+    private LocalDateTime lastLogin;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private UserStatus status;
-    
-    @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
-    
-    @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
     
-    @LastModifiedDate
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
     @PrePersist
     protected void onCreate() {
-        if (status == null) {
-            status = UserStatus.ACTIVE;
+        createdAt = LocalDateTime.now();
+        if (isActive == null) {
+            isActive = true;
         }
-        if (createdAt == null) {
-            createdAt = LocalDateTime.now();
-        }
-        updatedAt = LocalDateTime.now();
     }
     
     @PreUpdate
@@ -78,7 +67,9 @@ public class Users {
         updatedAt = LocalDateTime.now();
     }
     
-    public enum UserStatus {
-        ACTIVE, INACTIVE, SUSPENDED
+    public enum UserRole {
+        ADMIN,      // 시스템 관리자
+        MANAGER,    // 지점장
+        STAFF       // 일반 직원
     }
 }

@@ -5,22 +5,9 @@
 -- 1. 지점 정보 데이터 삽입
 -- =====================================================
 
--- 본사 (Headquarters)
+-- 지점 1 (강남점)
 INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('HQ001', '본사점', 'headquarters', '서울특별시 강남구 테헤란로 123', '02-1234-5678', '김본사', 'active', 
- JSON_OBJECT(
-   'monday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'tuesday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'wednesday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'thursday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'friday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'saturday', JSON_OBJECT('open', '10:00', 'close', '16:00'),
-   'sunday', JSON_OBJECT('open', 'closed', 'close', 'closed')
- ));
-
--- 지점 1 (Branch 1)
-INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('BR001', '강남점', 'branch', '서울특별시 강남구 역삼동 456', '02-2345-6789', '이강남', 'active',
+('GN001', '강남점', 'branch', '서울특별시 강남구 역삼동 456', '02-2345-6789', '박지점장', 'active',
  JSON_OBJECT(
    'monday', JSON_OBJECT('open', '07:00', 'close', '23:00'),
    'tuesday', JSON_OBJECT('open', '07:00', 'close', '23:00'),
@@ -31,9 +18,9 @@ INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, man
    'sunday', JSON_OBJECT('open', '08:00', 'close', '22:00')
  ));
 
--- 지점 2 (Branch 2)
+-- 지점 2 (홍대점)
 INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('BR002', '홍대점', 'branch', '서울특별시 마포구 홍대입구 789', '02-3456-7890', '박홍대', 'active',
+('HD001', '홍대점', 'branch', '서울특별시 마포구 홍대입구 789', '02-3456-7890', '한지점장', 'active',
  JSON_OBJECT(
    'monday', JSON_OBJECT('open', '08:00', 'close', '24:00'),
    'tuesday', JSON_OBJECT('open', '08:00', 'close', '24:00'),
@@ -42,6 +29,45 @@ INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, man
    'friday', JSON_OBJECT('open', '08:00', 'close', '24:00'),
    'saturday', JSON_OBJECT('open', '08:00', 'close', '24:00'),
    'sunday', JSON_OBJECT('open', '08:00', 'close', '24:00')
+ ));
+
+-- 지점 3 (신촌점)
+INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
+('SC001', '신촌점', 'branch', '서울특별시 서대문구 신촌동 101', '02-4567-8901', '강지점장', 'active',
+ JSON_OBJECT(
+   'monday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'tuesday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'wednesday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'thursday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'friday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'saturday', JSON_OBJECT('open', '08:30', 'close', '22:00'),
+   'sunday', JSON_OBJECT('open', '09:00', 'close', '21:00')
+ ));
+
+-- 지점 4 (잠실점)
+INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
+('JS001', '잠실점', 'branch', '서울특별시 송파구 잠실동 202', '02-5678-9012', '구지점장', 'active',
+ JSON_OBJECT(
+   'monday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'tuesday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'wednesday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'thursday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'friday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'saturday', JSON_OBJECT('open', '09:00', 'close', '23:00'),
+   'sunday', JSON_OBJECT('open', '09:00', 'close', '22:00')
+ ));
+
+-- 지점 5 (송파점)
+INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
+('SP001', '송파점', 'branch', '서울특별시 송파구 송파동 303', '02-6789-0123', '신지점장', 'active',
+ JSON_OBJECT(
+   'monday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'tuesday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'wednesday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'thursday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'friday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'saturday', JSON_OBJECT('open', '08:00', 'close', '22:00'),
+   'sunday', JSON_OBJECT('open', '08:00', 'close', '21:00')
  ));
 
 -- =====================================================

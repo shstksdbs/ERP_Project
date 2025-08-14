@@ -6,7 +6,7 @@ import noticeIcon from '../../assets/notice_icon.png';
 import bellIcon from '../../assets/bell_icon.png';
 
 
-export default function Header({ activeTab, setActiveTab }) {
+export default function Header({ activeTab, setActiveTab, onLogout }) {
 
   return (
     <header className={styles['erp-header']}>
@@ -34,7 +34,12 @@ export default function Header({ activeTab, setActiveTab }) {
             <img src={userIcon} alt="사용자" className={styles['user-icon']} />
             <span className={styles['user-name']}>홍길동님</span>
           </div>
-          <button className={`btn btn-secondary ${styles['logout-button']}`}>로그아웃</button>
+          <button 
+            className={`btn btn-secondary ${styles['logout-button']}`}
+            onClick={onLogout}
+          >
+            로그아웃
+          </button>
         </div>
       </div>
     </header>

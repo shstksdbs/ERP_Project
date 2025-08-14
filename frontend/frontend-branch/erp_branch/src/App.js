@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useParams, useNavigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import Login from './components/login/Login';
 import Dashboard from './components/Dashboard/Dashboard';
 import OrderList from './components/OrderManagement/OrderList';
 import OrderStatus from './components/OrderManagement/OrderStatus';
@@ -29,6 +30,23 @@ function AppContent() {
   const { branchId } = useParams();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(['dashboard']);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginData, setLoginData] = useState(null);
+
+  // 로그인 상태 확인 (로컬 스토리지에서)
+  useEffect(() => {
+    const savedLoginData = localStorage.getItem('erpLoginData');
+    if (savedLoginData) {
+      try {
+        const parsedData = JSON.parse(savedLoginData);
+        setLoginData(parsedData);
+        setIsLoggedIn(true);
+      } catch (error) {
+        console.error('로그인 데이터 파싱 오류:', error);
+        localStorage.removeItem('erpLoginData');
+      }
+    }
+  }, []);
 
   // 지점 ID가 없으면 기본값으로 리다이렉트
   useEffect(() => {
@@ -36,6 +54,31 @@ function AppContent() {
       navigate('/branch/1');
     }
   }, [branchId, navigate]);
+
+  // 로그인 처리 함수
+  const handleLogin = (loginFormData) => {
+    // 실제 로그인 API 호출 후 성공 시
+    const loginData = {
+      username: loginFormData.username,
+      branchId: loginFormData.branchId,
+      loginTime: new Date().toISOString()
+    };
+    
+    localStorage.setItem('erpLoginData', JSON.stringify(loginData));
+    setLoginData(loginData);
+    setIsLoggedIn(true);
+    
+    // 로그인 성공 후 해당 지점으로 리다이렉트
+    navigate(`/branch/${loginFormData.branchId}`);
+  };
+
+  // 로그아웃 처리 함수
+  const handleLogout = () => {
+    localStorage.removeItem('erpLoginData');
+    setLoginData(null);
+    setIsLoggedIn(false);
+    navigate('/login');
+  };
 
   // 라우팅 로직
   const renderContent = () => {
@@ -116,8 +159,13 @@ function AppContent() {
     }
   };
 
+  // 로그인되지 않은 경우 로그인 화면 표시
+  if (!isLoggedIn) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} branchId={branchId}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} branchId={branchId} onLogout={handleLogout}>
       {renderContent()}
     </Layout>
   );
@@ -127,6 +175,10 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/login" element={<Login onLogin={(data) => {
+          // 로그인 성공 시 해당 지점으로 리다이렉트
+          window.location.href = `/branch/${data.branchId}`;
+        }} />} />
         <Route path="/branch/:branchId" element={<AppContent />} />
         <Route path="/" element={<AppContent />} />
       </Routes>

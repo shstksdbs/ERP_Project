@@ -1,15 +1,27 @@
 package erp_project.erp_project.dto;
 
-import lombok.AllArgsConstructor;
+import erp_project.erp_project.entity.Users;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class LoginResponse {
     private String token;
     private String username;
-    private String role;
-    private String message;
+    private String realName;
+    private Long branchId;
+    private Users.UserRole role;
+    private LocalDateTime loginTime;
+    
+    public static LoginResponse fromUser(Users user, String token) {
+        LoginResponse response = new LoginResponse();
+        response.setToken(token);
+        response.setUsername(user.getUsername());
+        response.setRealName(user.getRealName());
+        response.setBranchId(user.getBranchId());
+        response.setRole(user.getRole());
+        response.setLoginTime(LocalDateTime.now());
+        return response;
+    }
 }

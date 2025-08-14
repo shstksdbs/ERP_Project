@@ -5,22 +5,9 @@
 -- 1. 지점 정보 데이터 삽입
 -- =====================================================
 
--- 본사 (Headquarters)
+-- 지점 1 (강남점)
 INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('HQ001', '본사점', 'headquarters', '서울특별시 강남구 테헤란로 123', '02-1234-5678', '김본사', 'active', 
- JSON_OBJECT(
-   'monday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'tuesday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'wednesday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'thursday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'friday', JSON_OBJECT('open', '09:00', 'close', '18:00'),
-   'saturday', JSON_OBJECT('open', '10:00', 'close', '16:00'),
-   'sunday', JSON_OBJECT('open', 'closed', 'close', 'closed')
- ));
-
--- 지점 1 (Branch 1)
-INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('BR001', '강남점', 'branch', '서울특별시 강남구 역삼동 456', '02-2345-6789', '이강남', 'active',
+('GN001', '강남점', 'branch', '서울특별시 강남구 역삼동 456', '02-2345-6789', '박지점장', 'active',
  JSON_OBJECT(
    'monday', JSON_OBJECT('open', '07:00', 'close', '23:00'),
    'tuesday', JSON_OBJECT('open', '07:00', 'close', '23:00'),
@@ -31,9 +18,9 @@ INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, man
    'sunday', JSON_OBJECT('open', '08:00', 'close', '22:00')
  ));
 
--- 지점 2 (Branch 2)
+-- 지점 2 (홍대점)
 INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
-('BR002', '홍대점', 'branch', '서울특별시 마포구 홍대입구 789', '02-3456-7890', '박홍대', 'active',
+('HD001', '홍대점', 'branch', '서울특별시 마포구 홍대입구 789', '02-3456-7890', '한지점장', 'active',
  JSON_OBJECT(
    'monday', JSON_OBJECT('open', '08:00', 'close', '24:00'),
    'tuesday', JSON_OBJECT('open', '08:00', 'close', '24:00'),
@@ -44,24 +31,53 @@ INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, man
    'sunday', JSON_OBJECT('open', '08:00', 'close', '24:00')
  ));
 
+-- 지점 3 (신촌점)
+INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
+('SC001', '신촌점', 'branch', '서울특별시 서대문구 신촌동 101', '02-4567-8901', '강지점장', 'active',
+ JSON_OBJECT(
+   'monday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'tuesday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'wednesday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'thursday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'friday', JSON_OBJECT('open', '07:30', 'close', '22:30'),
+   'saturday', JSON_OBJECT('open', '08:30', 'close', '22:00'),
+   'sunday', JSON_OBJECT('open', '09:00', 'close', '21:00')
+ ));
+
+-- 지점 4 (잠실점)
+INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
+('JS001', '잠실점', 'branch', '서울특별시 송파구 잠실동 202', '02-5678-9012', '구지점장', 'active',
+ JSON_OBJECT(
+   'monday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'tuesday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'wednesday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'thursday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'friday', JSON_OBJECT('open', '08:00', 'close', '23:00'),
+   'saturday', JSON_OBJECT('open', '09:00', 'close', '23:00'),
+   'sunday', JSON_OBJECT('open', '09:00', 'close', '22:00')
+ ));
+
+-- 지점 5 (송파점)
+INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, manager_name, status, opening_hours) VALUES
+('SP001', '송파점', 'branch', '서울특별시 송파구 송파동 303', '02-6789-0123', '신지점장', 'active',
+ JSON_OBJECT(
+   'monday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'tuesday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'wednesday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'thursday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'friday', JSON_OBJECT('open', '07:00', 'close', '22:00'),
+   'saturday', JSON_OBJECT('open', '08:00', 'close', '22:00'),
+   'sunday', JSON_OBJECT('open', '08:00', 'close', '21:00')
+ ));
+
 -- =====================================================
 -- 2. 지점별 메뉴 가용성 설정
 -- =====================================================
 
--- 본사점 메뉴 설정 (모든 메뉴 사용 가능)
-INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
-SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'HQ001'),
-    id,
-    TRUE,
-    NULL,
-    -1
-FROM menus;
-
 -- 강남점 메뉴 설정 (일부 메뉴 커스텀 가격)
 INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
 SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'BR001'),
+    (SELECT branch_id FROM branches WHERE branch_code = 'GN001'),
     id,
     TRUE,
     CASE 
@@ -75,7 +91,7 @@ FROM menus;
 -- 홍대점 메뉴 설정 (일부 메뉴 커스텀 가격)
 INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
 SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'BR002'),
+    (SELECT branch_id FROM branches WHERE branch_code = 'HD001'),
     id,
     TRUE,
     CASE 
@@ -86,6 +102,39 @@ SELECT
     -1
 FROM menus;
 
+-- 신촌점 메뉴 설정 (기본 가격)
+INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
+SELECT 
+    (SELECT branch_id FROM branches WHERE branch_code = 'SC001'),
+    id,
+    TRUE,
+    NULL,  -- 기본 가격 사용
+    -1
+FROM menus;
+
+-- 잠실점 메뉴 설정 (일부 메뉴 커스텀 가격)
+INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
+SELECT 
+    (SELECT branch_id FROM branches WHERE branch_code = 'JS001'),
+    id,
+    TRUE,
+    CASE 
+        WHEN category = 'drink' THEN price * 1.05  -- 음료 5% 가격 인상
+        ELSE NULL                                 -- 나머지는 기본 가격
+    END,
+    -1
+FROM menus;
+
+-- 송파점 메뉴 설정 (기본 가격)
+INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
+SELECT 
+    (SELECT branch_id FROM branches WHERE branch_code = 'SP001'),
+    id,
+    TRUE,
+    NULL,  -- 기본 가격 사용
+    -1
+FROM menus;
+
 -- =====================================================
 -- 3. 지점별 데이터 확인 쿼리
 -- =====================================================
@@ -93,9 +142,25 @@ FROM menus;
 -- 지점별 메뉴 현황 확인
 SELECT 
     b.branch_name,
+    b.branch_code,
     COUNT(bm.menu_id) as total_menus,
     COUNT(CASE WHEN bm.is_available = TRUE THEN 1 END) as available_menus,
     COUNT(CASE WHEN bm.custom_price IS NOT NULL THEN 1 END) as custom_price_menus
 FROM branches b
 LEFT JOIN branch_menus bm ON b.branch_id = bm.branch_id
-GROUP BY b.branch_id, b.branch_name;
+GROUP BY b.branch_id, b.branch_name, b.branch_code
+ORDER BY b.branch_id;
+
+-- 지점별 사용자 현황 확인 (users 테이블과 연동)
+SELECT 
+    b.branch_name,
+    b.branch_code,
+    COUNT(u.id) as total_users,
+    COUNT(CASE WHEN u.is_active = TRUE THEN 1 END) as active_users,
+    COUNT(CASE WHEN u.role = 'ADMIN' THEN 1 END) as admin_count,
+    COUNT(CASE WHEN u.role = 'MANAGER' THEN 1 END) as manager_count,
+    COUNT(CASE WHEN u.role = 'STAFF' THEN 1 END) as staff_count
+FROM branches b
+LEFT JOIN users u ON b.branch_id = u.branch_id
+GROUP BY b.branch_id, b.branch_name, b.branch_code
+ORDER BY b.branch_id;
