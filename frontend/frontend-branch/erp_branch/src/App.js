@@ -55,22 +55,7 @@ function AppContent() {
     }
   }, [branchId, navigate]);
 
-  // 로그인 처리 함수
-  const handleLogin = (loginFormData) => {
-    // 실제 로그인 API 호출 후 성공 시
-    const loginData = {
-      username: loginFormData.username,
-      branchId: loginFormData.branchId,
-      loginTime: new Date().toISOString()
-    };
-    
-    localStorage.setItem('erpLoginData', JSON.stringify(loginData));
-    setLoginData(loginData);
-    setIsLoggedIn(true);
-    
-    // 로그인 성공 후 해당 지점으로 리다이렉트
-    navigate(`/branch/${loginFormData.branchId}`);
-  };
+
 
   // 로그아웃 처리 함수
   const handleLogout = () => {
@@ -113,7 +98,7 @@ function AppContent() {
     
     switch (currentTab) {
       case 'dashboard':
-        return <Dashboard {...commonProps} />;
+        return <Dashboard {...commonProps} loginData={loginData} />;
       case 'order-list':
         return <OrderList {...commonProps} />;
       case 'order-status':
@@ -161,11 +146,11 @@ function AppContent() {
 
   // 로그인되지 않은 경우 로그인 화면 표시
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+    return <Login />;
   }
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} branchId={branchId} onLogout={handleLogout}>
+    <Layout activeTab={activeTab} setActiveTab={setActiveTab} branchId={branchId} onLogout={handleLogout} loginData={loginData}>
       {renderContent()}
     </Layout>
   );
@@ -175,10 +160,7 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/login" element={<Login onLogin={(data) => {
-          // 로그인 성공 시 해당 지점으로 리다이렉트
-          window.location.href = `/branch/${data.branchId}`;
-        }} />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/branch/:branchId" element={<AppContent />} />
         <Route path="/" element={<AppContent />} />
       </Routes>

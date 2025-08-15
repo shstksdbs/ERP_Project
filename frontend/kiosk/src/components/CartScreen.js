@@ -335,10 +335,6 @@ const CartScreen = () => {
 
       <div className={styles.cartList}>
         {cart.map((item, index) => {
-          // 디버깅: 각 아이템의 이미지 URL 확인
-          console.log(`CartScreen - item ${index}:`, item);
-          console.log(`CartScreen - item ${index} imageUrl:`, item.imageUrl);
-          console.log(`CartScreen - item ${index} menu.imageUrl:`, item.menu?.imageUrl);
           
           return (
             <div key={`${item.id}-${index}-${JSON.stringify(item.selectedOptions || {})}`} className={styles.cartItem}>

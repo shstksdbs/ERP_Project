@@ -30,7 +30,7 @@ const KioskLayout = () => {
       <div className={styles.layoutContainer}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
-            <h1 className={styles.title}>주문</h1>
+            <h1 className={styles.title}>주문하기</h1>
             <BranchSelector 
               selectedBranch={selectedBranch}
               onBranchChange={handleBranchChange}

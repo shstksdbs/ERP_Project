@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './Login.module.css';
 import dashboardIcon from '../../assets/dashboard_icon.png';
 import logo from '../../assets/logo.png';
 
-export default function Login({ onLogin }) {
+export default function Login() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -110,14 +112,25 @@ export default function Login({ onLogin }) {
 
       if (response.ok) {
         // 로그인 성공
-        if (onLogin) {
-          onLogin({
-            ...formData,
-            token: data.token,
-            realName: data.realName,
-            role: data.role
-          });
-        }
+        // 선택된 지점의 이름 찾기
+        const selectedBranch = branches.find(branch => branch.id === parseInt(formData.branchId));
+        
+        // 로그인 성공 - localStorage에 직접 저장
+        const loginData = {
+          username: formData.username,
+          branchId: formData.branchId,
+          branchName: selectedBranch ? selectedBranch.branchName : '',
+          realName: data.realName,
+          role: data.role,
+          lastLogin: data.lastLogin,
+          loginTime: new Date().toISOString()
+        };
+        
+        // localStorage에 저장
+        localStorage.setItem('erpLoginData', JSON.stringify(loginData));
+        
+        // 해당 지점으로 이동
+        navigate(`/branch/${formData.branchId}`);
       } else {
         // 로그인 실패
         setError(data.message || '로그인에 실패했습니다.');

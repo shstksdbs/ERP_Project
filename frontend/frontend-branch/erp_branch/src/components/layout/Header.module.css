@@ -120,6 +120,12 @@
   gap: 8px;
 }
 
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .user-icon {
   width: 32px;
   height: 32px;
@@ -133,6 +139,21 @@
 .user-name {
   font-size: 14px;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-info-detail {
+  font-size: 12px;
+  color: #666;
+  font-weight: 400;
+}
+
+.last-login {
+  font-size: 11px;
+  color: #666;
+  font-weight: 400;
 }
 
 .logout-button {

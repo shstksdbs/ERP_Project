@@ -123,25 +123,25 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       // 기본 식별 정보
       cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 고유 ID
       timestamp: new Date().toISOString(),
-      
+
       // 메뉴 기본 정보
       menu: baseMenuInfo,
-      
+
       // 수량 및 가격
       quantity: quantity,
       unitPrice: baseMenuInfo.basePrice + optionsPrice,
       totalPrice: totalPrice,
-      
+
       // 선택된 옵션들
       options: selectedOptions,
-      
+
       // 표시용 정보
       displayName: menuItem.name,
       displayOptions: [
         ...selectedOptions.toppings.add.map(t => `+${t.name}${t.quantity > 1 ? ` x${t.quantity}` : ''}`),
         ...selectedOptions.toppings.remove.map(t => `-${t.name}`)
       ],
-      
+
       // 메타데이터
       metadata: {
         isSet: false,
@@ -168,9 +168,9 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         <div className={styles.menuPreview}>
           <div className={styles.menuImageContainer}>
             {menuItem.imageUrl ? (
-              <img 
+              <img
                 src={menuItem.imageUrl.startsWith('http') ? menuItem.imageUrl : `http://localhost:8080${menuItem.imageUrl}`}
-                alt={menuItem.name} 
+                alt={menuItem.name}
                 className={styles.menuImage}
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -190,10 +190,9 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         </div>
 
         <div className={styles.optionsContainer}>
-          <h3 className={styles.optionsTitle}>토핑 추가 옵션 선택</h3>
-          <p className={styles.optionsDescription}>추가를 원하는 토핑을 선택해주세요</p>
-
           <div className={styles.optionsSection}>
+            <h3 className={styles.optionsTitle}>토핑 추가 옵션 선택</h3>
+            <p className={styles.optionsDescription}>추가를 원하는 토핑을 선택해주세요</p>
             <div className={styles.optionsGrid}>
               {Object.entries(options).map(([key, option]) => (
                 <div key={key} className={styles.optionItemContainer}>
@@ -209,7 +208,7 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
                       <span className={styles.optionPrice}>+₩{option.price.toLocaleString()}</span>
                     )}
                   </label>
-                  
+
                   {/* 개수 선택 가능한 옵션에만 개수 선택기 표시 */}
                   {option.quantitySelectable && addOptions[key] && (
                     <div className={styles.quantitySelector}>

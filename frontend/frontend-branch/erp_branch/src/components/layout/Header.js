@@ -6,7 +6,7 @@ import noticeIcon from '../../assets/notice_icon.png';
 import bellIcon from '../../assets/bell_icon.png';
 
 
-export default function Header({ activeTab, setActiveTab, onLogout }) {
+export default function Header({ activeTab, setActiveTab, onLogout, loginData }) {
 
   return (
     <header className={styles['erp-header']}>
@@ -32,9 +32,23 @@ export default function Header({ activeTab, setActiveTab, onLogout }) {
           </div>
           <div className={styles['user-info']}>
             <img src={userIcon} alt="사용자" className={styles['user-icon']} />
-            <span className={styles['user-name']}>홍길동님</span>
+            <div className={styles['user-details']}>
+              <span className={styles['user-name']}>
+                {loginData?.realName ? `${loginData.realName}님` : '사용자님'}
+                {loginData?.branchName && loginData?.role && (
+                  <span className={styles['user-info-detail']}>
+                    [ {loginData.branchName} / {loginData.role} ]
+                  </span>
+                )}
+              </span>
+              {loginData?.lastLogin && (
+                <span className={styles['last-login']}>
+                  마지막 로그인: {new Date(loginData.lastLogin).toLocaleString('ko-KR')}
+                </span>
+              )}
+            </div>
           </div>
-          <button 
+          <button
             className={`btn btn-secondary ${styles['logout-button']}`}
             onClick={onLogout}
           >

@@ -24,7 +24,7 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, ArcElement, Tooltip, Legend, Filler, Title);
 
-export default function Dashboard() {
+export default function Dashboard({ branchId, loginData }) {
   const formatNumber = (n) => new Intl.NumberFormat('ko-KR').format(n);
 
   const kpis = [
@@ -84,8 +84,7 @@ export default function Dashboard() {
   return (
     <div className={styles['product-list']}>
       <div className={styles['product-list-header']}>
-        <h1>가맹점 대시보드</h1>
-        <p style={{ color: '#6b7280' }}>전사 KPI와 핵심 지표 요약</p>
+        <h1>{loginData?.branchName ? `${loginData.branchName} 대시보드` : '가맹점 대시보드'}</h1>
       </div>
 
       {/* 요약 카드 - ProductList와 동일 구조 */}

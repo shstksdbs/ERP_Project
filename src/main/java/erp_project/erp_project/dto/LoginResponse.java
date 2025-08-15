@@ -13,6 +13,7 @@ public class LoginResponse {
     private Long branchId;
     private Users.UserRole role;
     private LocalDateTime loginTime;
+    private LocalDateTime lastLogin;  // 사용자의 마지막 로그인 시간
     
     public static LoginResponse fromUser(Users user, String token) {
         LoginResponse response = new LoginResponse();
@@ -22,6 +23,7 @@ public class LoginResponse {
         response.setBranchId(user.getBranchId());
         response.setRole(user.getRole());
         response.setLoginTime(LocalDateTime.now());
+        response.setLastLogin(user.getLastLogin());  // 사용자의 실제 last_login 값 사용
         return response;
     }
 }

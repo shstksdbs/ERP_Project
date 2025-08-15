@@ -387,45 +387,45 @@ const MenuScreen = () => {
                 </div>
                 <div className={styles.itemInfo}>
                   <h4 className={styles.itemName}>{selectedQuantityItem.name}</h4>
+                  <p className={styles.itemDescription}>{selectedQuantityItem.description || '맛있는 메뉴입니다'}</p>
                   <p className={styles.itemPrice}>₩{selectedQuantityItem.price.toLocaleString()}</p>
                 </div>
               </div>
               
-              <div className={styles.quantitySelector}>
-                <label className={styles.quantityLabel}>수량</label>
-                <div className={styles.quantityControls}>
-                  <button 
+              <div className={styles.quantitySection}>
+                <h4 className={styles.sectionTitle}>수량</h4>
+                <div className={styles.quantityControl}>
+                  <button
                     className={styles.quantityButton}
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                    disabled={quantity <= 1}
                   >
                     -
                   </button>
-                  <span className={styles.quantityDisplay}>{quantity}</span>
-                  <button 
+                  <span className={styles.quantity}>{quantity}</span>
+                  <button
                     className={styles.quantityButton}
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(prev => prev + 1)}
                   >
                     +
                   </button>
                 </div>
+                <div className={styles.quantityInfo}>
+                  <p className={styles.quantityText}>선택된 수량: {quantity}개</p>
+                  <p className={styles.quantityPrice}>개당 가격: ₩{selectedQuantityItem.price.toLocaleString()}</p>
+                </div>
               </div>
             </div>
             
-            <div className={styles.modalFooter}>
-              <button 
-                className={styles.cancelButton}
-                onClick={() => {
-                  setIsQuantityModalOpen(false);
-                  setSelectedQuantityItem(null);
-                }}
-              >
-                취소
-              </button>
+            <div className={styles.totalSection}>
+              <div className={styles.totalPrice}>
+                총 금액: ₩{(selectedQuantityItem.price * quantity).toLocaleString()}
+              </div>
               <button 
                 className={styles.addToCartButton}
                 onClick={() => addToCartWithQuantity(selectedQuantityItem, quantity)}
               >
-                장바구니 담기
+                장바구니에 추가
               </button>
             </div>
           </div>

@@ -74,20 +74,10 @@ INSERT INTO branches (branch_code, branch_name, branch_type, address, phone, man
 -- 2. 지점별 메뉴 가용성 설정
 -- =====================================================
 
--- 본사점 메뉴 설정 (모든 메뉴 사용 가능)
-INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
-SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'HQ001'),
-    id,
-    TRUE,
-    NULL,
-    -1
-FROM menus;
-
 -- 강남점 메뉴 설정 (일부 메뉴 커스텀 가격)
 INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
 SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'BR001'),
+    (SELECT branch_id FROM branches WHERE branch_code = 'GN001'),
     id,
     TRUE,
     CASE 
@@ -101,7 +91,7 @@ FROM menus;
 -- 홍대점 메뉴 설정 (일부 메뉴 커스텀 가격)
 INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
 SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'BR002'),
+    (SELECT branch_id FROM branches WHERE branch_code = 'HD001'),
     id,
     TRUE,
     CASE 
@@ -112,6 +102,39 @@ SELECT
     -1
 FROM menus;
 
+-- 신촌점 메뉴 설정 (기본 가격)
+INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
+SELECT 
+    (SELECT branch_id FROM branches WHERE branch_code = 'SC001'),
+    id,
+    TRUE,
+    NULL,  -- 기본 가격 사용
+    -1
+FROM menus;
+
+-- 잠실점 메뉴 설정 (일부 메뉴 커스텀 가격)
+INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
+SELECT 
+    (SELECT branch_id FROM branches WHERE branch_code = 'JS001'),
+    id,
+    TRUE,
+    CASE 
+        WHEN category = 'drink' THEN price * 1.05  -- 음료 5% 가격 인상
+        ELSE NULL                                 -- 나머지는 기본 가격
+    END,
+    -1
+FROM menus;
+
+-- 송파점 메뉴 설정 (기본 가격)
+INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
+SELECT 
+    (SELECT branch_id FROM branches WHERE branch_code = 'SP001'),
+    id,
+    TRUE,
+    NULL,  -- 기본 가격 사용
+    -1
+FROM menus;
+
 -- =====================================================
 -- 3. 지점별 데이터 확인 쿼리
 -- =====================================================
@@ -119,9 +142,25 @@ FROM menus;
 -- 지점별 메뉴 현황 확인
 SELECT 
     b.branch_name,
+    b.branch_code,
     COUNT(bm.menu_id) as total_menus,
     COUNT(CASE WHEN bm.is_available = TRUE THEN 1 END) as available_menus,
     COUNT(CASE WHEN bm.custom_price IS NOT NULL THEN 1 END) as custom_price_menus
 FROM branches b
 LEFT JOIN branch_menus bm ON b.branch_id = bm.branch_id
-GROUP BY b.branch_id, b.branch_name;
+GROUP BY b.branch_id, b.branch_name, b.branch_code
+ORDER BY b.branch_id;
+
+-- 지점별 사용자 현황 확인 (users 테이블과 연동)
+SELECT 
+    b.branch_name,
+    b.branch_code,
+    COUNT(u.id) as total_users,
+    COUNT(CASE WHEN u.is_active = TRUE THEN 1 END) as active_users,
+    COUNT(CASE WHEN u.role = 'ADMIN' THEN 1 END) as admin_count,
+    COUNT(CASE WHEN u.role = 'MANAGER' THEN 1 END) as manager_count,
+    COUNT(CASE WHEN u.role = 'STAFF' THEN 1 END) as staff_count
+FROM branches b
+LEFT JOIN users u ON b.branch_id = u.branch_id
+GROUP BY b.branch_id, b.branch_name, b.branch_code
+ORDER BY b.branch_id;

@@ -7,7 +7,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
   const [selectedSide, setSelectedSide] = useState('');
   const [selectedDrink, setSelectedDrink] = useState('');
   const [quantity, setQuantity] = useState(1);
-  
+
   // 데이터베이스에서 가져온 옵션들
   const [toppingOptions, setToppingOptions] = useState([]);
   const [sideOptions, setSideOptions] = useState([]);
@@ -25,22 +25,22 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
   const fetchMenuOptions = async () => {
     try {
       setLoading(true);
-      
+
       // 토핑 옵션 가져오기
       const toppingResponse = await fetch('http://localhost:8080/api/menu-options/category/topping');
       const toppingData = await toppingResponse.json();
       setToppingOptions(toppingData);
-      
+
       // 사이드 옵션 가져오기
       const sideResponse = await fetch('http://localhost:8080/api/menu-options/category/side');
       const sideData = await sideResponse.json();
       setSideOptions(sideData);
-      
+
       // 음료 옵션 가져오기
       const drinkResponse = await fetch('http://localhost:8080/api/menu-options/category/drink');
       const drinkData = await drinkResponse.json();
       setDrinkOptions(drinkData);
-      
+
       // 기본값 설정
       if (sideData.length > 0) {
         setSelectedSide(sideData[0].id.toString());
@@ -48,7 +48,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       if (drinkData.length > 0) {
         setSelectedDrink(drinkData[0].id.toString());
       }
-      
+
       // 토핑 옵션들의 초기 상태 설정
       const initialAddOptions = {};
       const initialRemoveOptions = {};
@@ -58,7 +58,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       });
       setAddOptions(initialAddOptions);
       setRemoveOptions(initialRemoveOptions);
-      
+
     } catch (error) {
       console.error('메뉴 옵션을 가져오는 중 오류가 발생했습니다:', error);
     } finally {
@@ -89,7 +89,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
   const calculateTotalPrice = () => {
     const basePrice = menuItem.price || menuItem.basePrice || 0;
-    
+
     // 추가 옵션만 가격에 반영 (제거 옵션은 가격에 영향 없음)
     const addOptionsPrice = Object.entries(addOptions).reduce((total, [optionId, value]) => {
       if (value) {
@@ -102,7 +102,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
     // 사이드 변경 가격
     const selectedSideOption = findOptionById(sideOptions, selectedSide);
     const sidePrice = selectedSideOption ? Number(selectedSideOption.price) : 0;
-    
+
     // 음료 변경 가격
     const selectedDrinkOption = findOptionById(drinkOptions, selectedDrink);
     const drinkPrice = selectedDrinkOption ? Number(selectedDrinkOption.price) : 0;
@@ -167,18 +167,18 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       // 기본 식별 정보
       cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 고유 ID
       timestamp: new Date().toISOString(),
-      
+
       // 메뉴 기본 정보
       menu: baseMenuInfo,
-      
+
       // 수량 및 가격
       quantity: quantity,
       unitPrice: baseMenuInfo.basePrice + optionsPrice + sidePrice + drinkPrice,
       totalPrice: totalPrice,
-      
+
       // 선택된 옵션들
       options: selectedOptions,
-      
+
       // 표시용 정보
       displayName: `${menuItem.name} 세트 (${selectedOptions.side.name}, ${selectedOptions.drink.name})`,
       displayOptions: [
@@ -187,7 +187,7 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         `사이드: ${selectedOptions.side.name}`,
         `음료: ${selectedOptions.drink.name}`
       ],
-      
+
       // 메타데이터
       metadata: {
         isSet: true,
@@ -226,9 +226,9 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         <div className={styles.menuPreview}>
           <div className={styles.menuImageContainer}>
             {menuItem.imageUrl ? (
-              <img 
+              <img
                 src={menuItem.imageUrl.startsWith('http') ? menuItem.imageUrl : `http://localhost:8080${menuItem.imageUrl}`}
-                alt={menuItem.name} 
+                alt={menuItem.name}
                 className={styles.menuImage}
                 onError={(e) => {
                   e.target.style.display = 'none';
@@ -248,10 +248,9 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         </div>
 
         <div className={styles.optionsContainer}>
-          <h3 className={styles.optionsTitle}>햄버거 토핑 옵션 선택</h3>
-          <p className={styles.optionsDescription}>추가를 원하는 토핑을 선택해주세요</p>
-
           <div className={styles.optionsSection}>
+            <h3 className={styles.optionsTitle}>햄버거 토핑 옵션 선택</h3>
+            <p className={styles.optionsDescription}>추가를 원하는 토핑을 선택해주세요</p>
             <div className={styles.optionsGrid}>
               {toppingOptions.map((option) => (
                 <label key={option.id} className={`${styles.optionItem} ${removeOptions[option.id] ? styles.disabled : ''}`}>
