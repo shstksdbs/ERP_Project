@@ -60,6 +60,15 @@
   font-size: 14px;
   background: white;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 150px;
 }
 
 .statusFilter:focus {
@@ -151,6 +160,24 @@
   color: #374151;
 }
 
+/* 주문내용 스타일 (OrderStatus와 동일) */
+.order-item-simple {
+  text-align: center;
+}
+
+.menu-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.menu-options {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
 .amount {
   font-weight: 500;
   color: #059669;
@@ -163,23 +190,35 @@
   font-weight: 500;
 }
 
+/* 상태 배지 스타일 (OrderStatus와 동일) */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 80px;
+  white-space: nowrap;
+}
+
 .statusPending {
-  background: #fef3c7;
+  background-color: #fef3c7;
   color: #92400e;
 }
 
 .statusPreparing {
-  background: #dbeafe;
+  background-color: #dbeafe;
   color: #1e40af;
 }
 
 .statusCompleted {
-  background: #d1fae5;
+  background-color: #d1fae5;
   color: #065f46;
 }
 
 .statusCancelled {
-  background: #fee2e2;
+  background-color: #fee2e2;
   color: #991b1b;
 }
 

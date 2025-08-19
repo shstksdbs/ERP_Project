@@ -267,6 +267,20 @@
   box-shadow: 0 4px 15px rgba(220, 20, 60, 0.4);
 }
 
+.orderButton.disabled {
+  background: #cccccc;
+  color: #666666;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.orderButton.disabled:hover {
+  background: #cccccc;
+  transform: none;
+  box-shadow: none;
+}
+
 .emptyCart {
   text-align: center;
   padding: 60px 30px;

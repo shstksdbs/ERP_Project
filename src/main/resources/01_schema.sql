@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS orders (
     payment_status ENUM('pending', 'completed', 'failed') DEFAULT 'pending' COMMENT '결제 상태',
     order_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '주문 시간',
     completed_time TIMESTAMP NULL COMMENT '완료 시간',
+    cancelled_time TIMESTAMP NULL COMMENT '취소 시간',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     

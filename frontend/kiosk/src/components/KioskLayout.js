@@ -15,25 +15,30 @@ export const useBranch = () => {
   return context;
 };
 
-const KioskLayout = () => {
-  const [selectedBranch, setSelectedBranch] = useState(null);
+const KioskLayout = ({ selectedBranch: appSelectedBranch, onBranchChange: appOnBranchChange }) => {
+  const [localSelectedBranch, setLocalSelectedBranch] = useState(appSelectedBranch);
 
-  const handleBranchChange = (branch) => {
-    setSelectedBranch(branch);
+  // App.js에서 전달받은 지점 정보가 있으면 사용
+  const selectedBranch = appSelectedBranch || localSelectedBranch;
+  const handleBranchChange = appOnBranchChange || setLocalSelectedBranch;
+
+  const handleLocalBranchChange = (branch) => {
+    setLocalSelectedBranch(branch);
+    if (appOnBranchChange) {
+      appOnBranchChange(branch);
+    }
     console.log('선택된 지점:', branch);
-    // 여기에 지점 변경 시 필요한 로직 추가 가능
-    // 예: 메뉴 데이터 새로고침, 가격 정책 적용 등
   };
 
   return (
-    <BranchContext.Provider value={{ selectedBranch, setSelectedBranch }}>
+    <BranchContext.Provider value={{ selectedBranch, setSelectedBranch: handleLocalBranchChange }}>
       <div className={styles.layoutContainer}>
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <h1 className={styles.title}>주문하기</h1>
             <BranchSelector 
               selectedBranch={selectedBranch}
-              onBranchChange={handleBranchChange}
+              onBranchChange={handleLocalBranchChange}
             />
           </div>
         </header>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import styles from './CartScreen.module.css';
 
-const CartScreen = () => {
+const CartScreen = ({ selectedBranch }) => {
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -12,6 +12,7 @@ const CartScreen = () => {
   // 디버깅: 장바구니 데이터 확인
   console.log('CartScreen - location.state:', location.state);
   console.log('CartScreen - cart:', cart);
+  console.log('CartScreen - selectedBranch:', selectedBranch);
 
   const updateQuantity = (index, change) => {
     setCart(prev => prev.map((item, i) => {
@@ -56,10 +57,16 @@ const CartScreen = () => {
   };
 
   const proceedToPayment = async () => {
+    // 지점이 선택되지 않은 경우 처리
+    if (!selectedBranch) {
+      alert('지점을 먼저 선택해주세요.');
+      return;
+    }
+
     try {
       // 주문 데이터 준비
       const orderData = {
-        branchId: 1, // 기본 지점 ID (실제로는 선택된 지점 사용)
+        branchId: selectedBranch.id, // 선택된 지점 ID
         orderType: "takeout", // 기본값: 포장
         customerName: "고객", // 기본값 (실제로는 입력받아야 함)
         customerPhone: "010-0000-0000", // 기본값 (실제로는 입력받아야 함)
@@ -77,6 +84,9 @@ const CartScreen = () => {
       };
 
       console.log('주문 데이터:', orderData);
+      console.log('선택된 지점:', selectedBranch);
+      console.log('displayOptions 예시:', cart[0]?.displayOptions);
+      console.log('displayOptions 타입:', typeof cart[0]?.displayOptions);
 
       // 백엔드 API 호출
       const response = await fetch('http://localhost:8080/api/orders/create', {
@@ -100,8 +110,9 @@ const CartScreen = () => {
           } 
         });
       } else {
-        console.error('주문 생성 실패:', response.status);
-        alert('주문 생성에 실패했습니다. 다시 시도해주세요.');
+        const errorData = await response.json();
+        console.error('주문 생성 실패:', response.status, errorData);
+        alert(`주문 생성에 실패했습니다: ${errorData.error || '알 수 없는 오류'}`);
       }
     } catch (error) {
       console.error('주문 생성 중 오류:', error);
@@ -393,8 +404,13 @@ const CartScreen = () => {
           <button className={styles.backButton} onClick={goBack}>
             메뉴로 돌아가기
           </button>
-          <button className={styles.orderButton} onClick={proceedToPayment}>
-            주문하기
+          <button 
+            className={`${styles.orderButton} ${!selectedBranch ? styles.disabled : ''}`} 
+            onClick={proceedToPayment}
+            disabled={!selectedBranch}
+            title={!selectedBranch ? '지점을 먼저 선택해주세요' : '주문하기'}
+          >
+            {selectedBranch ? `주문하기 (${selectedBranch.name})` : '지점 선택 필요'}
           </button>
         </div>
       </div>

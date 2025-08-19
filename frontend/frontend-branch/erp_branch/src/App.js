@@ -51,7 +51,7 @@ function AppContent() {
   // 지점 ID가 없으면 기본값으로 리다이렉트
   useEffect(() => {
     if (!branchId) {
-      navigate('/branch/1');
+      navigate('/login');
     }
   }, [branchId, navigate]);
 
@@ -102,9 +102,9 @@ function AppContent() {
       case 'order-list':
         return <OrderList {...commonProps} />;
       case 'order-status':
-        return <OrderStatus {...commonProps} />;
+        return <OrderStatus {...commonProps} loginData={loginData} />;
       case 'order-history':
-        return <OrderHistory {...commonProps} />;
+        return <OrderHistory {...commonProps} loginData={loginData} />;
       case 'inventory-status':
         return <InventoryStatus {...commonProps} />;
       case 'inventory-alert':

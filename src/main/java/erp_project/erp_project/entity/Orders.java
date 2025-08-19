@@ -56,6 +56,9 @@ public class Orders {
     @Column(name = "completed_time")
     private LocalDateTime completedTime;
     
+    @Column(name = "cancelled_time")
+    private LocalDateTime cancelledTime;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -111,6 +114,9 @@ public class Orders {
     
     public LocalDateTime getCompletedTime() { return completedTime; }
     public void setCompletedTime(LocalDateTime completedTime) { this.completedTime = completedTime; }
+    
+    public LocalDateTime getCancelledTime() { return cancelledTime; }
+    public void setCancelledTime(LocalDateTime cancelledTime) { this.cancelledTime = cancelledTime; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

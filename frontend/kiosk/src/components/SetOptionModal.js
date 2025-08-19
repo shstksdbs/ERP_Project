@@ -8,6 +8,12 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
   const [selectedDrink, setSelectedDrink] = useState('');
   const [quantity, setQuantity] = useState(1);
 
+  // 개수 선택 가능한 옵션들의 개수 상태
+  const [optionQuantities, setOptionQuantities] = useState({
+    cheese: 1,
+    bacon: 1
+  });
+
   // 데이터베이스에서 가져온 옵션들
   const [toppingOptions, setToppingOptions] = useState([]);
   const [sideOptions, setSideOptions] = useState([]);
@@ -87,6 +93,13 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
     }
   };
 
+  // 개수 선택 가능한 옵션들의 개수 변경 함수
+  const handleOptionQuantityChange = (optionName, newQuantity) => {
+    const maxQty = optionName === 'cheese' ? 5 : 3; // 치즈는 최대 5장, 베이컨은 최대 3장
+    const clampedQuantity = Math.max(1, Math.min(maxQty, newQuantity));
+    setOptionQuantities(prev => ({ ...prev, [optionName]: clampedQuantity }));
+  };
+
   const calculateTotalPrice = () => {
     const basePrice = menuItem.price || menuItem.basePrice || 0;
 
@@ -94,7 +107,17 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
     const addOptionsPrice = Object.entries(addOptions).reduce((total, [optionId, value]) => {
       if (value) {
         const option = findOptionById(toppingOptions, optionId);
-        return total + (option ? Number(option.price) : 0);
+        if (option) {
+          const optionPrice = Number(option.price);
+          // 치즈와 베이컨은 개수만큼 가격 계산
+          if (option.displayName === '치즈' || option.displayName === '베이컨') {
+            const optionName = option.displayName === '치즈' ? 'cheese' : 'bacon';
+            return total + (optionPrice * optionQuantities[optionName]);
+          } else {
+            // 기타 옵션은 1개 가격
+            return total + optionPrice;
+          }
+        }
       }
       return total;
     }, 0);
@@ -128,10 +151,20 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
           .filter(([optionId, value]) => value)
           .map(([optionId, value]) => {
             const option = findOptionById(toppingOptions, optionId);
+            const optionName = option ? option.displayName : '';
+            // 치즈와 베이컨은 개수만큼 가격 계산
+            let finalPrice = option ? Number(option.price) : 0;
+            if (optionName === '치즈' || optionName === '베이컨') {
+              const key = optionName === '치즈' ? 'cheese' : 'bacon';
+              finalPrice = finalPrice * optionQuantities[key];
+            }
             return {
               id: optionId,
-              name: option ? option.displayName : '',
-              price: option ? Number(option.price) : 0
+              name: optionName,
+              price: finalPrice,
+              quantity: optionName === '치즈' || optionName === '베이컨' 
+                ? optionQuantities[optionName === '치즈' ? 'cheese' : 'bacon'] 
+                : 1
             };
           }),
         remove: Object.entries(removeOptions)
@@ -180,9 +213,9 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       options: selectedOptions,
 
       // 표시용 정보
-      displayName: `${menuItem.name} 세트 (${selectedOptions.side.name}, ${selectedOptions.drink.name})`,
+      displayName: `${menuItem.name}`,
       displayOptions: [
-        ...selectedOptions.toppings.add.map(t => `+${t.name}`),
+        ...selectedOptions.toppings.add.map(t => `+${t.name}${t.quantity > 1 ? ` x${t.quantity}` : ''}`),
         ...selectedOptions.toppings.remove.map(t => `-${t.name}`),
         `사이드: ${selectedOptions.side.name}`,
         `음료: ${selectedOptions.drink.name}`
@@ -253,18 +286,53 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <p className={styles.optionsDescription}>추가를 원하는 토핑을 선택해주세요</p>
             <div className={styles.optionsGrid}>
               {toppingOptions.map((option) => (
-                <label key={option.id} className={`${styles.optionItem} ${removeOptions[option.id] ? styles.disabled : ''}`}>
-                  <input
-                    type="checkbox"
-                    checked={addOptions[option.id] || false}
-                    onChange={(e) => handleAddOptionChange(option.id.toString(), e.target.checked)}
-                    disabled={removeOptions[option.id]}
-                  />
-                  <span className={styles.optionName}>{option.displayName}</span>
-                  {Number(option.price) > 0 && (
-                    <span className={styles.optionPrice}>+₩{Number(option.price).toLocaleString()}</span>
+                <div key={option.id} className={styles.optionItemContainer}>
+                  <label className={`${styles.optionItem} ${removeOptions[option.id] ? styles.disabled : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={addOptions[option.id] || false}
+                      onChange={(e) => handleAddOptionChange(option.id.toString(), e.target.checked)}
+                      disabled={removeOptions[option.id]}
+                    />
+                    <span className={styles.optionName}>{option.displayName}</span>
+                    {Number(option.price) > 0 && (
+                      <span className={styles.optionPrice}>+₩{Number(option.price).toLocaleString()}</span>
+                    )}
+                  </label>
+
+                  {/* 치즈와 베이컨은 개수 선택 가능 */}
+                  {(option.displayName === '치즈' || option.displayName === '베이컨') && addOptions[option.id] && (
+                    <div className={styles.quantitySelector}>
+                      <span className={styles.quantityLabel}>개수:</span>
+                      <button
+                        className={styles.quantityButton}
+                        onClick={() => {
+                          const optionName = option.displayName === '치즈' ? 'cheese' : 'bacon';
+                          handleOptionQuantityChange(optionName, optionQuantities[optionName] - 1);
+                        }}
+                        disabled={optionQuantities[option.displayName === '치즈' ? 'cheese' : 'bacon'] <= 1}
+                      >
+                        -
+                      </button>
+                      <span className={styles.optionQuantity}>
+                        {optionQuantities[option.displayName === '치즈' ? 'cheese' : 'bacon']}
+                      </span>
+                      <button
+                        className={styles.quantityButton}
+                        onClick={() => {
+                          const optionName = option.displayName === '치즈' ? 'cheese' : 'bacon';
+                          handleOptionQuantityChange(optionName, optionQuantities[optionName] + 1);
+                        }}
+                        disabled={optionQuantities[option.displayName === '치즈' ? 'cheese' : 'bacon'] >= (option.displayName === '치즈' ? 5 : 3)}
+                      >
+                        +
+                      </button>
+                      <span className={styles.maxQuantity}>
+                        (최대 {option.displayName === '치즈' ? 5 : 3}장)
+                      </span>
+                    </div>
                   )}
-                </label>
+                </div>
               ))}
             </div>
           </div>

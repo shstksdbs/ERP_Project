@@ -26,14 +26,11 @@
   align-items: center;
 }
 
-.search-box {
-  flex: 1;
-}
-
 .search-input-container {
   position: relative;
   display: flex;
   align-items: center;
+  width: 300px;
 }
 
 .search-icon {
@@ -45,7 +42,7 @@
 }
 
 .search-input {
-  width: 25%;
+  width: 100%;
   padding: 10px 12px 10px 40px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -56,6 +53,7 @@
   outline: none;
   border-color: var(--gray-700);
 }
+
 
 .filter-box {
   min-width: 150px;
@@ -68,6 +66,15 @@
   border-radius: 6px;
   font-size: 14px;
   background-color: white;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
 }
 
 .filter-select:focus {
@@ -103,42 +110,50 @@
 /* 각 컬럼 너비 고정 */
 .orders-table th:nth-child(1),
 .orders-table td:nth-child(1) {
-  width: 10%; /* 주문번호 */
+  width: 10%;
+  /* 주문번호 */
 }
 
 .orders-table th:nth-child(2),
 .orders-table td:nth-child(2) {
-  width: 12%; /* 고객명 */
+  width: 20%;
+  /* 고객명 */
 }
 
 .orders-table th:nth-child(3),
 .orders-table td:nth-child(3) {
-  width: 25%; /* 주문내용 */
+  width: 10%;
+  /* 주문내용 */
 }
 
 .orders-table th:nth-child(4),
 .orders-table td:nth-child(4) {
-  width: 12%; /* 총 금액 */
+  width: 10%;
+  /* 총 금액 */
 }
 
 .orders-table th:nth-child(5),
 .orders-table td:nth-child(5) {
-  width: 10%; /* 상태 */
+  width: 10%;
+  /* 상태 */
 }
 
 .orders-table th:nth-child(6),
 .orders-table td:nth-child(6) {
-  width: 15%; /* 주문시간 */
+  width: 5%;
+  /* 주문시간 */
 }
 
 .orders-table th:nth-child(7),
 .orders-table td:nth-child(7) {
-  width: 12%; /* 담당직원 */
+  width: 12%;
+  /* 담당직원 */
 }
 
 .orders-table th:nth-child(8),
 .orders-table td:nth-child(8) {
-  width: 14%; /* 상태변경 */
+  width: 14%;
+  /* 상태변경 */
 }
 
 .orders-table td {
@@ -175,15 +190,50 @@
 }
 
 .order-item {
-  font-size: 12px;
+  padding: 4px 0;
+  border-bottom: 1px solid #f3f4f6;
+  font-size: 14px;
   color: #374151;
 }
 
-.status-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
+.order-item:last-child {
+  border-bottom: none;
+}
+
+/* 주문내용 컨테이너 */
+.order-items {
+  text-align: center;
+}
+
+/* 메뉴 이름과 옵션 구분 스타일 */
+.menu-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.menu-options {
+  color: #6b7280;
   font-size: 12px;
-  font-weight: 500;
+  line-height: 1.4;
+}
+
+/* 단순 주문내용 스타일 */
+.order-item-simple {
+  text-align: center;
+}
+
+/* 상태 배지 스타일 */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  min-width: 80px;
+  white-space: nowrap;
 }
 
 .status-pending {
@@ -191,9 +241,19 @@
   color: #92400e;
 }
 
+.status-confirmed {
+  background-color: #e0e7ff;
+  color: #3730a3;
+}
+
 .status-preparing {
   background-color: #dbeafe;
   color: #1e40af;
+}
+
+.status-ready {
+  background-color: #fef3c7;
+  color: #a16207;
 }
 
 .status-completed {
@@ -221,6 +281,14 @@
   font-size: 12px;
   background: white;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 6px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 30px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
 }
 
 .status-select:focus {
@@ -229,30 +297,49 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+/* 로딩 및 에러 스타일 */
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error {
+  text-align: center;
+  padding: 40px;
+  color: #dc2626;
+  font-size: 16px;
+}
+
+.error p {
+  margin-bottom: 8px;
+}
+
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .order-status {
     padding: 16px;
   }
-  
+
   .search-filter-container {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .search-input {
     width: 100%;
   }
-  
+
   .orders-table {
     font-size: 12px;
   }
-  
+
   .orders-table th,
   .orders-table td {
     padding: 8px 12px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     gap: 4px;
