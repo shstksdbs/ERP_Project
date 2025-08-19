@@ -98,12 +98,14 @@ CREATE TABLE IF NOT EXISTS branches (
     phone VARCHAR(20) COMMENT '연락처',
     manager_name VARCHAR(100) COMMENT '매니저명',
     status ENUM('active', 'inactive', 'maintenance') DEFAULT 'active' COMMENT '지점 상태',
-    opening_hours JSON COMMENT '영업시간 (JSON 형태)',
+    opening_hours VARCHAR(100) COMMENT '영업시간 (예: 07:00 - 22:00)',
+    opening_date DATE COMMENT '매장 오픈날짜',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     INDEX idx_branch_code (branch_code),
-    INDEX idx_branch_status (status)
+    INDEX idx_branch_status (status),
+    INDEX idx_opening_date (opening_date)
 );
 
 -- 지점별 메뉴 관리 테이블

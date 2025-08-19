@@ -7,65 +7,149 @@ export default function BranchEdit() {
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // 샘플 데이터
+  // 실제 서버에서 지점 데이터 가져오기
   useEffect(() => {
-    const sampleBranches = [
-      {
-        id: 1,
-        branchName: '강남강남강남점',
-        branchCode: 'GN001',
-        address: '서울시 강남구 테헤란로 123',
-        phone: '02-1234-5678',
-        manager: '김철수',
-        email: 'gn@company.com',
-        businessNumber: '123-45-67890',
-        status: 'active',
-        createdAt: '2024-01-15'
-      },
-      {
-        id: 2,
-        branchName: '홍대점',
-        branchCode: 'HD001',
-        address: '서울시 마포구 홍대로 456',
-        phone: '02-2345-6789',
-        manager: '이영희',
-        email: 'hd@company.com',
-        businessNumber: '234-56-78901',
-        status: 'active',
-        createdAt: '2024-01-20'
-      },
-      {
-        id: 3,
-        branchName: '부산점',
-        branchCode: 'BS001',
-        address: '부산시 해운대구 해운대로 789',
-        phone: '051-3456-7890',
-        manager: '박민수',
-        email: 'bs@company.com',
-        businessNumber: '345-67-89012',
-        status: 'inactive',
-        createdAt: '2024-02-01'
+    const fetchBranches = async () => {
+      try {
+        setIsLoading(true);
+        setError('');
+        
+        const response = await fetch('http://localhost:8080/api/branches');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('받아온 지점 데이터:', data);
+        
+        // 서버 데이터를 컴포넌트에서 사용할 형태로 변환
+        const formattedBranches = data.map(branch => {
+          console.log('개별 지점 데이터:', branch);
+          console.log('openingHours 값:', branch.openingHours);
+          
+          return {
+            id: branch.id,
+            branchName: branch.branchName,
+            branchCode: branch.branchCode,
+            address: branch.address || '주소 정보 없음',
+            phone: branch.phone || '연락처 정보 없음',
+            manager: branch.managerName || '담당자 정보 없음',
+            email: branch.email || '이메일 정보 없음',
+            businessNumber: branch.businessNumber || '사업자번호 정보 없음',
+            status: branch.status || 'active',
+            openingHours: branch.openingHours || branch.opening_hours || '운영시간 정보 없음',
+            openingDate: branch.openingDate || branch.opening_date ? new Date(branch.openingDate || branch.opening_date).toLocaleDateString('ko-KR') : '오픈날짜 정보 없음',
+            createdAt: branch.createdAt ? new Date(branch.createdAt).toLocaleDateString('ko-KR') : '등록일 정보 없음'
+          };
+        });
+        
+        console.log('변환된 지점 데이터:', formattedBranches);
+        
+        setBranches(formattedBranches);
+      } catch (err) {
+        console.error('지점 데이터 조회 오류:', err);
+        setError('지점 데이터를 불러오는데 실패했습니다. 다시 시도해주세요.');
+        
+        // 에러 발생 시 기본 데이터로 폴백
+        setBranches([]);
+      } finally {
+        setIsLoading(false);
       }
-    ];
-    setBranches(sampleBranches);
+    };
+
+    fetchBranches();
   }, []);
 
   const handleEdit = (branch) => {
     setSelectedBranch(branch);
   };
 
-  const handleDelete = (branchId) => {
+  const handleDelete = async (branchId) => {
     if (window.confirm('정말로 이 지점을 삭제하시겠습니까?')) {
-      setBranches(branches.filter(branch => branch.id !== branchId));
+      try {
+        const response = await fetch(`http://localhost:8080/api/branches/${branchId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          }
+        });
+
+        if (response.ok) {
+          // 삭제 성공 시 목록에서 제거
+          setBranches(branches.filter(branch => branch.id !== branchId));
+          alert('지점이 성공적으로 삭제되었습니다.');
+        } else {
+          throw new Error('삭제 실패');
+        }
+      } catch (err) {
+        console.error('지점 삭제 오류:', err);
+        alert('지점 삭제에 실패했습니다. 다시 시도해주세요.');
+      }
     }
   };
 
-  const handleUpdate = (updatedBranch) => {
-    setBranches(branches.map(branch => 
-      branch.id === updatedBranch.id ? updatedBranch : branch
-    ));
-    setSelectedBranch(null);
+  const handleUpdate = async (updatedBranch) => {
+    try {
+      setIsLoading(true);
+      
+      // 운영시간을 시작시간과 종료시간으로 결합
+      const branchData = {
+        branchName: updatedBranch.branchName,
+        branchCode: updatedBranch.branchCode,
+        address: updatedBranch.address,
+        phone: updatedBranch.phone,
+        managerName: updatedBranch.manager, // manager를 managerName으로 매핑
+        status: updatedBranch.status,
+        openingHours: `${updatedBranch.openingTime || ''} - ${updatedBranch.closingTime || ''}`,
+        openingDate: updatedBranch.openingDate || updatedBranch.opening_date // 오픈날짜 추가
+      };
+
+      console.log('수정할 데이터:', branchData);
+
+      const response = await fetch(`http://localhost:8080/api/branches/${updatedBranch.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(branchData)
+      });
+
+      if (response.ok) {
+        const responseData = await response.json();
+        console.log('서버 응답 데이터:', responseData);
+        
+        // 업데이트 성공 시 목록 업데이트
+        const updatedBranchWithHours = {
+          ...updatedBranch,
+          openingHours: branchData.openingHours,
+          // 서버에서 반환된 데이터로 업데이트
+          ...responseData
+        };
+        
+        setBranches(prevBranches => 
+          prevBranches.map(branch => 
+            branch.id === updatedBranch.id ? updatedBranchWithHours : branch
+          )
+        );
+        
+        setSelectedBranch(null);
+        alert('지점 정보가 성공적으로 수정되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        console.error('서버 에러 응답:', errorData);
+        throw new Error(`수정 실패: ${response.status} ${response.statusText}`);
+      }
+      
+    } catch (err) {
+      console.error('지점 수정 오류:', err);
+      alert(`지점 정보 수정에 실패했습니다: ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredBranches = branches.filter(branch => {
@@ -75,10 +159,43 @@ export default function BranchEdit() {
     return matchesSearch && matchesStatus;
   });
 
+  if (isLoading) {
+    return (
+      <div className={styles['branch-edit']}>
+        <div className={styles['branch-status-header']}>
+          <h1>지점 현황</h1>
+        </div>
+        <div className={styles['loading-container']}>
+          <p>지점 데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles['branch-edit']}>
+        <div className={styles['branch-status-header']}>
+          <h1>지점 현황</h1>
+        </div>
+        <div className={styles['error-container']}>
+          <p className={styles['error-message']}>{error}</p>
+          <button 
+            className="btn btn-primary" 
+            onClick={() => window.location.reload()}
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles['branch-edit']}>
       <div className={styles['branch-status-header']}>
         <h1>지점 현황</h1>
+        <p className={styles['branch-count']}>총 {branches.length}개 지점</p>
       </div>
 
       <div className={styles['search-filter-container']}>
@@ -113,54 +230,62 @@ export default function BranchEdit() {
       </div>
 
       <div className={styles['branches-container']}>
-        <div className={styles['branches-list']}>
-          <table className={styles['branches-table']}>
-            <thead className={styles['branches-table-header']}>
-              <tr>
-                <th>지점명</th>
-                <th>지점코드</th>
-                <th>담당자</th>
-                <th>연락처</th>
-                <th>상태</th>
-                <th>등록일</th>
-                <th>작업</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBranches.map(branch => (
-                <tr key={branch.id}>
-                  <td>{branch.branchName}</td>
-                  <td>{branch.branchCode}</td>
-                  <td>{branch.manager}</td>
-                  <td>{branch.phone}</td>
-                  <td>
-                    <span className={`${styles['status-badge']} ${styles[`status-${branch.status}`]}`}>
-                      {branch.status === 'active' ? '활성' : 
-                       branch.status === 'inactive' ? '비활성' : '대기'}
-                    </span>
-                  </td>
-                  <td>{branch.createdAt}</td>
-                  <td>
-                    <div className={styles['action-buttons']}>
-                      <button
-                        className={`btn btn-small btn-primary ${styles['btn-small']}`}
-                        onClick={() => handleEdit(branch)}
-                      >
-                        수정
-                      </button>
-                      <button
-                        className={`btn btn-small btn-danger ${styles['btn-small']}`}
-                        onClick={() => handleDelete(branch.id)}
-                      >
-                        삭제
-                      </button>
-                    </div>
-                  </td>
+        {filteredBranches.length === 0 ? (
+          <div className={styles['no-data']}>
+            <p>검색 조건에 맞는 지점이 없습니다.</p>
+          </div>
+        ) : (
+          <div className={styles['branches-list']}>
+            <table className={styles['branches-table']}>
+              <thead className={styles['branches-table-header']}>
+                <tr>
+                  <th>지점명</th>
+                  <th>지점코드</th>
+                  <th>담당자</th>
+                  <th>연락처</th>
+                  <th>상태</th>
+                  <th>운영시간</th>
+                  <th>오픈날짜</th>
+                  <th>작업</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {filteredBranches.map(branch => (
+                  <tr key={branch.id}>
+                    <td>{branch.branchName}</td>
+                    <td>{branch.branchCode}</td>
+                    <td>{branch.manager}</td>
+                    <td>{branch.phone}</td>
+                    <td>
+                      <span className={`${styles['status-badge']} ${styles[`status-${branch.status}`]}`}>
+                        {branch.status === 'active' ? '활성' : 
+                         branch.status === 'inactive' ? '비활성' : '대기'}
+                      </span>
+                    </td>
+                    <td>{branch.openingHours}</td>
+                    <td>{branch.openingDate}</td>
+                    <td>
+                      <div className={styles['action-buttons']}>
+                        <button
+                          className={`btn btn-small btn-primary ${styles['btn-small']}`}
+                          onClick={() => handleEdit(branch)}
+                        >
+                          수정
+                        </button>
+                        <button
+                          className={`btn btn-small btn-danger ${styles['btn-small']}`}
+                          onClick={() => handleDelete(branch.id)}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {selectedBranch && (
@@ -176,7 +301,40 @@ export default function BranchEdit() {
 
 // 지점 수정 모달 컴포넌트
 function BranchEditModal({ branch, onUpdate, onClose }) {
-  const [formData, setFormData] = useState(branch);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // 기존 운영시간을 시작시간과 종료시간으로 분리
+  const parseOpeningHours = (openingHours) => {
+    if (!openingHours || openingHours === '운영시간 정보 없음') {
+      return { openingTime: '', closingTime: '' };
+    }
+    
+    const parts = openingHours.split(' - ');
+    if (parts.length === 2) {
+      return { openingTime: parts[0], closingTime: parts[1] };
+    }
+    
+    return { openingTime: '', closingTime: '' };
+  };
+
+  const { openingTime, closingTime } = parseOpeningHours(branch.openingHours);
+  
+  // openingDate를 ISO 날짜 형식으로 변환 (YYYY-MM-DD)
+  const formatOpeningDate = (dateString) => {
+    if (!dateString || dateString === '오픈날짜 정보 없음') return '';
+    try {
+      return new Date(dateString).toISOString().split('T')[0];
+    } catch (e) {
+      return '';
+    }
+  };
+  
+  const [formData, setFormData] = useState({
+    ...branch,
+    openingTime,
+    closingTime,
+    openingDate: formatOpeningDate(branch.openingDate)
+  });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -186,9 +344,32 @@ function BranchEditModal({ branch, onUpdate, onClose }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onUpdate(formData);
+    
+    // 필수 필드 검증
+    if (!formData.branchName || !formData.branchCode) {
+      alert('지점명과 지점코드는 필수 입력 항목입니다.');
+      return;
+    }
+    
+    // 운영시간 검증
+    if (formData.openingTime && formData.closingTime) {
+      if (formData.openingTime >= formData.closingTime) {
+        alert('시작시간은 종료시간보다 빨라야 합니다.');
+        return;
+      }
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      await onUpdate(formData);
+    } catch (error) {
+      console.error('수정 처리 중 오류:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -257,33 +438,62 @@ function BranchEditModal({ branch, onUpdate, onClose }) {
             />
           </div>
 
+          <div className={styles['form-group']}>
+            <label>전화번호</label>
+            <input
+              type="tel"
+              name="phone"
+              value={formData.phone}
+              onChange={handleInputChange}
+            />
+          </div>
+
           <div className={styles['form-row']}>
             <div className={styles['form-group']}>
-              <label>전화번호</label>
+              <label>운영시간 (시작)</label>
               <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
+                type="time"
+                name="openingTime"
+                value={formData.openingTime || ''}
                 onChange={handleInputChange}
               />
             </div>
             <div className={styles['form-group']}>
-              <label>이메일</label>
+              <label>운영시간 (종료)</label>
               <input
-                type="email"
-                name="email"
-                value={formData.email}
+                type="time"
+                name="closingTime"
+                value={formData.closingTime || ''}
                 onChange={handleInputChange}
               />
             </div>
           </div>
 
+          <div className={styles['form-group']}>
+            <label>오픈날짜</label>
+            <input
+              type="date"
+              name="openingDate"
+              value={formData.openingDate ? new Date(formData.openingDate).toISOString().split('T')[0] : ''}
+              onChange={handleInputChange}
+            />
+          </div>
+
           <div className={styles['modal-actions']}>
-            <button type="button" className="btn btn-primary" onClick={onClose}>
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               취소
             </button>
-            <button type="submit" className="btn btn-primary">
-              수정 완료
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? '수정 중...' : '수정 완료'}
             </button>
           </div>
         </form>

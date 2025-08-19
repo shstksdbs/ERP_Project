@@ -48,6 +48,9 @@ INSERT INTO users (username, password, real_name, branch_id, role, email, phone,
 ('staff_songpa1', 'staff123', '오직원1', 5, 'STAFF', 'staff1.songpa@company.com', '010-5000-0003', TRUE, NOW()),
 ('staff_songpa2', 'staff123', '장직원2', 5, 'STAFF', 'staff2.songpa@company.com', '010-5000-0004', TRUE, NOW());
 
+-- 본사
+('admin', 'admin', '관리자',99, 'ADMIN', 'admin@company.com', '010-1111-1111', TRUE, NOW());
+
 -- 테스트용 간단한 계정 (개발/테스트용)
 INSERT INTO users (username, password, real_name, branch_id, role, email, phone, is_active, created_at) VALUES
 ('test1', 'test123', '테스트사용자1', 1, 'STAFF', 'test1@company.com', '010-9999-0001', TRUE, NOW()),

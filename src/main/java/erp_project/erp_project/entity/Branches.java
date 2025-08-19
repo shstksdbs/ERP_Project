@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "branches")
@@ -47,6 +48,10 @@ public class Branches {
     
     @Column(name = "opening_hours", columnDefinition = "JSON")
     private String openingHours;
+    
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    @Column(name = "opening_date")
+    private LocalDate openingDate;
     
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Column(name = "created_at", columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")

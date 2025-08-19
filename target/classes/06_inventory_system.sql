@@ -57,15 +57,12 @@ CREATE TABLE IF NOT EXISTS menu_ingredients (
 
 -- 빵류
 INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
-('번', 'bread', '개', 200, '신성제과', TRUE),
-('통밀번', 'bread', '개', 300, '신성제과', TRUE),
 ('브리오슈번', 'bread', '개', 400, '신성제과', TRUE);
 
 -- 패티류
 INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
 ('소고기패티', 'patty', '개', 800, '한우공장', TRUE),
 ('치킨패티', 'patty', '개', 600, '닭고기공장', TRUE),
-('돈까스패티', 'patty', '개', 700, '돈까스공장', TRUE),
 ('새우패티', 'patty', '개', 900, '수산물공장', TRUE);
 
 -- 채소류
@@ -73,35 +70,41 @@ INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_activ
 ('양상추', 'vegetable', 'g', 0.5, '농협', TRUE),
 ('토마토', 'vegetable', '개', 150, '농협', TRUE),
 ('양파', 'vegetable', 'g', 0.3, '농협', TRUE),
-('피클', 'vegetable', 'g', 0.8, '농협', TRUE),
-('아보카도', 'vegetable', '개', 800, '농협', TRUE);
+('피클', 'vegetable', 'g', 0.8, '농협', TRUE);
 
 -- 치즈류
 INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
-('체다치즈', 'cheese', '장', 200, '서울우유', TRUE),
-('모짜렐라치즈', 'cheese', '장', 250, '서울우유', TRUE);
+('치즈', 'cheese', '장', 200, '서울우유', TRUE);
+
+-- 고기류
+INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
+('베이컨', 'meat', 'g', 0.5, '농심', TRUE);
 
 -- 소스류
 INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
 ('케찹', 'sauce', 'ml', 0.1, '오리온', TRUE),
+('불고기소스', 'sauce', 'ml', 0.1, '오리온', TRUE),
 ('머스타드', 'sauce', 'ml', 0.2, '오리온', TRUE),
-('마요네즈', 'sauce', 'ml', 0.15, '오리온', TRUE),
-('BBQ소스', 'sauce', 'ml', 0.25, '오리온', TRUE),
-('핫소스', 'sauce', 'ml', 0.3, '오리온', TRUE);
+('마요네즈', 'sauce', 'ml', 0.15, '오리온', TRUE);
 
 -- 사이드류
 INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
 ('감자튀김', 'side', 'g', 0.8, '농심', TRUE),
 ('치킨너겟', 'side', '개', 300, '교촌', TRUE),
 ('치즈스틱', 'side', '개', 400, '교촌', TRUE),
-('어니언링', 'side', '개', 200, '농심', TRUE);
+('어니언링', 'side', '개', 200, '농심', TRUE),
+('콘샐러드', 'side', 'g', 0.5, '농심', TRUE),
+('양념감자 시즈닝', 'side', 'g', 0.5, '농심', TRUE);
 
 -- 음료류
 INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_active) VALUES
 ('콜라', 'drink', 'ml', 0.05, '코카콜라', TRUE),
-('사이다', 'drink', 'ml', 0.05, '칠성', TRUE),
+('제로콜라', 'drink', 'ml', 0.05, '코카콜라', TRUE),
+('스프라이트', 'drink', 'ml', 0.05, '칠성', TRUE),
+('제로스프라이트', 'drink', 'ml', 0.05, '칠성', TRUE),
 ('오렌지주스', 'drink', 'ml', 0.1, '델몬트', TRUE),
-('아메리카노', 'drink', 'ml', 0.08, '스타벅스', TRUE);
+('아메리카노', 'drink', 'ml', 0.08, '스타벅스', TRUE),
+('밀크쉐이크', 'drink', 'ml', 0.1, '델몬트', TRUE);
 
 -- =====================================================
 -- 3. 메뉴별 재료 소요량 설정
@@ -110,10 +113,10 @@ INSERT INTO ingredients (name, category, unit, cost_per_unit, supplier, is_activ
 -- 치즈버거 재료 소요량
 INSERT INTO menu_ingredients (menu_id, ingredient_id, quantity_per_serving, unit) VALUES
 (1, 1, 1, '개'),      -- 번 1개
-(1, 4, 1, '개'),      -- 소고기패티 1개
-(1, 7, 1, '장'),      -- 체다치즈 1장
+(1, 2, 1, '개'),      -- 소고기패티 1개
+(1, 9, 1, '장'),      -- 체다치즈 1장
 (1, 8, 30, 'g'),      -- 양상추 30g
-(1, 9, 0.5, '개'),    -- 토마토 0.5개
+(1, 9, 0.2, '개'),    -- 토마토 0.5개
 (1, 10, 15, 'g'),     -- 양파 15g
 (1, 12, 15, 'ml'),    -- 케찹 15ml
 (1, 13, 10, 'ml');    -- 머스타드 10ml

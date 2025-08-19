@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import Login from './components/login/Login';
 import Dashboard from './components/Dashboard/Dashboard';
 import BranchRegister from './components/BranchManagement/BranchRegister';
 import BranchStatus from './components/BranchManagement/BranchStatus';
@@ -25,6 +27,26 @@ import './App.css';
 
 function App() {
   const [activeTab, setActiveTab] = useState(['dashboard']);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  // 로그인 상태 확인
+  useEffect(() => {
+    const loginData = localStorage.getItem('erpLoginData');
+    if (loginData) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+
+  // 로그인 성공 시 호출
+  const handleLoginSuccess = () => {
+    setIsLoggedIn(true);
+  };
+
+  // 로그아웃 시 호출
+  const handleLogout = () => {
+    localStorage.removeItem('erpLoginData');
+    setIsLoggedIn(false);
+  };
 
   // 라우팅 로직
   const renderContent = () => {
@@ -103,9 +125,45 @@ function App() {
   };
 
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab}>
-      {renderContent()}
-    </Layout>
+    <Router>
+      <Routes>
+        <Route 
+          path="/login" 
+          element={
+            isLoggedIn ? 
+            <Navigate to="/dashboard" replace /> : 
+            <Login onLoginSuccess={handleLoginSuccess} />
+          } 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            isLoggedIn ? 
+            <Layout activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout}>
+              {renderContent()}
+            </Layout> : 
+            <Navigate to="/login" replace />
+          } 
+        />
+        <Route 
+          path="/" 
+          element={
+            isLoggedIn ? 
+            <Navigate to="/dashboard" replace /> : 
+            <Navigate to="/login" replace />
+          } 
+        />
+        {/* 다른 경로들도 대시보드로 리다이렉트 */}
+        <Route 
+          path="*" 
+          element={
+            isLoggedIn ? 
+            <Navigate to="/dashboard" replace /> : 
+            <Navigate to="/login" replace />
+          } 
+        />
+      </Routes>
+    </Router>
   );
 }
 

@@ -176,6 +176,36 @@ export default function OrderStatus({ branchId, loginData }) {
     return new Intl.NumberFormat('ko-KR').format(amount);
   };
 
+  // 주문시간을 한국어 형식으로 포맷팅하는 함수
+  const formatOrderDate = (dateString) => {
+    if (!dateString) return '-';
+    
+    try {
+      const date = new Date(dateString);
+      
+      // 유효한 날짜인지 확인
+      if (isNaN(date.getTime())) {
+        return dateString; // 원본 문자열 반환
+      }
+      
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      
+      // 오전/오후 구분
+      const ampm = hours < 12 ? '오전' : '오후';
+      const displayHours = hours < 12 ? hours : hours - 12;
+      const displayHoursStr = displayHours === 0 ? '12' : String(displayHours);
+      
+      return `${year}. ${month}. ${day}. ${ampm} ${displayHoursStr}:${minutes}`;
+    } catch (error) {
+      console.error('날짜 포맷팅 오류:', error);
+      return dateString; // 에러 시 원본 문자열 반환
+    }
+  };
+
   const getStatusText = (status) => { 
     const statusText = (() => {
       switch (status) {
@@ -249,7 +279,15 @@ export default function OrderStatus({ branchId, loginData }) {
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
+    
+    // 기본적으로 활성 상태의 주문만 표시 (완료, 취소 제외)
+    const isActiveOrder = order.status === 'pending' || 
+                         order.status === 'confirmed' || 
+                         order.status === 'preparing';
+    
+    // 상태 필터가 'all'이 아닌 경우에만 해당 상태 필터 적용
+    const matchesStatus = selectedStatus === 'all' ? isActiveOrder : order.status === selectedStatus;
+    
     return matchesSearch && matchesStatus;
   });
 
@@ -306,12 +344,10 @@ export default function OrderStatus({ branchId, loginData }) {
             onChange={handleStatusFilter}
             className={styles['filter-select']}
           >
-            <option value="all">전체 상태</option>
+            <option value="all">활성 주문</option>
             <option value="pending">대기중</option>
             <option value="confirmed">확인됨</option>
             <option value="preparing">준비중</option>
-            <option value="completed">완료</option>
-            <option value="cancelled">취소</option>
           </select>
         </div>
       </div>
@@ -363,7 +399,7 @@ export default function OrderStatus({ branchId, loginData }) {
                   <td>
                     {getStatusText(order.status)}
                   </td>
-                  <td>{order.orderDate}</td>
+                  <td>{formatOrderDate(order.orderDate)}</td>
                   <td>{currentEmployeeName}</td>
                   <td>
                     <div className={styles['action-buttons']}>
@@ -375,8 +411,6 @@ export default function OrderStatus({ branchId, loginData }) {
                         <option value="pending">대기중</option>
                         <option value="confirmed">확인됨</option>
                         <option value="preparing">준비중</option>
-                        <option value="completed">완료</option>
-                        <option value="cancelled">취소</option>
                       </select>
                     </div>
                   </td>

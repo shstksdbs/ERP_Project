@@ -19,6 +19,65 @@
   font-size: 16px;
 }
 
+.branch-count {
+  color: #6b7280;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* 로딩 및 에러 상태 스타일 */
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.loading-container p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
+.error-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.error-message {
+  color: #dc2626;
+  font-size: 16px;
+  margin: 0;
+  text-align: center;
+}
+
+/* 데이터 없음 상태 */
+.no-data {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.no-data p {
+  color: #6b7280;
+  font-size: 16px;
+  margin: 0;
+}
+
 .search-filter-container {
   display: flex;
   gap: 16px;
@@ -68,6 +127,15 @@
   border-radius: 6px;
   font-size: 14px;
   background-color: white;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .branches-container {
@@ -99,17 +167,17 @@
 /* 각 컬럼 너비 고정 */
 .branches-table th:nth-child(1),
 .branches-table td:nth-child(1) {
-  width: 15%; /* 지점명 */
+  width: 12%; /* 지점명 */
 }
 
 .branches-table th:nth-child(2),
 .branches-table td:nth-child(2) {
-  width: 15%; /* 지점코드 */
+  width: 12%; /* 지점코드 */
 }
 
 .branches-table th:nth-child(3),
 .branches-table td:nth-child(3) {
-  width: 15%; /* 담당자 */
+  width: 12%; /* 담당자 */
 }
 
 .branches-table th:nth-child(4),
@@ -271,8 +339,20 @@
   border-radius: 6px;
   font-size: 14px;
   transition: border-color 0.2s;
+  
 }
 
+.form-group select{
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
 .form-group input:focus,
 .form-group select:focus {
   outline: none;

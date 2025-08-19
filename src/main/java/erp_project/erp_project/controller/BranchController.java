@@ -46,4 +46,29 @@ public class BranchController {
             return ResponseEntity.internalServerError().build();
         }
     }
+    
+    @PutMapping("/{branchId}")
+    public ResponseEntity<Branches> updateBranch(@PathVariable Long branchId, @RequestBody Branches branchRequest) {
+        try {
+            return branchesRepository.findById(branchId)
+                    .map(existingBranch -> {
+                        // 기존 데이터 업데이트
+                        existingBranch.setBranchName(branchRequest.getBranchName());
+                        existingBranch.setBranchCode(branchRequest.getBranchCode());
+                        existingBranch.setAddress(branchRequest.getAddress());
+                        existingBranch.setPhone(branchRequest.getPhone());
+                        existingBranch.setManagerName(branchRequest.getManagerName());
+                        existingBranch.setStatus(branchRequest.getStatus());
+                        existingBranch.setOpeningHours(branchRequest.getOpeningHours());
+                        existingBranch.setOpeningDate(branchRequest.getOpeningDate());
+                        
+                        // 업데이트된 지점 저장
+                        Branches updatedBranch = branchesRepository.save(existingBranch);
+                        return ResponseEntity.ok(updatedBranch);
+                    })
+                    .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
