@@ -43,7 +43,7 @@ public class Branches {
     private String managerName;
     
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "ENUM('active', 'inactive', 'maintenance') DEFAULT 'active'")
+    @Column(name = "status", columnDefinition = "ENUM('active', 'inactive', 'pending') DEFAULT 'active'")
     private BranchStatus status;
     
     @Column(name = "opening_hours", columnDefinition = "JSON")
@@ -66,7 +66,7 @@ public class Branches {
     }
     
     public enum BranchStatus {
-        active, inactive, maintenance
+        active, inactive, pending
     }
     
     @PrePersist

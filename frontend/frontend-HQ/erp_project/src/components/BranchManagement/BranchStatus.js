@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from './BranchStatus.module.css';
 import searchIcon from '../../assets/search_icon.png';
 
-export default function BranchEdit() {
+export default function BranchEdit({ setActiveTab }) {
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,11 +38,9 @@ export default function BranchEdit() {
             address: branch.address || '주소 정보 없음',
             phone: branch.phone || '연락처 정보 없음',
             manager: branch.managerName || '담당자 정보 없음',
-            email: branch.email || '이메일 정보 없음',
-            businessNumber: branch.businessNumber || '사업자번호 정보 없음',
             status: branch.status || 'active',
-            openingHours: branch.openingHours || branch.opening_hours || '운영시간 정보 없음',
-            openingDate: branch.openingDate || branch.opening_date ? new Date(branch.openingDate || branch.opening_date).toLocaleDateString('ko-KR') : '오픈날짜 정보 없음',
+            openingHours: branch.openingHours || '운영시간 정보 없음',
+            openingDate: branch.openingDate ? new Date(branch.openingDate).toLocaleDateString('ko-KR') : '오픈날짜 정보 없음',
             createdAt: branch.createdAt ? new Date(branch.createdAt).toLocaleDateString('ko-KR') : '등록일 정보 없음'
           };
         });
@@ -69,26 +67,79 @@ export default function BranchEdit() {
   };
 
   const handleDelete = async (branchId) => {
-    if (window.confirm('정말로 이 지점을 삭제하시겠습니까?')) {
-      try {
-        const response = await fetch(`http://localhost:8080/api/branches/${branchId}`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          }
-        });
+    // 삭제할 지점 정보 찾기
+    const branchToDelete = branches.find(branch => branch.id === branchId);
+    if (!branchToDelete) {
+      alert('삭제할 지점을 찾을 수 없습니다.');
+      return;
+    }
 
-        if (response.ok) {
-          // 삭제 성공 시 목록에서 제거
-          setBranches(branches.filter(branch => branch.id !== branchId));
-          alert('지점이 성공적으로 삭제되었습니다.');
-        } else {
-          throw new Error('삭제 실패');
+    // 삭제 확인 다이얼로그 개선
+    const confirmMessage = `정말로 이 지점을 삭제하시겠습니까?\n\n` +
+                          `지점명: ${branchToDelete.branchName}\n` +
+                          `지점코드: ${branchToDelete.branchCode}\n` +
+                          `상태: ${branchToDelete.status === 'active' ? '활성' : 
+                                   branchToDelete.status === 'inactive' ? '비활성' : 
+                                   branchToDelete.status === 'pending' ? '대기' : '알 수 없음'}\n\n` +
+                          `이 작업은 되돌릴 수 없습니다.`;
+
+    if (!window.confirm(confirmMessage)) {
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      
+      console.log('지점 삭제 시도:', branchToDelete);
+      
+      const response = await fetch(`http://localhost:8080/api/branches/${branchId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
         }
-      } catch (err) {
-        console.error('지점 삭제 오류:', err);
-        alert('지점 삭제에 실패했습니다. 다시 시도해주세요.');
+      });
+
+      if (response.ok) {
+        // 삭제 성공 시 목록에서 제거
+        setBranches(prevBranches => prevBranches.filter(branch => branch.id !== branchId));
+        
+        // 성공 메시지 표시
+        const successMessage = `지점이 성공적으로 삭제되었습니다.\n\n` +
+                              `삭제된 지점: ${branchToDelete.branchName} (${branchToDelete.branchCode})`;
+        alert(successMessage);
+        
+        console.log('지점 삭제 성공:', branchToDelete);
+      } else {
+        // 서버에서 오류 응답
+        const errorData = await response.json().catch(() => ({}));
+        console.error('서버 삭제 오류 응답:', errorData);
+        
+        let errorMessage = '지점 삭제에 실패했습니다.';
+        if (errorData.message) {
+          errorMessage += `\n${errorData.message}`;
+        }
+        if (errorData.details) {
+          const details = Object.values(errorData.details).join(', ');
+          errorMessage += `\n상세: ${details}`;
+        }
+        
+        alert(errorMessage);
       }
+    } catch (err) {
+      console.error('지점 삭제 오류:', err);
+      
+      // 네트워크 오류 등
+      let errorMessage = '지점 삭제 중 오류가 발생했습니다.';
+      if (err.message) {
+        errorMessage += `\n${err.message}`;
+      }
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        errorMessage += '\n\n네트워크 연결을 확인해주세요.';
+      }
+      
+      alert(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -96,19 +147,24 @@ export default function BranchEdit() {
     try {
       setIsLoading(true);
       
-      // 운영시간을 시작시간과 종료시간으로 결합
+      // 백엔드 API와 일치하는 데이터 구조로 변환
       const branchData = {
         branchName: updatedBranch.branchName,
         branchCode: updatedBranch.branchCode,
         address: updatedBranch.address,
         phone: updatedBranch.phone,
         managerName: updatedBranch.manager, // manager를 managerName으로 매핑
-        status: updatedBranch.status,
-        openingHours: `${updatedBranch.openingTime || ''} - ${updatedBranch.closingTime || ''}`,
-        openingDate: updatedBranch.openingDate || updatedBranch.opening_date // 오픈날짜 추가
+        status: updatedBranch.status || 'active', // 상태 값이 없으면 기본값 사용
+        operatingHours: updatedBranch.openingTime && updatedBranch.closingTime 
+          ? `${updatedBranch.openingTime} - ${updatedBranch.closingTime}` 
+          : updatedBranch.openingHours,
+        openDate: updatedBranch.openingDate // 오픈날짜 추가
       };
 
       console.log('수정할 데이터:', branchData);
+      console.log('상태 값 확인:', branchData.status, typeof branchData.status);
+      console.log('상태 값 길이:', branchData.status ? branchData.status.length : 'NULL');
+      console.log('상태 값 바이트 확인:', branchData.status ? Array.from(branchData.status).map(c => c.charCodeAt(0)) : 'NULL');
 
       const response = await fetch(`http://localhost:8080/api/branches/${updatedBranch.id}`, {
         method: 'PUT',
@@ -125,7 +181,7 @@ export default function BranchEdit() {
         // 업데이트 성공 시 목록 업데이트
         const updatedBranchWithHours = {
           ...updatedBranch,
-          openingHours: branchData.openingHours,
+          openingHours: branchData.operatingHours,
           // 서버에서 반환된 데이터로 업데이트
           ...responseData
         };
@@ -141,7 +197,18 @@ export default function BranchEdit() {
       } else {
         const errorData = await response.json().catch(() => ({}));
         console.error('서버 에러 응답:', errorData);
-        throw new Error(`수정 실패: ${response.status} ${response.statusText}`);
+        
+        // 상세한 에러 메시지 표시
+        let errorMessage = '지점 정보 수정에 실패했습니다.';
+        if (errorData.message) {
+          errorMessage += `\n${errorData.message}`;
+        }
+        if (errorData.details) {
+          const details = Object.values(errorData.details).join(', ');
+          errorMessage += `\n상세: ${details}`;
+        }
+        
+        alert(errorMessage);
       }
       
     } catch (err) {
@@ -195,7 +262,7 @@ export default function BranchEdit() {
     <div className={styles['branch-edit']}>
       <div className={styles['branch-status-header']}>
         <h1>지점 현황</h1>
-        <p className={styles['branch-count']}>총 {branches.length}개 지점</p>
+        
       </div>
 
       <div className={styles['search-filter-container']}>
@@ -226,6 +293,15 @@ export default function BranchEdit() {
             <option value="inactive">비활성</option>
             <option value="pending">대기</option>
           </select>
+        </div>
+        <p className={styles['branch-count']}>총 {branches.length}개 지점</p>
+        <div className={styles['action-box']}>
+          <button 
+            className="btn btn-primary"
+            onClick={() => setActiveTab('branch-register')}
+          >
+            지점 등록
+          </button>
         </div>
       </div>
 
@@ -259,7 +335,8 @@ export default function BranchEdit() {
                     <td>
                       <span className={`${styles['status-badge']} ${styles[`status-${branch.status}`]}`}>
                         {branch.status === 'active' ? '활성' : 
-                         branch.status === 'inactive' ? '비활성' : '대기'}
+                         branch.status === 'inactive' ? '비활성' : 
+                         branch.status === 'pending' ? '대기' : '알 수 없음'}
                       </span>
                     </td>
                     <td>{branch.openingHours}</td>
@@ -323,8 +400,16 @@ function BranchEditModal({ branch, onUpdate, onClose }) {
   const formatOpeningDate = (dateString) => {
     if (!dateString || dateString === '오픈날짜 정보 없음') return '';
     try {
-      return new Date(dateString).toISOString().split('T')[0];
+      // 이미 날짜 형식인 경우 그대로 반환
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateString;
+      }
+      // 한국어 날짜 형식인 경우 ISO 형식으로 변환
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return '';
+      return date.toISOString().split('T')[0];
     } catch (e) {
+      console.error('날짜 변환 오류:', e);
       return '';
     }
   };
@@ -335,6 +420,12 @@ function BranchEditModal({ branch, onUpdate, onClose }) {
     closingTime,
     openingDate: formatOpeningDate(branch.openingDate)
   });
+
+  console.log('수정 모달 초기화 - 원본 지점 데이터:', branch);
+  console.log('수정 모달 초기화 - 설정된 formData:', formData);
+  console.log('수정 모달 초기화 - 상태 값:', formData.status);
+  console.log('수정 모달 초기화 - 상태 값 타입:', typeof formData.status);
+  console.log('수정 모달 초기화 - 상태 값 길이:', formData.status ? formData.status.length : 'NULL');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -474,7 +565,7 @@ function BranchEditModal({ branch, onUpdate, onClose }) {
             <input
               type="date"
               name="openingDate"
-              value={formData.openingDate ? new Date(formData.openingDate).toISOString().split('T')[0] : ''}
+              value={formData.openingDate || ''}
               onChange={handleInputChange}
             />
           </div>

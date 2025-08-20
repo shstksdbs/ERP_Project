@@ -17,9 +17,18 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.Resource;
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.util.Map;
 
 @Component
 public class DataInitializer {
+
+    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     @Autowired
     private DataSource dataSource;
@@ -29,54 +38,70 @@ public class DataInitializer {
 
     // 실행할 SQL 파일 목록 (순서 중요!)
     private final List<String> sqlFiles = Arrays.asList(
-        "01_schema.sql",           // 1. 기본 테이블 구조 생성
-        "02_branch_setup.sql",    // 2. 지점 정보 및 설정
-        "03_menu_data.sql",       // 3. 메뉴 기본 데이터
-        "04_option_templates.sql", // 4. 옵션 템플릿 시스템
-        "05_option_data.sql",     // 5. 옵션 데이터
-        "06_inventory_system.sql" // 6. 재고 관리 시스템
+        "01_schema.sql",           // 1. 기본 테이블 구조 생성 (카테고리 테이블 포함)
+        "13_category_data.sql",    // 2. 카테고리 데이터 생성 (메뉴보다 먼저)
+        "02_branch_setup.sql",     // 3. 지점 정보 및 설정
+        "03_menu_data.sql",        // 4. 메뉴 기본 데이터 (카테고리 참조)
+        "04_option_templates.sql", // 5. 옵션 템플릿 시스템
+        "05_option_data.sql",      // 6. 옵션 데이터
+        "06_inventory_system.sql"  // 7. 재고 관리 시스템
     );
 
     @EventListener(ApplicationReadyEvent.class)
     public void initializeData() {
-        System.out.println("🚀 SQL 파일 기반 데이터베이스 초기화를 시작합니다...");
-        System.out.println("📁 실행할 SQL 파일 목록:");
-        for (String file : sqlFiles) {
-            System.out.println("   - " + file);
-        }
+        log.info("데이터베이스 초기화를 시작합니다...");
         
-        try (Connection connection = dataSource.getConnection()) {
-            connection.setAutoCommit(false);
-            System.out.println("✅ 데이터베이스 연결 성공");
+        try {
+            // SQL 파일들을 순서대로 실행 (실제 존재하는 파일들만)
+            String[] sqlFiles = {
+                "01_schema.sql",
+                "10_users_data.sql", 
+                "03_menu_data.sql"
+            };
             
             for (String sqlFile : sqlFiles) {
-                try {
-                    System.out.println("\n📁 " + sqlFile + " 실행 중...");
-                    boolean success = executeSqlFile(connection, sqlFile);
-                    if (success) {
-                        System.out.println("✅ " + sqlFile + " 실행 완료");
-                    } else {
-                        System.err.println("⚠️ " + sqlFile + " 실행 실패 (일부만 성공)");
+                log.info("SQL 파일 실행 중: {}", sqlFile);
+                Resource resource = new ClassPathResource(sqlFile);
+                
+                if (!resource.exists()) {
+                    log.warn("SQL 파일이 존재하지 않습니다: {}", sqlFile);
+                    continue;
+                }
+                
+                try (InputStream inputStream = resource.getInputStream();
+                     BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+                    
+                    StringBuilder sql = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sql.append(line).append("\n");
                     }
-                } catch (Exception e) {
-                    System.err.println("❌ " + sqlFile + " 실행 실패: " + e.getMessage());
-                    e.printStackTrace();
-                    // 에러가 발생해도 계속 진행
+                    
+                    String[] statements = sql.toString().split(";");
+                    for (String statement : statements) {
+                        statement = statement.trim();
+                        if (!statement.isEmpty() && !statement.startsWith("--")) {
+                            try {
+                                jdbcTemplate.execute(statement);
+                                log.debug("SQL 실행 완료: {}", statement.substring(0, Math.min(50, statement.length())));
+                            } catch (Exception e) {
+                                log.warn("SQL 실행 실패 (무시됨): {}", e.getMessage());
+                            }
+                        }
+                    }
                 }
             }
             
-            connection.commit();
-            System.out.println("🎉 데이터베이스 초기화가 완료되었습니다!");
+            log.info("데이터베이스 초기화가 완료되었습니다.");
             
-            // 데이터 확인
+            // 데이터 검증
             verifyData();
             
         } catch (Exception e) {
-            System.err.println("❌ 데이터베이스 초기화 실패: " + e.getMessage());
-            e.printStackTrace();
+            log.error("데이터베이스 초기화 중 오류가 발생했습니다.", e);
         }
     }
-
+    
     /**
      * SQL 파일 실행
      */
@@ -161,56 +186,33 @@ public class DataInitializer {
         return statements.toArray(new String[0]);
     }
     
-    /**
-     * 데이터 확인
-     */
     private void verifyData() {
+        log.info("데이터 검증을 시작합니다...");
+        
         try {
-            System.out.println("\n📊 데이터베이스 데이터 확인:");
-            
-            // 테이블 개수 확인
-            int tableCount = jdbcTemplate.queryForObject("SHOW TABLES", Integer.class);
-            System.out.println("   - 총 테이블 수: " + tableCount);
-            
-            // 지점 데이터 확인
-            try {
-                int branchCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM branches", Integer.class);
-                System.out.println("   - 지점 수: " + branchCount);
-                
-                if (branchCount > 0) {
-                    // 지점별 상세 정보
-                    jdbcTemplate.query("SELECT branch_code, branch_name, branch_type, status, opening_hours FROM branches", 
-                        (rs, rowNum) -> {
-                            System.out.println("     - " + rs.getString("branch_code") + ": " + 
-                                            rs.getString("branch_name") + " (" + 
-                                            rs.getString("branch_type") + ", " + 
-                                            rs.getString("status") + ") - " +
-                                            rs.getString("opening_hours"));
-                            return null;
-                        });
-                }
-            } catch (Exception e) {
-                System.out.println("   - 지점 테이블 확인 실패: " + e.getMessage());
-            }
-            
             // 메뉴 데이터 확인
-            try {
-                int menuCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM menus", Integer.class);
-                System.out.println("   - 메뉴 수: " + menuCount);
-            } catch (Exception e) {
-                System.out.println("   - 메뉴 테이블 확인 실패: " + e.getMessage());
+            Integer menuCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM menus", Integer.class);
+            log.info("메뉴 데이터: {}개", menuCount);
+            
+            if (menuCount > 0) {
+                List<Map<String, Object>> sampleMenus = jdbcTemplate.queryForList(
+                    "SELECT name, price, category FROM menus LIMIT 5"
+                );
+                log.info("샘플 메뉴: {}", sampleMenus);
             }
             
-            // 옵션 데이터 확인
-            try {
-                int optionCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM menu_options", Integer.class);
-                System.out.println("   - 옵션 수: " + optionCount);
-            } catch (Exception e) {
-                System.out.println("   - 옵션 테이블 확인 실패: " + e.getMessage());
-            }
+            // 사용자 데이터 확인
+            Integer userCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Integer.class);
+            log.info("사용자 데이터: {}개", userCount);
+            
+            // 재고 데이터 확인
+            Integer inventoryCount = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM inventory", Integer.class);
+            log.info("재고 데이터: {}개", inventoryCount);
+            
+            log.info("데이터 검증이 완료되었습니다.");
             
         } catch (Exception e) {
-            System.err.println("데이터 확인 중 오류: " + e.getMessage());
+            log.error("데이터 검증 중 오류가 발생했습니다.", e);
         }
     }
 }

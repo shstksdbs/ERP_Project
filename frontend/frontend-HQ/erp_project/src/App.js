@@ -82,7 +82,7 @@ function App() {
       case 'branch-register':
         return <BranchRegister />;
       case 'branch-status':
-        return <BranchStatus />;
+        return <BranchStatus setActiveTab={setActiveTab} />;
       case 'branch-users':
         return <BranchUsers />;
       case 'product-register':

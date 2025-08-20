@@ -25,6 +25,65 @@
   gap: 12px;
 }
 
+.loading-text {
+  color: #6b7280;
+  font-size: 14px;
+  font-style: italic;
+  padding: 10px 12px;
+  min-width: 200px;
+}
+
+.error-text {
+  color: #dc2626;
+  font-size: 14px;
+  padding: 10px 12px;
+  min-width: 200px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 6px;
+}
+
+.error-detail {
+  font-size: 12px;
+  color: #991b1b;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.no-branches-text {
+  color: #6b7280;
+  font-size: 14px;
+  padding: 10px 12px;
+  min-width: 200px;
+  background-color: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  text-align: center;
+}
+
+.form-help-text {
+  color: #6b7280;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* 지점 상태별 스타일 */
+.branch-status-inactive {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+.branch-status-suspended {
+  color: #d97706;
+  font-weight: 500;
+}
+
+.branch-status-closed {
+  color: #6b7280;
+  font-weight: 500;
+}
+
 .branch-selector label {
   font-size: 16px;
   font-weight: 500;
@@ -38,6 +97,16 @@
   font-size: 14px;
   min-width: 200px;
   background-color: white;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .branch-select:focus {
@@ -114,7 +183,8 @@
   width: 100%;
   border-collapse: collapse;
   text-align: center;
-  table-layout: fixed; /* 테이블 레이아웃 고정 */
+  table-layout: fixed;
+  /* 테이블 레이아웃 고정 */
 }
 
 .users-table th {
@@ -129,9 +199,9 @@
   border-bottom: 1px solid #f3f4f6;
   font-size: 14px;
   color: #374151;
-  white-space: nowrap; /* 텍스트 줄바꿈 방지 */
-  overflow: hidden; /* 넘치는 텍스트 숨김 */
-  text-overflow: ellipsis; /* 넘치는 텍스트를 ...으로 표시 */
+  white-space: nowrap;
+  /* 텍스트 줄바꿈 방지 */
+
 }
 
 .users-table-header {
@@ -143,81 +213,90 @@
   background-color: #f9fafb;
 }
 
-.status-select {
-  padding: 4px 8px;
-  border-radius: 6px;
+/* 상태 배지 */
+.status-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
   font-size: 12px;
-  border: 1px solid #d1d5db;
-  background-color: white;
-  cursor: pointer;
+  font-weight: 500;
+  text-align: center;
+  min-width: 60px;
 }
 
-.status-select.status-active {
+.status-active {
   background-color: #dcfce7;
   color: #166534;
-  border-color: #bbf7d0;
 }
 
-.status-select.status-inactive {
-  background-color: #fee2e2;
-  color: #991b1b;
-  border-color: #fecaca;
-}
-
-.status-select.status-suspended {
-  background-color: #fef3c7;
-  color: #92400e;
-  border-color: #fed7aa;
+.status-inactive {
+  background-color: #fef2f2;
+  color: #dc2626;
 }
 
 .action-buttons {
   display: flex;
   gap: 8px;
+  justify-content: center;
+  /* 버튼들을 가운데 정렬 */
+  align-items: center;
+  /* 세로 중앙 정렬 */
 }
 
 .btn-small {
   padding: 4px 8px;
   font-size: 11px;
+
 }
 
 .users-table th:nth-child(1),
 .users-table td:nth-child(1) {
-  width: 10%; /* 사용자명 */
+  width: 10%;
+  /* 사용자명 */
 }
 
 .users-table th:nth-child(2),
 .users-table td:nth-child(2) {
-  width: 10%; /* 이름 */
+  width: 8%;
+  /* 이름 */
 }
 
 .users-table th:nth-child(3),
 .users-table td:nth-child(3) {
-  width: 10%; /* 이메일 */
+  width: 15%;
+  /* 이메일 */
 }
 
 .users-table th:nth-child(4),
 .users-table td:nth-child(4) {
-  width: 10%; /* 권한 */
+  width: 8%;
+  /* 권한 */
 }
 
 .users-table th:nth-child(5),
 .users-table td:nth-child(5) {
-  width: 10%; /* 상태 */
+  width: 8%;
+  /* 상태 */
 }
 
 .users-table th:nth-child(6),
 .users-table td:nth-child(6) {
-  width: 10%; /* 마지막 로그인 */
+  width: 10%;
+  /* 마지막 로그인 */
 }
 
 .users-table th:nth-child(7),
 .users-table td:nth-child(7) {
-  width: 15%; /* 지점 */
+  width: 15%;
+  /* 지점 */
 }
 
 .users-table th:nth-child(8),
 .users-table td:nth-child(8) {
-  width: 10%; /* 작업 */
+  width: 10%;
+  /* 작업 */
+  text-align: center;
+  /* 작업 컬럼 중앙 정렬 */
 }
 
 /* 모달 스타일 */
@@ -303,6 +382,19 @@
   margin-bottom: 6px;
 }
 
+.form-group select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
 .form-group input,
 .form-group select {
   padding: 10px 12px;
@@ -333,53 +425,53 @@
   .branch-users {
     padding: 16px;
   }
-  
+
   .branch-selector {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .branch-select {
     width: 100%;
     min-width: auto;
   }
-  
+
   .users-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .search-box {
     max-width: none;
     width: 100%;
   }
-  
+
   .users-table {
     font-size: 12px;
   }
-  
+
   .users-table th,
   .users-table td {
     padding: 8px 12px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .modal-content {
     width: 95%;
     padding: 16px;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
-} 
+}

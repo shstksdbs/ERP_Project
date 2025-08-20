@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -28,4 +29,13 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
         @Param("branchId") Long branchId, 
         @Param("password") String password
     );
+    
+    // 지점 ID로 사용자 목록 조회
+    List<Users> findByBranchId(Long branchId);
+    
+    // 활성 사용자만 조회
+    List<Users> findByIsActiveTrue();
+    
+    // 이메일로 사용자 찾기
+    Optional<Users> findByEmail(String email);
 }

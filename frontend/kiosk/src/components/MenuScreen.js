@@ -35,13 +35,30 @@ const MenuScreen = () => {
         throw new Error('메뉴 데이터를 가져오는데 실패했습니다');
       }
       const allMenus = await response.json();
+      console.log('백엔드에서 받은 메뉴 데이터:', allMenus);
+      
+      // 백엔드 카테고리를 키오스크 카테고리로 매핑
+      const categoryMapping = {
+        'BURGER': 'burger',
+        'SET': 'set', 
+        'SIDE': 'side',
+        'DRINK': 'drink'
+      };
+      
       // 카테고리별로 메뉴 분류
       const categorizedMenus = {
-        burger: allMenus.filter(menu => menu.category === 'burger'),
-        set: allMenus.filter(menu => menu.category === 'set'),
-        side: allMenus.filter(menu => menu.category === 'side'),
-        drink: allMenus.filter(menu => menu.category === 'drink')
+        burger: allMenus.filter(menu => categoryMapping[menu.category] === 'burger'),
+        set: allMenus.filter(menu => categoryMapping[menu.category] === 'set'),
+        side: allMenus.filter(menu => categoryMapping[menu.category] === 'side'),
+        drink: allMenus.filter(menu => categoryMapping[menu.category] === 'drink')
       };
+      
+      console.log('카테고리별로 분류된 메뉴:', categorizedMenus);
+      
+      // 각 카테고리별 메뉴 개수 확인
+      Object.keys(categorizedMenus).forEach(category => {
+        console.log(`${category} 카테고리: ${categorizedMenus[category].length}개`);
+      });
       
       setMenuItems(categorizedMenus);
       setError(null);
@@ -181,7 +198,7 @@ const MenuScreen = () => {
         {categories.map(category => (
           <button
             key={category.id}
-            className={`${styles.categoryTab} ${selectedCategory === category.id ? styles.active : ''}`}
+            className={`${styles.categoryTab} ${selectedCategory === category.id ? styles['active'] : ''}`}
             onClick={() => setSelectedCategory(category.id)}
           >
             {category.name}
@@ -207,46 +224,64 @@ const MenuScreen = () => {
       
       {!loading && !error && (
         <div className={styles.menuGrid}>
-          {menuItems[selectedCategory]?.map(item => (
-            <div key={item.id} className={styles.menuItem} onClick={() => handleMenuItemClick(item)}>
-              <div className={styles.menuImageContainer}>
-                {item.imageUrl ? (
-                  <img 
-                    src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:8080${item.imageUrl}`}
-                    alt={item.name} 
-                    className={styles.menuImage}
-                    onError={(e) => {
-                      e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'flex';
-                    }}
-                  />
-                ) : null}
-                <div className={`${styles.menuIcon} ${item.imageUrl ? styles.menuIconFallback : ''}`}>
-                  {item.name.charAt(0)}
-                </div>
-              </div>
-              <div className={styles.menuInfo}>
-                <h3 className={styles.menuName}>{item.name}</h3>
-                <p className={styles.menuDescription}>{item.description}</p>
-                <p className={styles.menuPrice}>₩{item.price.toLocaleString()}</p>
-              </div>
-              {selectedCategory === 'burger' && (
-                <button className={styles.addButton}>
-                  옵션 선택
-                </button>
-              )}
-              {selectedCategory === 'set' && (
-                <button className={styles.addButton}>
-                  옵션 선택
-                </button>
-              )}
-              {(selectedCategory === 'side' || selectedCategory === 'drink') && (
-                <button className={styles.addButton}>
-                  장바구니 담기
-                </button>
-              )}
+          {console.log('현재 선택된 카테고리:', selectedCategory)}
+          {console.log('현재 카테고리의 메뉴:', menuItems[selectedCategory])}
+          {console.log('전체 메뉴 아이템:', menuItems)}
+          
+          {!menuItems[selectedCategory] || menuItems[selectedCategory].length === 0 ? (
+            <div className={styles.noMenuMessage}>
+              <p>이 카테고리에 메뉴가 없습니다.</p>
+              <p>선택된 카테고리: {selectedCategory}</p>
+              <p>전체 메뉴 개수: {Object.values(menuItems).flat().length}개</p>
+              <button onClick={fetchMenuData} className={styles.retryButton}>
+                메뉴 새로고침
+              </button>
             </div>
-          ))}
+          ) : (
+            menuItems[selectedCategory].map(item => {
+              console.log('렌더링할 메뉴 아이템:', item);
+              return (
+                <div key={item.id} className={styles.menuItem} onClick={() => handleMenuItemClick(item)}>
+                  <div className={styles.menuImageContainer}>
+                    {item.imageUrl ? (
+                      <img 
+                        src={item.imageUrl.startsWith('http') ? item.imageUrl : `http://localhost:8080${item.imageUrl}`}
+                        alt={item.name} 
+                        className={styles.menuImage}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'flex';
+                        }}
+                      />
+                    ) : null}
+                    <div className={`${styles.menuIcon} ${item.imageUrl ? styles.menuIconFallback : ''}`}>
+                      {item.name.charAt(0)}
+                    </div>
+                  </div>
+                  <div className={styles.menuInfo}>
+                    <h3 className={styles.menuName}>{item.name}</h3>
+                    <p className={styles.menuDescription}>{item.description}</p>
+                    <p className={styles.menuPrice}>₩{item.price.toLocaleString()}</p>
+                  </div>
+                  {selectedCategory === 'burger' && (
+                    <button className={styles.addButton}>
+                      옵션 선택
+                    </button>
+                  )}
+                  {selectedCategory === 'set' && (
+                    <button className={styles.addButton}>
+                      옵션 선택
+                    </button>
+                  )}
+                  {(selectedCategory === 'side' || selectedCategory === 'drink') && (
+                    <button className={styles.addButton}>
+                      장바구니 담기
+                    </button>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
       )}
 

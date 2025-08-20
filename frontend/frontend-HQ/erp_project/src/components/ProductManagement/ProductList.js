@@ -10,7 +10,6 @@ import percentIcon from '../../assets/percent_icon.png';
 export default function ProductList() {
   const [activeTab, setActiveTab] = useState('product-list');
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -18,174 +17,288 @@ export default function ProductList() {
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [showProductDetailModal, setShowProductDetailModal] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // 샘플 데이터
+  // API 기본 URL
+  const API_BASE_URL = 'http://localhost:8080/api';
+
+  // 고정 카테고리 목록 (API 호출 없이 사용)
+  const categories = [
+    { id: 1, name: 'BURGER', code: 'BURGER' },
+    { id: 2, name: 'SET', code: 'SET' },
+    { id: 3, name: 'SIDE', code: 'SIDE' },
+    { id: 4, name: 'DRINK', code: 'DRINK' }
+  ];
+
+  // 실제 메뉴 데이터 가져오기
   useEffect(() => {
-    const sampleCategories = [
-      { id: 1, name: '음료', code: 'BEVERAGE' },
-      { id: 2, name: '식품', code: 'FOOD' },
-      { id: 3, name: '디저트', code: 'DESSERT' },
-      { id: 4, name: '사이드', code: 'SIDE' }
-    ];
-
-    const sampleProducts = [
-      {
-        id: 1,
-        name: '아메리카노',
-        code: 'AM001',
-        category: '음료',
-        price: 4500,
-        cost: 1500,
-        profitMargin: 66.7,
-        stock: 100,
-        status: 'active',
-        description: '깔끔한 아메리카노',
-        image: null,
-        createdAt: '2024-01-15',
-        updatedAt: '2024-01-20',
-        salesCount: 1250,
-        rating: 4.5
-      },
-      {
-        id: 2,
-        name: '카페라떼',
-        code: 'CL001',
-        category: '음료',
-        price: 5500,
-        cost: 1800,
-        profitMargin: 67.3,
-        stock: 80,
-        status: 'active',
-        description: '부드러운 카페라떼',
-        image: null,
-        createdAt: '2024-01-16',
-        updatedAt: '2024-01-25',
-        salesCount: 980,
-        rating: 4.8
-      },
-      {
-        id: 3,
-        name: '카푸치노',
-        code: 'CP001',
-        category: '음료',
-        price: 5500,
-        cost: 1800,
-        profitMargin: 67.3,
-        stock: 75,
-        status: 'active',
-        description: '크림이 풍부한 카푸치노',
-        image: null,
-        createdAt: '2024-01-17',
-        updatedAt: '2024-01-22',
-        salesCount: 720,
-        rating: 4.6
-      },
-      {
-        id: 4,
-        name: '샌드위치',
-        code: 'SW001',
-        category: '식품',
-        price: 8000,
-        cost: 3000,
-        profitMargin: 62.5,
-        stock: 50,
-        status: 'active',
-        description: '신선한 샌드위치',
-        image: null,
-        createdAt: '2024-01-18',
-        updatedAt: '2024-01-28',
-        salesCount: 450,
-        rating: 4.3
-      },
-      {
-        id: 5,
-        name: '샐러드',
-        code: 'SL001',
-        category: '식품',
-        price: 12000,
-        cost: 4500,
-        profitMargin: 62.5,
-        stock: 30,
-        status: 'active',
-        description: '건강한 샐러드',
-        image: null,
-        createdAt: '2024-01-19',
-        updatedAt: '2024-01-30',
-        salesCount: 280,
-        rating: 4.7
-      },
-      {
-        id: 6,
-        name: '티라미수',
-        code: 'TR001',
-        category: '디저트',
-        price: 6500,
-        cost: 2200,
-        profitMargin: 66.2,
-        stock: 40,
-        status: 'active',
-        description: '이탈리안 디저트',
-        image: null,
-        createdAt: '2024-01-20',
-        updatedAt: '2024-02-01',
-        salesCount: 320,
-        rating: 4.9
-      },
-      {
-        id: 7,
-        name: '치즈케이크',
-        code: 'CK001',
-        category: '디저트',
-        price: 7000,
-        cost: 2500,
-        profitMargin: 64.3,
-        stock: 35,
-        status: 'active',
-        description: '부드러운 치즈케이크',
-        image: null,
-        createdAt: '2024-01-21',
-        updatedAt: '2024-02-02',
-        salesCount: 290,
-        rating: 4.4
-      },
-      {
-        id: 8,
-        name: '감자튀김',
-        code: 'FF001',
-        category: '사이드',
-        price: 3500,
-        cost: 1200,
-        profitMargin: 65.7,
-        stock: 60,
-        status: 'inactive',
-        description: '바삭한 감자튀김',
-        image: null,
-        createdAt: '2024-01-22',
-        updatedAt: '2024-02-03',
-        salesCount: 180,
-        rating: 4.2
-      }
-    ];
-
-    setCategories(sampleCategories);
-    setProducts(sampleProducts);
+    fetchMenus();
   }, []);
 
-  const handleAddProduct = (newProduct) => {
-    setProducts([...products, { ...newProduct, id: Date.now() }]);
-    setShowAddProductModal(false);
+  // 메뉴 데이터 가져오기
+  const fetchMenus = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await fetch(`${API_BASE_URL}/menus`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const menus = await response.json();
+      
+      if (!Array.isArray(menus)) {
+        throw new Error('메뉴 데이터 형식이 올바르지 않습니다.');
+      }
+      
+      // Menu 엔티티 데이터를 ProductList 형식에 맞게 변환
+      const transformedProducts = menus.map(menu => ({
+        id: menu.id,
+        name: menu.name || '이름 없음',
+        code: menu.code || `MENU${menu.id}`,
+        category: menu.category || '카테고리 없음',
+        price: menu.price || 0,
+        cost: menu.basePrice || 0,
+        profit: menu.price && menu.basePrice ? 
+          Math.round(((menu.price - menu.basePrice) / menu.price) * 100) : 0,
+        sales: Math.floor(Math.random() * 100) + 1, // 임시 데이터
+        status: menu.isAvailable ? 'active' : 'inactive',
+        image: menu.imageUrl || null,
+        stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
+        profitMargin: menu.price && menu.basePrice ? 
+          Math.round(((menu.price - menu.basePrice) / menu.price) * 100) : 0,
+        salesCount: Math.floor(Math.random() * 1000) + 100, // 임시 판매량
+        rating: (Math.random() * 2 + 3).toFixed(1), // 임시 평점
+        createdAt: menu.createdAt ? menu.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+        updatedAt: menu.updatedAt ? menu.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+        description: menu.description || '상품 설명이 없습니다.'
+      }));
+      
+      setProducts(transformedProducts);
+      console.log('메뉴 데이터 로드 성공:', transformedProducts);
+    } catch (err) {
+      console.error('메뉴 데이터 가져오기 오류:', err);
+      
+      // 네트워크 오류인지 확인
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setError('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.');
+      } else {
+        setError(`메뉴 데이터를 가져오는데 실패했습니다: ${err.message}`);
+      }
+      
+      // 오류 발생 시 샘플 데이터로 폴백
+      setProducts(getSampleProducts());
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleEditProduct = (updatedProduct) => {
-    setProducts(products.map(product => 
-      product.id === updatedProduct.id ? updatedProduct : product
-    ));
-    setShowEditProductModal(false);
+  // 샘플 상품 데이터 (폴백용)
+  const getSampleProducts = () => [
+    {
+      id: 1,
+      name: '아메리카노',
+      code: 'AM001',
+      category: '음료',
+      price: 4500,
+      cost: 1500,
+      profitMargin: 66.7,
+      stock: 100,
+      status: 'active',
+      description: '깔끔한 아메리카노',
+      image: null,
+      createdAt: '2024-01-15',
+      updatedAt: '2024-01-20',
+      salesCount: 1250,
+      rating: 4.5
+    },
+    {
+      id: 2,
+      name: '카페라떼',
+      code: 'CL001',
+      category: '음료',
+      price: 5500,
+      cost: 1800,
+      profitMargin: 67.3,
+      stock: 80,
+      status: 'active',
+      description: '부드러운 카페라떼',
+      image: null,
+      createdAt: '2024-01-16',
+      updatedAt: '2024-01-25',
+      salesCount: 980,
+      rating: 4.8
+    }
+  ];
+
+  // 상품 추가 (API 호출)
+  const handleAddProduct = async (newProduct) => {
+    try {
+      const menuData = {
+        name: newProduct.name,
+        description: newProduct.description,
+        price: newProduct.price,
+        category: newProduct.category, // 카테고리 이름 직접 사용
+        basePrice: newProduct.cost,
+        isAvailable: newProduct.status === 'active',
+        displayOrder: products.length + 1
+      };
+
+      const response = await fetch(`${API_BASE_URL}/menus`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify(menuData)
+      });
+
+      if (response.ok) {
+        const createdMenu = await response.json();
+        // 새로 생성된 메뉴를 products 상태에 추가
+        const transformedProduct = {
+          id: createdMenu.id,
+          name: createdMenu.name,
+          code: createdMenu.code || `MENU${createdMenu.id}`,
+          category: createdMenu.category || '카테고리 없음',
+          price: createdMenu.price,
+          cost: createdMenu.basePrice,
+          profit: createdMenu.price && createdMenu.basePrice ? 
+            Math.round(((createdMenu.price - createdMenu.basePrice) / createdMenu.price) * 100) : 0,
+          sales: Math.floor(Math.random() * 100) + 1,
+          status: createdMenu.isAvailable ? 'active' : 'inactive',
+          image: createdMenu.imageUrl,
+          stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
+          profitMargin: createdMenu.price && createdMenu.basePrice ? 
+            Math.round(((createdMenu.price - createdMenu.basePrice) / createdMenu.price) * 100) : 0,
+          salesCount: Math.floor(Math.random() * 1000) + 100, // 임시 판매량
+          rating: (Math.random() * 2 + 3).toFixed(1), // 임시 평점
+          createdAt: new Date().toISOString().split('T')[0],
+          updatedAt: new Date().toISOString().split('T')[0]
+        };
+        
+        setProducts([...products, transformedProduct]);
+        alert('상품이 성공적으로 추가되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('상품 추가 오류:', err);
+      alert('상품 추가에 실패했습니다: ' + err.message);
+    }
   };
 
-  const handleDeleteProduct = (productId) => {
+  // 상품 수정 (API 호출)
+  const handleEditProduct = async (updatedProduct) => {
+    try {
+      const menuData = {
+        name: updatedProduct.name,
+        description: updatedProduct.description,
+        price: updatedProduct.price,
+        category: updatedProduct.category,
+        basePrice: updatedProduct.cost,
+        isAvailable: updatedProduct.status === 'active',
+        displayOrder: updatedProduct.displayOrder || 0
+      };
+
+      const response = await fetch(`${API_BASE_URL}/menus/${updatedProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors',
+        body: JSON.stringify(menuData)
+      });
+
+      if (response.ok) {
+        const updatedMenu = await response.json();
+        // 수정된 메뉴를 products 상태에 반영
+        const transformedProduct = {
+          ...updatedProduct,
+          name: updatedMenu.name,
+          category: updatedMenu.category,
+          price: updatedMenu.price ? parseFloat(updatedMenu.price) : 0,
+          cost: updatedMenu.basePrice ? parseFloat(updatedMenu.basePrice) : 0,
+          status: updatedMenu.isAvailable ? 'active' : 'inactive',
+          description: updatedMenu.description || '',
+          image: updatedMenu.imageUrl,
+          updatedAt: updatedMenu.updatedAt ? updatedMenu.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+          stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
+          profitMargin: updatedMenu.price && updatedMenu.basePrice ? 
+            Math.round(((updatedMenu.price - updatedMenu.basePrice) / updatedMenu.price) * 100) : 0,
+          salesCount: Math.floor(Math.random() * 1000) + 100, // 임시 판매량
+          rating: (Math.random() * 2 + 3).toFixed(1) // 임시 평점
+        };
+        
+        setProducts(products.map(product => 
+          product.id === updatedProduct.id ? transformedProduct : product
+        ));
+        setShowEditProductModal(false);
+        alert('상품이 성공적으로 수정되었습니다.');
+      } else {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error('상품 수정 오류:', err);
+      alert('상품 수정에 실패했습니다: ' + err.message);
+    }
+  };
+
+  // 상품 삭제 (API 호출)
+  const handleDeleteProduct = async (productId) => {
     if (window.confirm('정말로 이 상품을 삭제하시겠습니까?')) {
-      setProducts(products.filter(product => product.id !== productId));
+      try {
+        const response = await fetch(`${API_BASE_URL}/menus/${productId}`, {
+          method: 'DELETE',
+          mode: 'cors'
+        });
+
+        if (response.ok) {
+          setProducts(products.filter(product => product.id !== productId));
+          alert('상품이 성공적으로 삭제되었습니다.');
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
+      } catch (err) {
+        console.error('상품 삭제 오류:', err);
+        alert('상품 삭제에 실패했습니다: ' + err.message);
+      }
+    }
+  };
+
+  // API 연결 테스트
+  const testApiConnection = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`${API_BASE_URL}/menus`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      });
+      if (response.ok) {
+        alert('API 연결 성공! 백엔드 서버가 정상적으로 응답합니다.');
+      } else {
+        throw new Error(`API 연결 실패. HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      alert('API 연결 실패: ' + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -215,7 +328,39 @@ export default function ProductList() {
     <div className={styles['product-list']}>
       <div className={styles['product-list-header']}>
         <h1>상품 목록</h1>
+        <div className={styles['header-buttons']}>
+          <button 
+            className={`btn btn-secondary ${styles['test-api-button']}`}
+            onClick={testApiConnection}
+            disabled={loading}
+          >
+            API 연결 테스트
+          </button>
+          <button 
+            className={`btn btn-secondary ${styles['refresh-button']}`}
+            onClick={fetchMenus}
+            disabled={loading}
+          >
+            {loading ? '새로고침 중...' : '새로고침'}
+          </button>
+        </div>
       </div>
+
+      {/* 오류 메시지 표시 */}
+      {error && (
+        <div className={styles['error-message']}>
+          <p>⚠️ {error}</p>
+          <button 
+            className="btn btn-secondary"
+            onClick={() => {
+              setError(null);
+              fetchMenus();
+            }}
+          >
+            다시 시도
+          </button>
+        </div>
+      )}
 
       <div className={styles['tab-container']}>
         <button
@@ -242,7 +387,9 @@ export default function ProductList() {
               </div>
               <div className={styles['summary-content']}>
                 <h3>총 상품</h3>
-                <div className={styles['summary-number']}>{totalProducts}개</div>
+                <div className={styles['summary-number']}>
+                  {loading ? '...' : `${totalProducts}개`}
+                </div>
               </div>
             </div>
             <div className={styles['summary-card']}>
@@ -251,7 +398,9 @@ export default function ProductList() {
               </div>
               <div className={styles['summary-content']}>
                 <h3>활성 상품</h3>
-                <div className={styles['summary-number']}>{activeProducts}개</div>
+                <div className={styles['summary-number']}>
+                  {loading ? '...' : `${activeProducts}개`}
+                </div>
               </div>
             </div>
             <div className={styles['summary-card']}>
@@ -260,7 +409,9 @@ export default function ProductList() {
               </div>
               <div className={styles['summary-content']}>
                 <h3>총 재고 가치</h3>
-                <div className={styles['summary-number']}>{formatCurrency(totalValue)}원</div>
+                <div className={styles['summary-number']}>
+                  {loading ? '...' : `${formatCurrency(totalValue)}원`}
+                </div>
               </div>
             </div>
             <div className={styles['summary-card']}>
@@ -269,52 +420,56 @@ export default function ProductList() {
               </div>
               <div className={styles['summary-content']}>
                 <h3>평균 수익률</h3>
-                <div className={styles['summary-number']}>{avgProfitMargin.toFixed(1)}%</div>
+                <div className={styles['summary-number']}>
+                  {loading ? '...' : `${avgProfitMargin.toFixed(1)}%`}
+                </div>
               </div>
             </div>
           </div>
 
           <div className={styles['search-filter-container']}>
-            <div className={styles['search-box']}>
-              <div className={styles['search-input-container']}>
-                <img 
-                  src={searchIcon} 
-                  alt="검색" 
-                  className={styles['search-icon']}
-                />
-                <input
-                  type="text"
-                  placeholder="상품명 또는 코드로 검색"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className={styles['search-input']}
-                />
+            <div className={styles['search-filter-left']}>
+              <div className={styles['search-box']}>
+                <div className={styles['search-input-container']}>
+                  <img 
+                    src={searchIcon} 
+                    alt="검색" 
+                    className={styles['search-icon']}
+                  />
+                  <input
+                    type="text"
+                    placeholder="상품명 또는 코드로 검색"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className={styles['search-input']}
+                  />
+                </div>
               </div>
-            </div>
-            <div className={styles['filter-box']}>
-              <select
-                className={styles['filter-select']}
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-              >
-                <option value="all">전체 카테고리</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.name}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles['filter-box']}>
-              <select
-                className={styles['filter-select']}
-                value={selectedStatus}
-                onChange={(e) => setSelectedStatus(e.target.value)}
-              >
-                <option value="all">전체 상태</option>
-                <option value="active">활성</option>
-                <option value="inactive">비활성</option>
-              </select>
+              <div className={styles['filter-box']}>
+                <select
+                  className={styles['filter-select']}
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  <option value="all">전체 카테고리</option>
+                  {categories.map(category => (
+                    <option key={category.id} value={category.name}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles['filter-box']}>
+                <select
+                  className={styles['filter-select']}
+                  value={selectedStatus}
+                  onChange={(e) => setSelectedStatus(e.target.value)}
+                >
+                  <option value="all">전체 상태</option>
+                  <option value="active">활성</option>
+                  <option value="inactive">비활성</option>
+                </select>
+              </div>
             </div>
             <button
               className={`btn btn-primary ${styles['add-button']}`}
@@ -326,85 +481,116 @@ export default function ProductList() {
           </div>
 
           <div className={styles['products-container']}>
-            <div className={styles['products-list']}>
-              <table className={styles['products-table']}>
-                <thead className={styles['products-table-header']}>
-                  <tr>
-                    <th>상품명</th>
-                    <th>코드</th>
-                    <th>카테고리</th>
-                    <th>판매가</th>
-                    <th>원가</th>
-                    <th>수익률</th>
-                    <th>재고</th>
-                    <th>판매량</th>
-                    <th>상태</th>
-                    <th>등록일</th>
-                    <th>작업</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.map(product => (
-                    <tr key={product.id}>
-                      <td>
-                        <div className={styles['product-info']}>
-                          <span className={styles['product-name']}>{product.name}</span>
-                        </div>
-                      </td>
-                      <td>{product.code}</td>
-                      <td>
-                        <span className={`${styles['category-badge']} ${styles[`category-${product.category.toLowerCase()}`]}`}>
-                          {product.category}
-                        </span>
-                      </td>
-                      <td>{formatCurrency(product.price)}원</td>
-                      <td>{formatCurrency(product.cost)}원</td>
-                      <td>{product.profitMargin}%</td>
-                      <td>
-                        <span className={`${styles['stock-badge']} ${product.stock < 20 ? styles['low-stock'] : ''}`}>
-                          {product.stock}개
-                        </span>
-                      </td>
-                      <td>{formatCurrency(product.salesCount)}개</td>
-                      <td>
-                        <span className={`${styles['status-badge']} ${styles[`status-${product.status}`]}`}>
-                          {getStatusText(product.status)}
-                        </span>
-                      </td>
-                      <td>{product.createdAt}</td>
-                      <td>
-                        <div className={styles['action-buttons']}>
-                          <button
-                            className={`btn btn-small ${styles['btn-small']}`}
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setShowProductDetailModal(true);
-                            }}
-                          >
-                            상세
-                          </button>
-                          <button
-                            className={`btn btn-small ${styles['btn-small']}`}
-                            onClick={() => {
-                              setSelectedProduct(product);
-                              setShowEditProductModal(true);
-                            }}
-                          >
-                            <img src={pencilIcon} alt="수정" className={styles['action-icon']} />
-                          </button>
-                          <button
-                            className={`btn btn-small btn-danger ${styles['btn-small']}`}
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            삭제
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            {/* 로딩 상태 표시 */}
+            {loading && (
+              <div className={styles['loading-container']}>
+                <div className={styles['loading-spinner']}></div>
+                <p>상품 데이터를 불러오는 중...</p>
+              </div>
+            )}
+
+            {/* 상품 목록 테이블 */}
+            {!loading && (
+              <div className={styles['products-list']}>
+                {filteredProducts.length === 0 ? (
+                  <div className={styles['no-products']}>
+                    <p>표시할 상품이 없습니다.</p>
+                    {searchTerm || selectedCategory !== 'all' || selectedStatus !== 'all' ? (
+                      <button 
+                        className="btn btn-secondary"
+                        onClick={() => {
+                          setSearchTerm('');
+                          setSelectedCategory('all');
+                          setSelectedStatus('all');
+                        }}
+                      >
+                        필터 초기화
+                      </button>
+                    ) : null}
+                  </div>
+                ) : (
+                  <table className={styles['products-table']}>
+                    <thead className={styles['products-table-header']}>
+                      <tr>
+                        <th>상품명</th>
+                        <th>코드</th>
+                        <th>카테고리</th>
+                        <th>판매가</th>
+                        <th>원가</th>
+                        <th>수익률</th>
+                        <th>판매량</th>
+                        <th>상태</th>
+                        <th>등록일</th>
+                        <th>작업</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filteredProducts.map(product => (
+                        <tr key={product.id}>
+                          <td>
+                            <div className={styles['product-info']}>
+                              {/* {product.image && (
+                                <img 
+                                  src={product.image} 
+                                  alt={product.name} 
+                                  className={styles['product-image']}
+                                />
+                              )} */}
+                              <span className={styles['product-name']}>{product.name}</span>
+                            </div>
+                          </td>
+                          <td>{product.code}</td>
+                          <td>
+                            <span className={`${styles['category-badge']} ${styles[`category-${product.category.toLowerCase()}`]}`}>
+                              {product.category}
+                            </span>
+                          </td>
+                          <td>{formatCurrency(product.price)}원</td>
+                          <td>{formatCurrency(product.cost)}원</td>
+                          <td>{product.profitMargin}%</td>
+                          <td>{formatCurrency(product.salesCount)}개</td>
+                          <td>
+                            <span className={`${styles['status-badge']} ${styles[`status-${product.status}`]}`}>
+                              {getStatusText(product.status)}
+                            </span>
+                          </td>
+                          <td>{product.createdAt}</td>
+                          <td>
+                            <div className={styles['action-buttons']}>
+                              <button
+                                className={`btn btn-small ${styles['btn-small']}`}
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  setShowProductDetailModal(true);
+                                }}
+                              >
+                                상세
+                              </button>
+                              <button
+                                className={`btn btn-primary btn-small ${styles['btn-small']}`}
+                                onClick={() => {
+                                  setSelectedProduct(product);
+                                  setShowEditProductModal(true);
+                                }}
+                              >
+                                {/* <img src={pencilIcon} alt="수정" className={styles['action-icon']} /> */}
+                                수정
+                              </button>
+                              <button
+                                className={`btn btn-small btn-danger ${styles['btn-small']}`}
+                                onClick={() => handleDeleteProduct(product.id)}
+                              >
+                                삭제
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+            )}
           </div>
         </div>
       )}
