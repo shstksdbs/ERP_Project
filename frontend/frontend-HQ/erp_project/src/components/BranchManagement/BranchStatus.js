@@ -10,6 +10,27 @@ export default function BranchEdit({ setActiveTab }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // JSON 형식의 운영시간을 파싱하여 시간만 표시하는 함수
+  const formatOpeningHours = (openingHours) => {
+    if (!openingHours || openingHours === '운영시간 정보 없음') {
+      return '운영시간 정보 없음';
+    }
+    
+    try {
+      // JSON 형식인지 확인
+      if (openingHours.startsWith('{') && openingHours.includes('"open"')) {
+        const parsed = JSON.parse(openingHours);
+        return `${parsed.open} - ${parsed.close}`;
+      }
+      
+      // 기존 형식 (HH:MM - HH:MM)인 경우 그대로 반환
+      return openingHours;
+    } catch (e) {
+      console.error('운영시간 파싱 오류:', e);
+      return openingHours; // 파싱 실패 시 원본 반환
+    }
+  };
+
   // 실제 서버에서 지점 데이터 가져오기
   useEffect(() => {
     const fetchBranches = async () => {
@@ -147,19 +168,19 @@ export default function BranchEdit({ setActiveTab }) {
     try {
       setIsLoading(true);
       
-      // 백엔드 API와 일치하는 데이터 구조로 변환
-      const branchData = {
-        branchName: updatedBranch.branchName,
-        branchCode: updatedBranch.branchCode,
-        address: updatedBranch.address,
-        phone: updatedBranch.phone,
-        managerName: updatedBranch.manager, // manager를 managerName으로 매핑
-        status: updatedBranch.status || 'active', // 상태 값이 없으면 기본값 사용
-        operatingHours: updatedBranch.openingTime && updatedBranch.closingTime 
-          ? `${updatedBranch.openingTime} - ${updatedBranch.closingTime}` 
-          : updatedBranch.openingHours,
-        openDate: updatedBranch.openingDate // 오픈날짜 추가
-      };
+             // 백엔드 API와 일치하는 데이터 구조로 변환
+       const branchData = {
+         branchName: updatedBranch.branchName,
+         branchCode: updatedBranch.branchCode,
+         address: updatedBranch.address,
+         phone: updatedBranch.phone,
+         managerName: updatedBranch.manager, // manager를 managerName으로 매핑
+         status: updatedBranch.status || 'active', // 상태 값이 없으면 기본값 사용
+         operatingHours: updatedBranch.openingTime && updatedBranch.closingTime 
+           ? JSON.stringify({ open: updatedBranch.openingTime, close: updatedBranch.closingTime })
+           : updatedBranch.openingHours,
+         openDate: updatedBranch.openingDate // 오픈날짜 추가
+       };
 
       console.log('수정할 데이터:', branchData);
       console.log('상태 값 확인:', branchData.status, typeof branchData.status);
@@ -339,7 +360,7 @@ export default function BranchEdit({ setActiveTab }) {
                          branch.status === 'pending' ? '대기' : '알 수 없음'}
                       </span>
                     </td>
-                    <td>{branch.openingHours}</td>
+                    <td>{formatOpeningHours(branch.openingHours)}</td>
                     <td>{branch.openingDate}</td>
                     <td>
                       <div className={styles['action-buttons']}>
@@ -380,15 +401,26 @@ export default function BranchEdit({ setActiveTab }) {
 function BranchEditModal({ branch, onUpdate, onClose }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // 기존 운영시간을 시작시간과 종료시간으로 분리
+  // JSON 형식의 운영시간을 파싱하여 시간만 표시
   const parseOpeningHours = (openingHours) => {
     if (!openingHours || openingHours === '운영시간 정보 없음') {
       return { openingTime: '', closingTime: '' };
     }
     
-    const parts = openingHours.split(' - ');
-    if (parts.length === 2) {
-      return { openingTime: parts[0], closingTime: parts[1] };
+    try {
+      // JSON 형식인지 확인
+      if (openingHours.startsWith('{') && openingHours.includes('"open"')) {
+        const parsed = JSON.parse(openingHours);
+        return { openingTime: parsed.open, closingTime: parsed.close };
+      }
+      
+      // 기존 형식 (HH:MM - HH:MM)인 경우
+      const parts = openingHours.split(' - ');
+      if (parts.length === 2) {
+        return { openingTime: parts[0], closingTime: parts[1] };
+      }
+    } catch (e) {
+      console.error('운영시간 파싱 오류:', e);
     }
     
     return { openingTime: '', closingTime: '' };

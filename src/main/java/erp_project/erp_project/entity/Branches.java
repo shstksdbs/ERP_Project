@@ -20,7 +20,6 @@ public class Branches {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "branch_id")
     private Long id;
     
     @Column(name = "branch_code", unique = true, nullable = false, length = 10)

@@ -108,7 +108,7 @@ public class UserService {
         if (request.containsKey("role")) {
             String role = (String) request.get("role");
             if (role != null && !role.trim().isEmpty()) {
-                user.setRole(UserRole.valueOf(role.toUpperCase()));
+                user.setRole(Users.UserRole.valueOf(role.toUpperCase()));
             }
         }
         
@@ -209,12 +209,12 @@ public class UserService {
         String role = (String) request.get("role");
         if (role != null && !role.trim().isEmpty()) {
             try {
-                newUser.setRole(UserRole.valueOf(role.toUpperCase()));
+                newUser.setRole(Users.UserRole.valueOf(role.toUpperCase()));
             } catch (IllegalArgumentException e) {
-                newUser.setRole(UserRole.STAFF); // 기본값
+                newUser.setRole(Users.UserRole.STAFF); // 기본값
             }
         } else {
-            newUser.setRole(UserRole.STAFF); // 기본값
+            newUser.setRole(Users.UserRole.STAFF); // 기본값
         }
         
         // 상태 설정

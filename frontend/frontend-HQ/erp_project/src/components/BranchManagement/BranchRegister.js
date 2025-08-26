@@ -60,7 +60,7 @@ export default function BranchRegister() {
         phone: formData.phone.trim(),
         managerName: formData.manager.trim(),
         operatingHours: formData.openingTime && formData.closingTime 
-          ? `${formData.openingTime} - ${formData.closingTime}` 
+          ? JSON.stringify({ open: formData.openingTime, close: formData.closingTime })
           : '',
         openDate: formData.openDate || null,
         status: formData.status

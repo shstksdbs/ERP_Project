@@ -32,6 +32,10 @@ public class Users {
     @Column(name = "branch_id", nullable = false)
     private Long branchId;
     
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "branch_id", insertable = false, updatable = false)
+    private Branches branch;
+    
     @Column(name = "role", nullable = false)
     @Enumerated(EnumType.STRING)
     private UserRole role;

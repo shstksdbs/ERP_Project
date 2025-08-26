@@ -1,23 +1,9 @@
--- 사용자 테이블 생성
-CREATE TABLE IF NOT EXISTS users (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    real_name VARCHAR(100) NOT NULL,
-    branch_id BIGINT NOT NULL,
-    role ENUM('ADMIN', 'MANAGER', 'STAFF') NOT NULL,
-    email VARCHAR(100),
-    phone VARCHAR(20),
-    is_active BOOLEAN NOT NULL DEFAULT TRUE,
-    last_login DATETIME,
-    created_at DATETIME NOT NULL,
-    updated_at DATETIME,
-    FOREIGN KEY (branch_id) REFERENCES branches(branch_id)
-);
+-- 10_users_data.sql
+-- 사용자 데이터 삽입
 
 -- 임시 사용자 데이터 추가
 -- 비밀번호는 실제 운영환경에서는 암호화해야 합니다
-INSERT INTO users (username, password, real_name, branch_id, role, email, phone, is_active, created_at) VALUES
+INSERT IGNORE INTO users (username, password, real_name, branch_id, role, email, phone, is_active, created_at) VALUES
 -- 지점 1 (강남점)
 ('admin_gangnam', 'admin123', '김관리자', 1, 'ADMIN', 'admin.gangnam@company.com', '010-1000-0001', TRUE, NOW()),
 ('manager_gangnam', 'manager123', '박지점장', 1, 'MANAGER', 'manager.gangnam@company.com', '010-1000-0002', TRUE, NOW()),
@@ -46,15 +32,8 @@ INSERT INTO users (username, password, real_name, branch_id, role, email, phone,
 ('admin_songpa', 'admin123', '백관리자', 5, 'ADMIN', 'admin.songpa@company.com', '010-5000-0001', TRUE, NOW()),
 ('manager_songpa', 'manager123', '신지점장', 5, 'MANAGER', 'manager.songpa@company.com', '010-5000-0002', TRUE, NOW()),
 ('staff_songpa1', 'staff123', '오직원1', 5, 'STAFF', 'staff1.songpa@company.com', '010-5000-0003', TRUE, NOW()),
-('staff_songpa2', 'staff123', '장직원2', 5, 'STAFF', 'staff2.songpa@company.com', '010-5000-0004', TRUE, NOW()),
+('staff_songpa2', 'staff123', '장직원2', 5, 'STAFF', 'staff2.songpa@company.com', '010-5000-0004', TRUE, NOW());
 
 -- 본사
-INSERT INTO users (username, password, real_name, branch_id, role, email, phone, is_active, created_at) VALUES
+INSERT IGNORE INTO users (username, password, real_name, branch_id, role, email, phone, is_active, created_at) VALUES
 ('admin', 'admin', '본사관리자', 99, 'ADMIN', 'test1@company.com', '010-9999-0001', TRUE, NOW());
-
-
--- 사용자 테이블 인덱스 생성
-CREATE INDEX idx_users_username ON users(username);
-CREATE INDEX idx_users_branch_id ON users(branch_id);
-CREATE INDEX idx_users_role ON users(role);
-CREATE INDEX idx_users_active ON users(is_active);

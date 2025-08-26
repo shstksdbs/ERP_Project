@@ -1,26 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './BurgerOptionModal.module.css';
 
 const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
-  const [addOptions, setAddOptions] = useState({
-    tomato: false,
-    onion: false,
-    cheese: false,
-    lettuce: false,
-    sauce: false,
-    pickle: false,
-    bacon: false
-  });
-
-  const [removeOptions, setRemoveOptions] = useState({
-    tomato: false,
-    onion: false,
-    cheese: false,
-    lettuce: false,
-    sauce: false,
-    pickle: false,
-    bacon: false
-  });
+  const [addOptions, setAddOptions] = useState({});
+  const [removeOptions, setRemoveOptions] = useState({});
 
   // 개수 선택 가능한 옵션들의 개수 상태
   const [optionQuantities, setOptionQuantities] = useState({
@@ -30,54 +13,93 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
   const [quantity, setQuantity] = useState(1);
 
-  const options = {
-    tomato: { name: '토마토', price: 300, quantitySelectable: false },
-    onion: { name: '양파', price: 300, quantitySelectable: false },
-    pickle: { name: '피클', price: 0, quantitySelectable: false },
-    lettuce: { name: '양상추', price: 300, quantitySelectable: false },
-    cheese: { name: '치즈', price: 300, quantitySelectable: true, maxQuantity: 5 },
-    sauce: { name: '소스', price: 0, quantitySelectable: false },
-    bacon: { name: '베이컨', price: 500, quantitySelectable: true, maxQuantity: 3 }
-  };
+  // 데이터베이스에서 가져온 토핑 옵션들
+  const [toppingOptions, setToppingOptions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleAddOptionChange = (optionName, value) => {
-    setAddOptions(prev => ({ ...prev, [optionName]: value }));
-    // 추가 옵션을 선택하면 제거 옵션에서 해제
-    if (value) {
-      setRemoveOptions(prev => ({ ...prev, [optionName]: false }));
+  // 컴포넌트 마운트 시 토핑 옵션들을 데이터베이스에서 가져오기
+  useEffect(() => {
+    if (isOpen) {
+      fetchToppingOptions();
+    }
+  }, [isOpen]);
+
+  // 토핑 옵션들을 데이터베이스에서 가져오는 함수
+  const fetchToppingOptions = async () => {
+    try {
+      setLoading(true);
+
+      // 토핑 옵션 가져오기
+      const toppingResponse = await fetch('http://localhost:8080/api/menu-options/category/topping');
+      const toppingData = await toppingResponse.json();
+      setToppingOptions(toppingData);
+
+      // 토핑 옵션들의 초기 상태 설정
+      const initialAddOptions = {};
+      const initialRemoveOptions = {};
+      toppingData.forEach(option => {
+        initialAddOptions[option.id] = false;
+        initialRemoveOptions[option.id] = false;
+      });
+      setAddOptions(initialAddOptions);
+      setRemoveOptions(initialRemoveOptions);
+
+    } catch (error) {
+      console.error('토핑 옵션을 가져오는 중 오류가 발생했습니다:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveOptionChange = (optionName, value) => {
-    setRemoveOptions(prev => ({ ...prev, [optionName]: value }));
+  // 옵션 ID로 옵션 정보를 찾는 함수
+  const findOptionById = (options, id) => {
+    return options.find(option => option.id.toString() === id);
+  };
+
+  const handleAddOptionChange = (optionId, value) => {
+    setAddOptions(prev => ({ ...prev, [optionId]: value }));
+    // 추가 옵션을 선택하면 제거 옵션에서 해제
+    if (value) {
+      setRemoveOptions(prev => ({ ...prev, [optionId]: false }));
+    }
+  };
+
+  const handleRemoveOptionChange = (optionId, value) => {
+    setRemoveOptions(prev => ({ ...prev, [optionId]: value }));
     // 제거 옵션을 선택하면 추가 옵션에서 해제
     if (value) {
-      setAddOptions(prev => ({ ...prev, [optionName]: false }));
+      setAddOptions(prev => ({ ...prev, [optionId]: false }));
     }
   };
 
   const handleOptionQuantityChange = (optionName, newQuantity) => {
-    const maxQty = options[optionName].maxQuantity;
+    const maxQty = optionName === 'cheese' ? 5 : 3; // 치즈는 최대 5장, 베이컨은 최대 3장
     const clampedQuantity = Math.max(1, Math.min(maxQty, newQuantity));
     setOptionQuantities(prev => ({ ...prev, [optionName]: clampedQuantity }));
   };
 
   const calculateTotalPrice = () => {
-    const basePrice = menuItem.price;
+    const basePrice = menuItem.price || menuItem.basePrice || 0;
+
     // 추가 옵션만 가격에 반영 (제거 옵션은 가격에 영향 없음)
-    const addOptionsPrice = Object.entries(addOptions).reduce((total, [key, value]) => {
-      if (value && options[key]) {
-        const optionPrice = options[key].price;
-        if (options[key].quantitySelectable) {
-          // 개수 선택 가능한 옵션은 개수만큼 가격 계산
-          return total + (optionPrice * optionQuantities[key]);
-        } else {
-          // 개수 선택 불가능한 옵션은 1개 가격
-          return total + optionPrice;
+    const addOptionsPrice = Object.entries(addOptions).reduce((total, [optionId, value]) => {
+      if (value) {
+        const option = findOptionById(toppingOptions, optionId);
+        if (option) {
+          const optionPrice = Number(option.price);
+          // 치즈와 베이컨은 개수만큼 가격 계산
+          if (option.displayName === '치즈' || option.displayName === '베이컨') {
+            const optionName = option.displayName === '치즈' ? 'cheese' : 'bacon';
+            return total + (optionPrice * optionQuantities[optionName]);
+          } else {
+            // 기타 옵션은 1개 가격
+            return total + optionPrice;
+          }
         }
       }
       return total;
     }, 0);
+
     return (basePrice + addOptionsPrice) * quantity;
   };
 
@@ -96,26 +118,39 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
     const selectedOptions = {
       toppings: {
         add: Object.entries(addOptions)
-          .filter(([key, value]) => value)
-          .map(([key, value]) => ({
-            id: key,
-            name: options[key].name,
-            price: options[key].price,
-            quantity: optionQuantities[key] || 1
-          })),
+          .filter(([optionId, value]) => value)
+          .map(([optionId, value]) => {
+            const option = findOptionById(toppingOptions, optionId);
+            const optionName = option ? option.displayName : '';
+            // 치즈와 베이컨은 개수만큼 가격 계산
+            let finalPrice = option ? Number(option.price) : 0;
+            if (optionName === '치즈' || optionName === '베이컨') {
+              const key = optionName === '치즈' ? 'cheese' : 'bacon';
+              finalPrice = finalPrice * optionQuantities[key];
+            }
+            return {
+              id: optionId,
+              name: optionName,
+              price: finalPrice,
+              quantity: optionName === '치즈' || optionName === '베이컨' 
+                ? optionQuantities[optionName === '치즈' ? 'cheese' : 'bacon'] 
+                : 1
+            };
+          }),
         remove: Object.entries(removeOptions)
-          .filter(([key, value]) => value)
-          .map(([key, value]) => ({
-            id: key,
-            name: options[key].name
-          }))
+          .filter(([optionId, value]) => value)
+          .map(([optionId, value]) => {
+            const option = findOptionById(toppingOptions, optionId);
+            return {
+              id: optionId,
+              name: option ? option.displayName : ''
+            };
+          })
       }
     };
 
     // 가격 계산
-    const optionsPrice = selectedOptions.toppings.add.reduce((total, topping) => {
-      return total + (topping.price * topping.quantity);
-    }, 0);
+    const optionsPrice = selectedOptions.toppings.add.reduce((total, topping) => total + topping.price, 0);
     const totalPrice = (baseMenuInfo.basePrice + optionsPrice) * quantity;
 
     // 장바구니 아이템 생성
@@ -157,6 +192,16 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
   if (!isOpen) return null;
 
+  if (loading) {
+    return (
+      <div className={styles.modalOverlay}>
+        <div className={styles.modalContent}>
+          <div className={styles.loadingMessage}>옵션을 불러오는 중...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -194,41 +239,51 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <h3 className={styles.optionsTitle}>토핑 추가 옵션 선택</h3>
             <p className={styles.optionsDescription}>추가를 원하는 토핑을 선택해주세요</p>
             <div className={styles.optionsGrid}>
-              {Object.entries(options).map(([key, option]) => (
-                <div key={key} className={styles.optionItemContainer}>
-                  <label className={`${styles.optionItem} ${removeOptions[key] ? styles.disabled : ''}`}>
+              {toppingOptions.map((option) => (
+                <div key={option.id} className={styles.optionItemContainer}>
+                  <label className={`${styles.optionItem} ${removeOptions[option.id] ? styles.disabled : ''}`}>
                     <input
                       type="checkbox"
-                      checked={addOptions[key]}
-                      onChange={(e) => handleAddOptionChange(key, e.target.checked)}
-                      disabled={removeOptions[key]}
+                      checked={addOptions[option.id] || false}
+                      onChange={(e) => handleAddOptionChange(option.id.toString(), e.target.checked)}
+                      disabled={removeOptions[option.id]}
                     />
-                    <span className={styles.optionName}>{option.name}</span>
-                    {option.price > 0 && (
-                      <span className={styles.optionPrice}>+₩{option.price.toLocaleString()}</span>
+                    <span className={styles.optionName}>{option.displayName}</span>
+                    {Number(option.price) > 0 && (
+                      <span className={styles.optionPrice}>+₩{Number(option.price).toLocaleString()}</span>
                     )}
                   </label>
 
-                  {/* 개수 선택 가능한 옵션에만 개수 선택기 표시 */}
-                  {option.quantitySelectable && addOptions[key] && (
+                  {/* 치즈와 베이컨은 개수 선택 가능 */}
+                  {(option.displayName === '치즈' || option.displayName === '베이컨') && addOptions[option.id] && (
                     <div className={styles.quantitySelector}>
                       <span className={styles.quantityLabel}>개수:</span>
                       <button
                         className={styles.quantityButton}
-                        onClick={() => handleOptionQuantityChange(key, optionQuantities[key] - 1)}
-                        disabled={optionQuantities[key] <= 1}
+                        onClick={() => {
+                          const optionName = option.displayName === '치즈' ? 'cheese' : 'bacon';
+                          handleOptionQuantityChange(optionName, optionQuantities[optionName] - 1);
+                        }}
+                        disabled={optionQuantities[option.displayName === '치즈' ? 'cheese' : 'bacon'] <= 1}
                       >
                         -
                       </button>
-                      <span className={styles.optionQuantity}>{optionQuantities[key]}</span>
+                      <span className={styles.optionQuantity}>
+                        {optionQuantities[option.displayName === '치즈' ? 'cheese' : 'bacon']}
+                      </span>
                       <button
                         className={styles.quantityButton}
-                        onClick={() => handleOptionQuantityChange(key, optionQuantities[key] + 1)}
-                        disabled={optionQuantities[key] >= option.maxQuantity}
+                        onClick={() => {
+                          const optionName = option.displayName === '치즈' ? 'cheese' : 'bacon';
+                          handleOptionQuantityChange(optionName, optionQuantities[optionName] + 1);
+                        }}
+                        disabled={optionQuantities[option.displayName === '치즈' ? 'cheese' : 'bacon'] >= (option.displayName === '치즈' ? 5 : 3)}
                       >
                         +
                       </button>
-                      <span className={styles.maxQuantity}>(최대 {option.maxQuantity}개)</span>
+                      <span className={styles.maxQuantity}>
+                        (최대 {option.displayName === '치즈' ? 5 : 3}장)
+                      </span>
                     </div>
                   )}
                 </div>
@@ -240,15 +295,15 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <h3 className={styles.optionsTitle}>토핑 제거 옵션 선택</h3>
             <p className={styles.optionsDescription}>제거를 원하는 토핑을 선택해주세요</p>
             <div className={styles.optionsGrid}>
-              {Object.entries(options).map(([key, option]) => (
-                <label key={key} className={`${styles.optionItem} ${addOptions[key] ? styles.disabled : ''}`}>
+              {toppingOptions.map((option) => (
+                <label key={option.id} className={`${styles.optionItem} ${addOptions[option.id] ? styles.disabled : ''}`}>
                   <input
                     type="checkbox"
-                    checked={removeOptions[key]}
-                    onChange={(e) => handleRemoveOptionChange(key, e.target.checked)}
-                    disabled={addOptions[key]}
+                    checked={removeOptions[option.id] || false}
+                    onChange={(e) => handleRemoveOptionChange(option.id.toString(), e.target.checked)}
+                    disabled={addOptions[option.id]}
                   />
-                  <span className={styles.optionName}>{option.name}</span>
+                  <span className={styles.optionName}>{option.displayName}</span>
                 </label>
               ))}
             </div>
