@@ -1,16 +1,26 @@
 package erp_project.erp_project.service;
 
+import erp_project.erp_project.dto.MenuResponseDto;
+import erp_project.erp_project.dto.MenuCategoryResponseDto;
 import erp_project.erp_project.entity.Menu;
+import erp_project.erp_project.entity.MenuCategory;
 import erp_project.erp_project.repository.MenuRepository;
+import erp_project.erp_project.repository.MenuCategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,15 +28,21 @@ import java.util.Optional;
 public class MenuService {
     
     private final MenuRepository menuRepository;
+    private final MenuCategoryRepository menuCategoryRepository;
     
-    // 모든 메뉴 조회
+    // 모든 메뉴 조회 (카테고리 정보 포함)
     public List<Menu> getAllMenus() {
-        return menuRepository.findByIsAvailableTrueOrderByDisplayOrderAsc();
+        return menuRepository.findAllWithCategoryOrderByDisplayOrder();
     }
     
-    // 카테고리별 메뉴 조회
+    // 카테고리별 메뉴 조회 (기존 호환성 유지)
     public List<Menu> getMenusByCategory(String category) {
         return menuRepository.findByCategoryAndIsAvailableTrueOrderByDisplayOrderAsc(category);
+    }
+    
+    // 카테고리 ID로 메뉴 조회 (새로운 방식)
+    public List<Menu> getMenusByCategoryId(Long categoryId) {
+        return menuRepository.findByCategoryIdAndIsAvailableTrueOrderByDisplayOrderAsc(categoryId);
     }
     
     // 특정 메뉴 조회
@@ -50,6 +66,71 @@ public class MenuService {
         return menuRepository.save(menu);
     }
     
+    // 이미지 업로드를 포함한 메뉴 추가
+    @Transactional
+    public Menu createMenuWithImage(
+            String name, String code, Long categoryId, BigDecimal price, 
+            BigDecimal basePrice, Integer stock, String unit, String description, 
+            Boolean isAvailable, Integer displayOrder, MultipartFile image) {
+        
+        Menu menu = new Menu();
+        menu.setName(name);
+        // code 필드가 없으므로 name을 사용
+        menu.setCategoryId(categoryId);
+        // category 필드도 설정 (기존 호환성을 위해)
+        if (categoryId != null) {
+            // 실제 카테고리 이름을 가져와서 설정
+            MenuCategory category = menuCategoryRepository.findById(categoryId).orElse(null);
+            if (category != null) {
+                menu.setCategory(category.getName());
+            } else {
+                menu.setCategory("unknown");
+            }
+        } else {
+            menu.setCategory("uncategorized");
+        }
+        menu.setPrice(price);
+        menu.setBasePrice(basePrice != null ? basePrice : BigDecimal.ZERO);
+        // stock, unit 필드가 없으므로 제거
+        menu.setDescription(description);
+        menu.setIsAvailable(isAvailable != null ? isAvailable : true);
+        menu.setDisplayOrder(displayOrder != null ? displayOrder : 1);
+        
+        // 이미지 처리
+        if (image != null && !image.isEmpty()) {
+            try {
+                String imageUrl = saveImage(image);
+                menu.setImageUrl(imageUrl);
+            } catch (IOException e) {
+                throw new RuntimeException("이미지 저장 중 오류가 발생했습니다: " + e.getMessage());
+            }
+        }
+        
+        return menuRepository.save(menu);
+    }
+    
+    // 이미지 저장
+    private String saveImage(MultipartFile image) throws IOException {
+        // 업로드 디렉토리 생성
+        String uploadDir = "uploads/menu-images";
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        
+        // 파일명 생성 (중복 방지)
+        String originalFilename = image.getOriginalFilename();
+        String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+        String filename = UUID.randomUUID().toString() + fileExtension;
+        
+        // 파일 저장
+        Path filePath = uploadPath.resolve(filename);
+        Files.copy(image.getInputStream(), filePath);
+        
+        // 이미지 URL 반환
+        return "/uploads/menu-images/" + filename;
+    }
+    
     // 메뉴 수정
     @Transactional
     public Menu updateMenu(Long id, Menu menuDetails) {
@@ -59,7 +140,8 @@ public class MenuService {
         menu.setName(menuDetails.getName());
         menu.setDescription(menuDetails.getDescription());
         menu.setPrice(menuDetails.getPrice());
-        menu.setCategory(menuDetails.getCategory());
+        menu.setCategory(menuDetails.getCategory()); // 기존 호환성 유지
+        menu.setCategoryId(menuDetails.getCategoryId()); // 새로운 카테고리 ID 설정
         menu.setBasePrice(menuDetails.getBasePrice());
         menu.setIsAvailable(menuDetails.getIsAvailable());
         menu.setDisplayOrder(menuDetails.getDisplayOrder());
@@ -68,14 +150,14 @@ public class MenuService {
         return menuRepository.save(menu);
     }
     
-    // 메뉴 삭제 (소프트 삭제)
+    // 메뉴 삭제 (실제 데이터베이스에서 삭제)
     @Transactional
     public void deleteMenu(Long id) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
         
-        menu.setIsAvailable(false);
-        menuRepository.save(menu);
+        // 실제 데이터베이스에서 메뉴 삭제
+        menuRepository.delete(menu);
     }
     
     // 메뉴 가용성 토글
@@ -125,5 +207,38 @@ public class MenuService {
         }
         
         return Optional.of(options);
+    }
+    
+    /**
+     * Menu 엔티티를 MenuResponseDto로 변환
+     */
+    public MenuResponseDto convertToResponseDto(Menu menu) {
+        return MenuResponseDto.builder()
+                .id(menu.getId())
+                .name(menu.getName())
+                .description(menu.getDescription())
+                .price(menu.getPrice())
+                .category(menu.getCategory())
+                .categoryId(menu.getCategoryId())
+                .basePrice(menu.getBasePrice())
+                .isAvailable(menu.getIsAvailable())
+                .displayOrder(menu.getDisplayOrder())
+                .imageUrl(menu.getImageUrl())
+                .createdAt(menu.getCreatedAt())
+                .updatedAt(menu.getUpdatedAt())
+                .menuCategory(menu.getMenuCategory() != null ? 
+                    MenuCategoryResponseDto.builder()
+                        .id(menu.getMenuCategory().getId())
+                        .name(menu.getMenuCategory().getName())
+                        .displayName(menu.getMenuCategory().getDisplayName())
+                        .description(menu.getMenuCategory().getDescription())
+                        .displayOrder(menu.getMenuCategory().getDisplayOrder())
+                        .isActive(menu.getMenuCategory().getIsActive())
+                        .imageUrl(menu.getMenuCategory().getImageUrl())
+                        .parentCategoryId(menu.getMenuCategory().getParentCategoryId())
+                        .createdAt(menu.getMenuCategory().getCreatedAt())
+                        .updatedAt(menu.getMenuCategory().getUpdatedAt())
+                        .build() : null)
+                .build();
     }
 }

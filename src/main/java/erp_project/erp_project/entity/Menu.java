@@ -31,7 +31,14 @@ public class Menu {
     private BigDecimal price;
     
     @Column(name = "category", nullable = false, length = 50)
-    private String category;
+    private String category; // 기존 호환성을 위해 유지
+    
+    @Column(name = "category_id")
+    private Long categoryId; // 새로운 카테고리 ID 필드
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", insertable = false, updatable = false)
+    private MenuCategory menuCategory;
     
     @Column(name = "base_price", precision = 10, scale = 2)
     private BigDecimal basePrice; // 세트 메뉴용 기본 가격

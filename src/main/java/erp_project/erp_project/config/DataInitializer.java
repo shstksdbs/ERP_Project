@@ -40,8 +40,10 @@ public class DataInitializer {
     // 실행할 SQL 파일 목록 (순서 중요!)
     private final List<String> sqlFiles = Arrays.asList(
         "02_branch_setup.sql",     // 1. 지점 정보 및 설정
-        "01_menu_data.sql",        // 2. 메뉴 기본 데이터     
-        "03_option_data.sql",      // 3. 메뉴 옵션 데이터
+        "05_menu_categories.sql",  // 2. 메뉴 카테고리 데이터
+        "01_menu_data.sql",        // 2. 메뉴 기본 데이터    
+        "06_menu_category_migration.sql",  // 2. 메뉴 카테고리 데이터
+        "03_option_data.sql",      // 3. 메뉴 옵션 데이터  
         "04_users_data.sql"        // 4. 사용자 데이터
     );
 

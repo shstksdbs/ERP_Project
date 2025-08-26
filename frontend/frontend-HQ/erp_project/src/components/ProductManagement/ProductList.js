@@ -23,18 +23,44 @@ export default function ProductList() {
   // API 기본 URL
   const API_BASE_URL = 'http://localhost:8080/api';
 
-  // 고정 카테고리 목록 (API 호출 없이 사용)
-  const categories = [
-    { id: 1, name: 'BURGER', code: 'BURGER' },
-    { id: 2, name: 'SET', code: 'SET' },
-    { id: 3, name: 'SIDE', code: 'SIDE' },
-    { id: 4, name: 'DRINK', code: 'DRINK' }
-  ];
+  // 카테고리 목록 상태
+  const [categories, setCategories] = useState([]);
 
   // 실제 메뉴 데이터 가져오기
   useEffect(() => {
     fetchMenus();
+    fetchCategories();
   }, []);
+
+  // 카테고리 데이터 가져오기
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/menu-categories`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        mode: 'cors'
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const categoriesData = await response.json();
+      setCategories(categoriesData);
+      console.log('카테고리 데이터 로드 성공:', categoriesData);
+    } catch (err) {
+      console.error('카테고리 데이터 가져오기 오류:', err);
+      // 오류 발생 시 기본 카테고리로 폴백
+      setCategories([
+        { id: 1, name: 'BURGER', displayName: 'BURGER' },
+        { id: 2, name: 'SET', displayName: 'SET' },
+        { id: 3, name: 'SIDE', displayName: 'SIDE' },
+        { id: 4, name: 'DRINK', displayName: 'DRINK' }
+      ]);
+    }
+  };
 
   // 메뉴 데이터 가져오기
   const fetchMenus = async () => {
@@ -71,7 +97,7 @@ export default function ProductList() {
         profit: menu.price && menu.basePrice ? 
           Math.round(((menu.price - menu.basePrice) / menu.price) * 100) : 0,
         sales: Math.floor(Math.random() * 100) + 1, // 임시 데이터
-        status: menu.isAvailable ? 'active' : 'inactive',
+        status: menu.isAvailable !== undefined ? (menu.isAvailable ? 'active' : 'inactive') : 'active',
         image: menu.imageUrl || null,
         stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
         profitMargin: menu.price && menu.basePrice ? 
@@ -265,7 +291,8 @@ export default function ProductList() {
         });
 
         if (response.ok) {
-          setProducts(products.filter(product => product.id !== productId));
+          // 삭제 성공 후 목록 새로고침
+          await fetchMenus();
           alert('상품이 성공적으로 삭제되었습니다.');
         } else {
           const errorData = await response.json().catch(() => ({}));
@@ -513,7 +540,6 @@ export default function ProductList() {
                     <thead className={styles['products-table-header']}>
                       <tr>
                         <th>상품명</th>
-                        <th>코드</th>
                         <th>카테고리</th>
                         <th>판매가</th>
                         <th>원가</th>
@@ -539,7 +565,6 @@ export default function ProductList() {
                               <span className={styles['product-name']}>{product.name}</span>
                             </div>
                           </td>
-                          <td>{product.code}</td>
                           <td>
                             <span className={`${styles['category-badge']} ${styles[`category-${product.category.toLowerCase()}`]}`}>
                               {product.category}
@@ -704,11 +729,9 @@ export default function ProductList() {
 function AddProductModal({ categories, onAdd, onClose }) {
   const [formData, setFormData] = useState({
     name: '',
-    code: '',
     category: '',
     price: '',
     cost: '',
-    stock: '',
     description: '',
     status: 'active'
   });
@@ -728,7 +751,6 @@ function AddProductModal({ categories, onAdd, onClose }) {
       ...formData,
       price: parseInt(formData.price),
       cost: parseInt(formData.cost),
-      stock: parseInt(formData.stock),
       profitMargin: parseFloat(profitMargin),
       salesCount: 0,
       rating: 0,
@@ -758,17 +780,6 @@ function AddProductModal({ categories, onAdd, onClose }) {
                 placeholder="상품명을 입력하세요"
               />
             </div>
-            <div className={styles['form-group']}>
-              <label>상품 코드 *</label>
-              <input
-                type="text"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                required
-                placeholder="상품 코드를 입력하세요"
-              />
-            </div>
           </div>
 
           <div className={styles['form-row']}>
@@ -783,7 +794,7 @@ function AddProductModal({ categories, onAdd, onClose }) {
                 <option value="">카테고리를 선택하세요</option>
                 {categories.map(category => (
                   <option key={category.id} value={category.name}>
-                    {category.name}
+                    {category.displayName || category.name}
                   </option>
                 ))}
               </select>
@@ -826,19 +837,7 @@ function AddProductModal({ categories, onAdd, onClose }) {
             </div>
           </div>
 
-          <div className={styles['form-row']}>
-            <div className={styles['form-group']}>
-              <label>재고 *</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleInputChange}
-                required
-                placeholder="재고 수량을 입력하세요"
-              />
-            </div>
-          </div>
+
 
           <div className={styles['form-group']}>
             <label>상품 설명</label>
@@ -884,7 +883,6 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
       ...formData,
       price: parseInt(formData.price),
       cost: parseInt(formData.cost),
-      stock: parseInt(formData.stock),
       profitMargin: parseFloat(profitMargin),
       updatedAt: new Date().toISOString().split('T')[0]
     });
@@ -910,16 +908,6 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
                 required
               />
             </div>
-            <div className={styles['form-group']}>
-              <label>상품 코드 *</label>
-              <input
-                type="text"
-                name="code"
-                value={formData.code}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
           </div>
 
           <div className={styles['form-row']}>
@@ -933,7 +921,7 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
               >
                 {categories.map(category => (
                   <option key={category.id} value={category.name}>
-                    {category.name}
+                    {category.displayName || category.name}
                   </option>
                 ))}
               </select>
@@ -974,18 +962,7 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
             </div>
           </div>
 
-          <div className={styles['form-row']}>
-            <div className={styles['form-group']}>
-              <label>재고 *</label>
-              <input
-                type="number"
-                name="stock"
-                value={formData.stock}
-                onChange={handleInputChange}
-                required
-              />
-            </div>
-          </div>
+
 
           <div className={styles['form-group']}>
             <label>상품 설명</label>

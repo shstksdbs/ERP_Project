@@ -27,4 +27,21 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     @Query("SELECT m FROM Menu m WHERE m.price BETWEEN :minPrice AND :maxPrice AND m.isAvailable = true")
     List<Menu> findByPriceRange(@Param("minPrice") java.math.BigDecimal minPrice, 
                                 @Param("maxPrice") java.math.BigDecimal maxPrice);
+    
+    // 카테고리 ID로 메뉴 조회 (새로운 방식)
+    List<Menu> findByCategoryIdAndIsAvailableTrueOrderByDisplayOrderAsc(Long categoryId);
+    
+    // 카테고리 ID로 메뉴 개수 조회
+    long countByCategoryIdAndIsAvailableTrue(Long categoryId);
+    
+    // 카테고리 ID로 메뉴 존재 여부 확인
+    boolean existsByCategoryId(Long categoryId);
+    
+    // 카테고리 ID와 상위 카테고리 ID로 메뉴 조회 (하위 카테고리 포함)
+    @Query("SELECT m FROM Menu m JOIN MenuCategory c ON m.categoryId = c.id WHERE (c.id = :categoryId OR c.parentCategoryId = :categoryId) AND m.isAvailable = true ORDER BY m.displayOrder")
+    List<Menu> findByCategoryIdOrParentCategoryIdAndIsAvailableTrue(@Param("categoryId") Long categoryId);
+    
+    // 카테고리 정보와 함께 메뉴 조회 (JOIN FETCH) - 모든 메뉴 포함
+    @Query("SELECT m FROM Menu m LEFT JOIN FETCH m.menuCategory ORDER BY m.menuCategory.displayOrder, m.displayOrder")
+    List<Menu> findAllWithCategoryOrderByDisplayOrder();
 }
