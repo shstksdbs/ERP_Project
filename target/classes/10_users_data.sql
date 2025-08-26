@@ -46,16 +46,12 @@ INSERT INTO users (username, password, real_name, branch_id, role, email, phone,
 ('admin_songpa', 'admin123', '백관리자', 5, 'ADMIN', 'admin.songpa@company.com', '010-5000-0001', TRUE, NOW()),
 ('manager_songpa', 'manager123', '신지점장', 5, 'MANAGER', 'manager.songpa@company.com', '010-5000-0002', TRUE, NOW()),
 ('staff_songpa1', 'staff123', '오직원1', 5, 'STAFF', 'staff1.songpa@company.com', '010-5000-0003', TRUE, NOW()),
-('staff_songpa2', 'staff123', '장직원2', 5, 'STAFF', 'staff2.songpa@company.com', '010-5000-0004', TRUE, NOW());
+('staff_songpa2', 'staff123', '장직원2', 5, 'STAFF', 'staff2.songpa@company.com', '010-5000-0004', TRUE, NOW()),
 
 -- 본사
-('admin', 'admin', '관리자',99, 'ADMIN', 'admin@company.com', '010-1111-1111', TRUE, NOW());
-
--- 테스트용 간단한 계정 (개발/테스트용)
 INSERT INTO users (username, password, real_name, branch_id, role, email, phone, is_active, created_at) VALUES
-('test1', 'test123', '테스트사용자1', 1, 'STAFF', 'test1@company.com', '010-9999-0001', TRUE, NOW()),
-('test2', 'test123', '테스트사용자2', 2, 'STAFF', 'test2@company.com', '010-9999-0002', TRUE, NOW()),
-('test3', 'test123', '테스트사용자3', 3, 'STAFF', 'test3@company.com', '010-9999-0003', TRUE, NOW());
+('admin', 'admin', '본사관리자', 99, 'ADMIN', 'test1@company.com', '010-9999-0001', TRUE, NOW());
+
 
 -- 사용자 테이블 인덱스 생성
 CREATE INDEX idx_users_username ON users(username);

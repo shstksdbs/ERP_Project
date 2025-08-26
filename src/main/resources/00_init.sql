@@ -1,13 +1,22 @@
--- =====================================================
--- ERP Project Database Initialization Script
--- =====================================================
+-- 00_init.sql
+-- 데이터베이스 초기화 및 정리
+
+-- 기존 테이블 정리 (역순으로 삭제)
+DROP TABLE IF EXISTS branch_menus;
+DROP TABLE IF EXISTS order_items;
+DROP TABLE IF EXISTS orders;
+DROP TABLE IF EXISTS inventory;
+DROP TABLE IF EXISTS menus;
+DROP TABLE IF EXISTS employees;
+DROP TABLE IF EXISTS sales;
+DROP TABLE IF EXISTS supplier_items;
+DROP TABLE IF EXISTS suppliers;
+DROP TABLE IF EXISTS system_settings;
+DROP TABLE IF EXISTS users;
 
 -- 데이터베이스 생성 (필요시)
--- CREATE DATABASE IF NOT EXISTS erp_project CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-
--- 데이터베이스 선택
-USE erp_system;
-
+-- CREATE DATABASE IF NOT EXISTS erp_project;
+-- USE erp_project;
 -- 스키마 생성
 SOURCE 01_schema.sql;
 
@@ -31,3 +40,4 @@ SOURCE 11_triggers.sql;
 
 -- 데이터 검증
 SOURCE 12_verification.sql;
+

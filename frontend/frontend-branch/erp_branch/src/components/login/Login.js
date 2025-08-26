@@ -20,7 +20,7 @@ export default function Login() {
   useEffect(() => {
     const fetchBranches = async () => {
       try {
-        const response = await fetch('http://localhost:8080/api/branches/active');
+        const response = await fetch('http://localhost:8080/api/branches');
         if (response.ok) {
           const data = await response.json();
           console.log('받아온 지점 데이터:', data);
@@ -29,7 +29,8 @@ export default function Login() {
             console.log(`지점 ${index + 1}:`, {
               id: branch.id,
               name: branch.branchName,
-              code: branch.branchCode
+              code: branch.branchCode,
+              status: branch.status
             });
           });
           
@@ -170,7 +171,7 @@ export default function Login() {
                  <option value="">지점을 선택하세요</option>
                  {branches.map((branch) => (
                    <option key={branch.id} value={branch.id}>
-                     {branch.branchName} ({branch.branchCode})
+                     {branch.branchName} ({branch.branchCode}) - {branch.status}
                    </option>
                  ))}
                </select>

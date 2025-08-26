@@ -2,49 +2,7 @@
 -- 지점별 샘플 데이터
 
 -- =====================================================
--- 1. 지점별 메뉴 가용성 설정 (메뉴 데이터 생성 후 실행)
--- =====================================================
-
--- 본사점 메뉴 설정 (모든 메뉴 사용 가능)
-INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
-SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'HQ001'),
-    id,
-    TRUE,
-    NULL,
-    -1
-FROM menus;
-
--- 강남점 메뉴 설정 (일부 메뉴 커스텀 가격)
-INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
-SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'BR001'),
-    id,
-    TRUE,
-    CASE 
-        WHEN category = 'burger' THEN price * 1.1  -- 햄버거 10% 가격 인상
-        WHEN category = 'set' THEN price * 1.05   -- 세트 5% 가격 인상
-        ELSE NULL                                 -- 나머지는 기본 가격
-    END,
-    -1
-FROM menus;
-
--- 홍대점 메뉴 설정 (일부 메뉴 커스텀 가격)
-INSERT INTO branch_menus (branch_id, menu_id, is_available, custom_price, stock_quantity)
-SELECT 
-    (SELECT branch_id FROM branches WHERE branch_code = 'BR002'),
-    id,
-    TRUE,
-    CASE 
-        WHEN category = 'burger' THEN price * 0.95  -- 햄버거 5% 가격 할인
-        WHEN category = 'set' THEN price * 0.98    -- 세트 2% 가격 할인
-        ELSE NULL                                  -- 나머지는 기본 가격
-    END,
-    -1
-FROM menus;
-
--- =====================================================
--- 2. 샘플 주문 데이터 생성 (테스트용)
+-- 1. 샘플 주문 데이터 생성 (테스트용)
 -- =====================================================
 
 -- 강남점 샘플 주문
@@ -63,7 +21,7 @@ INSERT INTO orders (branch_id, order_number, order_status, order_type, customer_
 ((SELECT branch_id FROM branches WHERE branch_code = 'HQ001'), 'HQ001-001', 'completed', 'dine_in', '본사직원', 5000, 0, 5000, 'card', 'completed', DATE_SUB(NOW(), INTERVAL 3 HOUR));
 
 -- =====================================================
--- 3. 주문 상세 데이터 생성
+-- 2. 주문 상세 데이터 생성
 -- =====================================================
 
 -- 강남점 주문 상세
@@ -72,15 +30,14 @@ SELECT
     o.order_id,
     m.id,
     m.name,
-    COALESCE(bm.custom_price, m.price),
+    m.price,
     1,
-    COALESCE(bm.custom_price, m.price),
+    m.price,
     JSON_OBJECT('addOptions', JSON_ARRAY('치즈'), 'removeOptions', JSON_ARRAY('양파')),
     CONCAT(m.name, ' (치즈 추가, 양파 제거)'),
     JSON_ARRAY('+치즈', '-양파')
 FROM orders o
 JOIN menus m ON m.category = 'burger'
-JOIN branch_menus bm ON m.id = bm.menu_id AND bm.branch_id = o.branch_id
 WHERE o.order_number IN ('BR001-001', 'BR001-002')
 LIMIT 2;
 
@@ -90,15 +47,14 @@ SELECT
     o.order_id,
     m.id,
     m.name,
-    COALESCE(bm.custom_price, m.price),
+    m.price,
     1,
-    COALESCE(bm.custom_price, m.price),
+    m.price,
     JSON_OBJECT('addOptions', JSON_ARRAY('베이컨'), 'removeOptions', JSON_ARRAY()),
     CONCAT(m.name, ' (베이컨 추가)'),
     JSON_ARRAY('+베이컨')
 FROM orders o
 JOIN menus m ON m.category = 'burger'
-JOIN branch_menus bm ON m.id = bm.menu_id AND bm.branch_id = o.branch_id
 WHERE o.order_number IN ('BR002-001', 'BR002-002')
 LIMIT 2;
 
@@ -108,20 +64,19 @@ SELECT
     o.order_id,
     m.id,
     m.name,
-    COALESCE(bm.custom_price, m.price),
+    m.price,
     1,
-    COALESCE(bm.custom_price, m.price),
+    m.price,
     JSON_OBJECT('addOptions', JSON_ARRAY(), 'removeOptions', JSON_ARRAY()),
     m.name,
     JSON_ARRAY()
 FROM orders o
 JOIN menus m ON m.category = 'side'
-JOIN branch_menus bm ON m.id = bm.menu_id AND bm.branch_id = o.branch_id
 WHERE o.order_number = 'HQ001-001'
 LIMIT 1;
 
 -- =====================================================
--- 4. 결제 데이터 생성
+-- 3. 결제 데이터 생성
 -- =====================================================
 
 INSERT INTO payments (order_id, payment_method, payment_amount, payment_status, transaction_id, payment_time)
@@ -136,7 +91,7 @@ FROM orders
 WHERE payment_status = 'completed';
 
 -- =====================================================
--- 5. 시스템 로그 샘플 데이터
+-- 4. 시스템 로그 샘플 데이터
 -- =====================================================
 
 INSERT INTO system_logs (branch_id, log_level, log_category, message, details) VALUES
@@ -150,7 +105,7 @@ INSERT INTO system_logs (branch_id, log_level, log_category, message, details) V
  JSON_OBJECT('backup_time', NOW(), 'backup_size', '256MB', 'status', 'success'));
 
 -- =====================================================
--- 6. 매출 통계 초기 데이터
+-- 5. 매출 통계 초기 데이터
 -- =====================================================
 
 -- 어제 매출 데이터
@@ -184,7 +139,7 @@ CROSS JOIN (
 WHERE b.branch_type = 'branch' AND h.hour BETWEEN 7 AND 23;  -- 영업시간만
 
 -- =====================================================
--- 7. 할인 프로모션 사용 내역 샘플 데이터
+-- 6. 할인 프로모션 사용 내역 샘플 데이터
 -- =====================================================
 
 -- 홍대점 신규 지점 오픈 할인 사용 내역
@@ -203,18 +158,8 @@ WHERE o.branch_id = (SELECT branch_id FROM branches WHERE branch_code = 'BR002')
     AND o.discount_amount > 0;
 
 -- =====================================================
--- 8. 데이터 검증 쿼리
+-- 7. 데이터 검증 쿼리
 -- =====================================================
-
--- 지점별 메뉴 현황 확인
-SELECT 
-    b.branch_name,
-    COUNT(bm.menu_id) as total_menus,
-    COUNT(CASE WHEN bm.is_available = TRUE THEN 1 END) as available_menus,
-    COUNT(CASE WHEN bm.custom_price IS NOT NULL THEN 1 END) as custom_price_menus
-FROM branches b
-LEFT JOIN branch_menus bm ON b.branch_id = bm.branch_id
-GROUP BY b.branch_id, b.branch_name;
 
 -- 지점별 재고 현황 확인
 SELECT 

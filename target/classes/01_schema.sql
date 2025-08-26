@@ -148,15 +148,3 @@ CREATE TABLE IF NOT EXISTS system_settings (
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
--- 인덱스 생성
-CREATE INDEX idx_menus_category ON menus(category);
-CREATE INDEX idx_menus_is_available ON menus(is_available);
-CREATE INDEX idx_orders_status ON orders(status);
-CREATE INDEX idx_orders_order_time ON orders(order_time);
-CREATE INDEX idx_inventory_category ON inventory(category);
-CREATE INDEX idx_inventory_is_active ON inventory(is_active);
-CREATE INDEX idx_employees_department ON employees(department);
-CREATE INDEX idx_employees_is_active ON employees(is_active);
-CREATE INDEX idx_sales_date ON sales(date);
-CREATE INDEX idx_suppliers_is_active ON suppliers(is_active);

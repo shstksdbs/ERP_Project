@@ -25,11 +25,11 @@ export default function OrderStatus({ branchId, loginData }) {
     try {
       setLoading(true);
       const response = await fetch(`http://localhost:8080/api/orders/branch/${branchId}`);
-      
+
       if (!response.ok) {
         throw new Error('주문 데이터를 가져오는데 실패했습니다.');
       }
-      
+
       const data = await response.json();
       setOrders(data);
       setError(null);
@@ -95,7 +95,7 @@ export default function OrderStatus({ branchId, loginData }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           status: newStatus,
           employeeName: currentEmployeeName // 현재 로그인한 유저의 이름 추가
         }),
@@ -103,21 +103,21 @@ export default function OrderStatus({ branchId, loginData }) {
 
       if (response.ok) {
         // 로컬 상태 업데이트
-        setOrders(prevOrders => 
-          prevOrders.map(order => 
-            order.id === orderId 
-              ? { 
-                  ...order, 
-                  status: newStatus, 
-                  // 완료시간 자동 설정
-                  completedDate: newStatus === 'completed' ? new Date().toLocaleString('ko-KR') : order.completedDate,
-                  // 취소시간 자동 설정
-                  cancelledDate: newStatus === 'cancelled' ? new Date().toLocaleString('ko-KR') : order.cancelledDate
-                }
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            order.id === orderId
+              ? {
+                ...order,
+                status: newStatus,
+                // 완료시간 자동 설정
+                completedDate: newStatus === 'completed' ? new Date().toLocaleString('ko-KR') : order.completedDate,
+                // 취소시간 자동 설정
+                cancelledDate: newStatus === 'cancelled' ? new Date().toLocaleString('ko-KR') : order.cancelledDate
+              }
               : order
           )
         );
-        
+
         // 주문이력 테이블에 자동 추가 (완료 또는 취소된 경우)
         // 백엔드에서 자동으로 처리하므로 프론트엔드에서는 제거
         // if (newStatus === 'completed' || newStatus === 'cancelled') {
@@ -137,7 +137,7 @@ export default function OrderStatus({ branchId, loginData }) {
     try {
       const order = orders.find(o => o.id === orderId);
       if (!order) return;
-      
+
       const historyData = {
         orderId: order.id,
         orderNumber: order.orderNumber,
@@ -150,9 +150,9 @@ export default function OrderStatus({ branchId, loginData }) {
         cancelledDate: status === 'cancelled' ? new Date().toLocaleString('ko-KR') : null,
         employeeName: currentEmployeeName
       };
-      
+
       console.log('주문이력에 추가할 데이터:', historyData);
-      
+
       // 주문이력 API 호출 (백엔드 구현 필요)
       const historyResponse = await fetch('http://localhost:8080/api/order-history', {
         method: 'POST',
@@ -161,7 +161,7 @@ export default function OrderStatus({ branchId, loginData }) {
         },
         body: JSON.stringify(historyData),
       });
-      
+
       if (historyResponse.ok) {
         console.log('주문이력에 성공적으로 추가되었습니다.');
       } else {
@@ -179,26 +179,26 @@ export default function OrderStatus({ branchId, loginData }) {
   // 주문시간을 한국어 형식으로 포맷팅하는 함수
   const formatOrderDate = (dateString) => {
     if (!dateString) return '-';
-    
+
     try {
       const date = new Date(dateString);
-      
+
       // 유효한 날짜인지 확인
       if (isNaN(date.getTime())) {
         return dateString; // 원본 문자열 반환
       }
-      
+
       const year = date.getFullYear();
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
       const hours = date.getHours();
       const minutes = String(date.getMinutes()).padStart(2, '0');
-      
+
       // 오전/오후 구분
       const ampm = hours < 12 ? '오전' : '오후';
       const displayHours = hours < 12 ? hours : hours - 12;
       const displayHoursStr = displayHours === 0 ? '12' : String(displayHours);
-      
+
       return `${year}. ${month}. ${day}. ${ampm} ${displayHoursStr}:${minutes}`;
     } catch (error) {
       console.error('날짜 포맷팅 오류:', error);
@@ -206,7 +206,7 @@ export default function OrderStatus({ branchId, loginData }) {
     }
   };
 
-  const getStatusText = (status) => { 
+  const getStatusText = (status) => {
     const statusText = (() => {
       switch (status) {
         case 'pending':
@@ -225,9 +225,9 @@ export default function OrderStatus({ branchId, loginData }) {
     })();
 
     const statusClass = getStatusClass(status);
-    
+
     return (
-      <span 
+      <span
         className={`${styles['status-badge']} ${statusClass}`}
         style={{
           display: 'inline-block',
@@ -238,18 +238,18 @@ export default function OrderStatus({ branchId, loginData }) {
           textAlign: 'center',
           minWidth: '80px',
           whiteSpace: 'nowrap',
-          backgroundColor: status === 'pending' ? '#fef3c7' : 
-                          status === 'confirmed' ? '#e0e7ff' :
-                          status === 'preparing' ? '#dbeafe' :
-                          status === 'ready' ? '#fef3c7' :
-                          status === 'completed' ? '#d1fae5' :
-                          status === 'cancelled' ? '#fee2e2' : '#f3f4f6',
+          backgroundColor: status === 'pending' ? '#fef3c7' :
+            status === 'confirmed' ? '#e0e7ff' :
+              status === 'preparing' ? '#dbeafe' :
+                status === 'ready' ? '#fef3c7' :
+                  status === 'completed' ? '#d1fae5' :
+                    status === 'cancelled' ? '#fee2e2' : '#f3f4f6',
           color: status === 'pending' ? '#92400e' :
-                 status === 'confirmed' ? '#3730a3' :
-                 status === 'preparing' ? '#1e40af' :
-                 status === 'ready' ? '#a16207' :
-                 status === 'completed' ? '#065f46' :
-                 status === 'cancelled' ? '#991b1b' : '#374151'
+            status === 'confirmed' ? '#3730a3' :
+              status === 'preparing' ? '#1e40af' :
+                status === 'ready' ? '#a16207' :
+                  status === 'completed' ? '#065f46' :
+                    status === 'cancelled' ? '#991b1b' : '#374151'
         }}
       >
         {statusText}
@@ -278,16 +278,16 @@ export default function OrderStatus({ branchId, loginData }) {
 
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      order.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+
     // 기본적으로 활성 상태의 주문만 표시 (완료, 취소 제외)
-    const isActiveOrder = order.status === 'pending' || 
-                         order.status === 'confirmed' || 
-                         order.status === 'preparing';
-    
+    const isActiveOrder = order.status === 'pending' ||
+      order.status === 'confirmed' ||
+      order.status === 'preparing';
+
     // 상태 필터가 'all'이 아닌 경우에만 해당 상태 필터 적용
     const matchesStatus = selectedStatus === 'all' ? isActiveOrder : order.status === selectedStatus;
-    
+
     return matchesSearch && matchesStatus;
   });
 
@@ -377,7 +377,7 @@ export default function OrderStatus({ branchId, loginData }) {
                         const parts = item.split('\n');
                         const menuName = parts[0];
                         const options = parts.slice(1).join('\n');
-                        
+
                         return (
                           <div key={index} className={styles['order-item']}>
                             <div className={styles['order-item-simple']}>
@@ -411,6 +411,8 @@ export default function OrderStatus({ branchId, loginData }) {
                         <option value="pending">대기중</option>
                         <option value="confirmed">확인됨</option>
                         <option value="preparing">준비중</option>
+                        <option value="completed">완료</option>
+                        <option value="cancelled">취소</option>
                       </select>
                     </div>
                   </td>
