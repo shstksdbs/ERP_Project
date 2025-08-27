@@ -54,7 +54,9 @@ public class RecipeIngredient {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
-        if (totalCost == null && quantity != null && costPerUnit != null) {
+        // totalCost가 null이거나 0인 경우에만 계산
+        if ((totalCost == null || totalCost.compareTo(BigDecimal.ZERO) == 0) && 
+            quantity != null && costPerUnit != null) {
             totalCost = quantity.multiply(costPerUnit);
         }
     }
@@ -62,7 +64,9 @@ public class RecipeIngredient {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-        if (quantity != null && costPerUnit != null) {
+        // totalCost가 null이거나 0인 경우에만 계산
+        if ((totalCost == null || totalCost.compareTo(BigDecimal.ZERO) == 0) && 
+            quantity != null && costPerUnit != null) {
             totalCost = quantity.multiply(costPerUnit);
         }
     }

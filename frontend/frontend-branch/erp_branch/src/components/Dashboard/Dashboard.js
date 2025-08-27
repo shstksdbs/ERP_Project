@@ -33,7 +33,6 @@ export default function Dashboard({ branchId, loginData }) {
     { label: '운영 지점', value: 15, delta: '전체 지점', icon: storeIcon },
     { label: '발주 대기', value: 8, delta: '승인 필요', icon: truckIcon },
     { label: '재고 부족', value: 12, delta: '긴급 대응', icon: bellIcon },
-    { label: '신규 가입', value: 3, delta: '이번 주', icon: usersIcon },
   ];
 
   const lineData = {
