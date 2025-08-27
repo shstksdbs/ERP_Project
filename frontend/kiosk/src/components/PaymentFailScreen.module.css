@@ -1,0 +1,183 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.failCard {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.failIcon {
+  margin-bottom: 24px;
+}
+
+.cross {
+  width: 80px;
+  height: 80px;
+  background-color: #dc3545;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  color: white;
+  font-size: 48px;
+  font-weight: bold;
+}
+
+.title {
+  color: #dc3545;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+}
+
+.errorInfo {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.errorMessage {
+  color: #dc3545;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.detailMessage {
+  color: #6c757d;
+  font-size: 14px;
+  margin-bottom: 12px;
+  word-break: break-word;
+}
+
+.orderId {
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  background-color: #e9ecef;
+  padding: 8px 12px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.suggestions {
+  text-align: left;
+  margin-bottom: 24px;
+  color: #6c757d;
+}
+
+.suggestions p {
+  margin: 0 0 12px 0;
+  font-weight: 500;
+}
+
+.suggestions ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.suggestions li {
+  margin: 6px 0;
+  line-height: 1.4;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.retryButton, .mainButton {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 120px;
+}
+
+.retryButton {
+  background-color: #ffc107;
+  color: #212529;
+}
+
+.retryButton:hover {
+  background-color: #e0a800;
+}
+
+.mainButton {
+  background-color: #6c757d;
+  color: white;
+}
+
+.mainButton:hover {
+  background-color: #5a6268;
+}
+
+.countdown {
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+}
+
+.loading {
+  color: #6c757d;
+  font-size: 18px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .container {
+    padding: 15px;
+  }
+  
+  .failCard {
+    padding: 30px 20px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .cross {
+    width: 60px;
+    height: 60px;
+    font-size: 36px;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .retryButton, .mainButton {
+    width: 100%;
+    max-width: 250px;
+  }
+  
+  .suggestions {
+    text-align: center;
+  }
+  
+  .suggestions ul {
+    display: inline-block;
+    text-align: left;
+  }
+}

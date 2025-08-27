@@ -50,9 +50,6 @@ const OrderCompleteScreen = () => {
           <button className={styles.primaryButton} onClick={goToMenu}>
             메뉴로 돌아가기
           </button>
-          <button className={styles.secondaryButton} onClick={goToOrderHistory}>
-            주문 내역 보기
-          </button>
         </div>
       </div>
     </div>

@@ -36,10 +36,15 @@ const KioskLayout = ({ selectedBranch: appSelectedBranch, onBranchChange: appOnB
         <header className={styles.header}>
           <div className={styles.headerContent}>
             <h1 className={styles.title}>주문하기</h1>
-            <BranchSelector 
-              selectedBranch={selectedBranch}
-              onBranchChange={handleLocalBranchChange}
-            />
+            <div className={styles.headerRight}>
+              <BranchSelector 
+                selectedBranch={selectedBranch}
+                onBranchChange={handleLocalBranchChange}
+              />
+              <a href="/payment-test" className={styles.testLink}>
+                결제 테스트
+              </a>
+            </div>
           </div>
         </header>
         <main className={styles.mainContent}>

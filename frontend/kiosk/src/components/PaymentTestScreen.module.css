@@ -1,0 +1,179 @@
+.testContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.testCard {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+}
+
+.title {
+  color: #dc3545;
+  font-size: 28px;
+  font-weight: 600;
+  margin: 0 0 24px 0;
+  text-align: center;
+}
+
+.testInfo {
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.testInfo p {
+  margin: 8px 0;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.testForm {
+  margin-bottom: 24px;
+}
+
+.inputGroup {
+  margin-bottom: 20px;
+}
+
+.inputGroup label {
+  display: block;
+  margin-bottom: 8px;
+  color: #333;
+  font-weight: 500;
+}
+
+.inputGroup input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  box-sizing: border-box;
+}
+
+.inputGroup input:focus {
+  outline: none;
+  border-color: #dc3545;
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.2);
+}
+
+.testCards {
+  background-color: #fff3cd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.testCards h3 {
+  margin: 0 0 15px 0;
+  color: #856404;
+  font-size: 18px;
+}
+
+.cardInfo p {
+  margin: 8px 0;
+  color: #856404;
+  font-size: 14px;
+}
+
+.actionButtons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.testButton, .mainButton {
+  padding: 15px 30px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 150px;
+}
+
+.testButton {
+  background-color: #28a745;
+  color: white;
+}
+
+.testButton:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.testButton:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}
+
+.mainButton {
+  background-color: #6c757d;
+  color: white;
+}
+
+.mainButton:hover {
+  background-color: #5a6268;
+}
+
+.notes {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  border-left: 4px solid #dc3545;
+}
+
+.notes h4 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.notes ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.notes li {
+  margin: 8px 0;
+  color: #666;
+  line-height: 1.4;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .testContainer {
+    padding: 15px;
+  }
+  
+  .testCard {
+    padding: 30px 20px;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+  
+  .actionButtons {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .testButton, .mainButton {
+    width: 100%;
+    max-width: 250px;
+  }
+}

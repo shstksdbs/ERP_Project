@@ -16,6 +16,9 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
     
     List<Orders> findByBranchIdOrderByOrderTimeDesc(Long branchId);
     
+    // 결제 완료된 주문만 조회
+    List<Orders> findByBranchIdAndPaymentStatusOrderByOrderTimeDesc(Long branchId, Orders.PaymentStatus paymentStatus);
+    
     @Query("SELECT o FROM Orders o WHERE o.branchId = :branchId AND o.orderTime BETWEEN :startTime AND :endTime")
     List<Orders> findByBranchIdAndOrderTimeBetween(
         @Param("branchId") Long branchId,
@@ -37,4 +40,7 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
         @Param("startTime") LocalDateTime startTime,
         @Param("endTime") LocalDateTime endTime
     );
+    
+    // 주문 번호로 주문 찾기
+    Orders findByOrderNumber(String orderNumber);
 }

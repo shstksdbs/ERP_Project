@@ -6,6 +6,9 @@ import MenuScreen from './components/MenuScreen';
 import CartScreen from './components/CartScreen';
 import PaymentScreen from './components/PaymentScreen';
 import OrderCompleteScreen from './components/OrderCompleteScreen';
+import PaymentSuccessScreen from './components/PaymentSuccessScreen';
+import PaymentFailScreen from './components/PaymentFailScreen';
+import PaymentTestScreen from './components/PaymentTestScreen';
 
 function App() {
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -26,6 +29,9 @@ function App() {
             <Route path="complete" element={<OrderCompleteScreen selectedBranch={selectedBranch} />} />
             <Route path="order-complete" element={<OrderCompleteScreen selectedBranch={selectedBranch} />} />
           </Route>
+          <Route path="/payment-success" element={<PaymentSuccessScreen />} />
+          <Route path="/payment-fail" element={<PaymentFailScreen />} />
+          <Route path="/payment-test" element={<PaymentTestScreen />} />
         </Routes>
       </div>
     </Router>

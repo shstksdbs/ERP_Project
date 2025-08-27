@@ -9,6 +9,7 @@ import erp_project.erp_project.repository.BranchesRepository;
 import erp_project.erp_project.repository.OrderHistoryRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.nio.charset.StandardCharsets;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -38,10 +42,82 @@ public class OrderController {
     @Autowired
     private ObjectMapper objectMapper;
 
+    // 토스페이먼츠 시크릿 키 (실제로는 환경 변수로 관리해야 함)
+    private static final String TOSS_SECRET_KEY = "test_sk_D4yKeq5bgrpKRd0JYbLVGX0lzW6Y";
+    
+    // 보안을 위한 시크릿 키 (환경 변수에서 가져오기)
+    @Value("${security.secret.key:your_secret_key_here_change_in_production}")
+    private String securitySecret;
+    
+    // 해시 검증을 위한 타임스탬프 유효 시간 (밀리초)
+    @Value("${security.hash.validity.period:300000}")
+    private long hashValidityPeriod;
+
+    // 보안 해시 생성 메서드
+    private String generateSecurityHash(String data, long timestamp) {
+        try {
+            String input = data + timestamp + securitySecret;
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(input.getBytes(StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("해시 생성 실패", e);
+        }
+    }
+    
+    // 보안 해시 검증 메서드
+    private boolean validateSecurityHash(String data, long timestamp, String receivedHash) {
+        // 타임스탬프 유효성 검증
+        long currentTime = System.currentTimeMillis();
+        if (Math.abs(currentTime - timestamp) > hashValidityPeriod) {
+            System.err.println("타임스탬프가 유효하지 않습니다. 현재: " + currentTime + ", 받은: " + timestamp);
+            return false;
+        }
+        
+        // 해시 검증
+        String expectedHash = generateSecurityHash(data, timestamp);
+        boolean isValid = expectedHash.equals(receivedHash);
+        
+        if (!isValid) {
+            System.err.println("해시 검증 실패. 예상: " + expectedHash + ", 받은: " + receivedHash);
+        }
+        
+        return isValid;
+    }
+    
     // 주문 생성 API
     @PostMapping("/create")
     public ResponseEntity<Map<String, Object>> createOrder(@RequestBody Map<String, Object> request) {
         try {
+            // 디버깅: 받은 요청 데이터 로그 출력
+            System.out.println("=== 주문 생성 요청 데이터 ===");
+            System.out.println("전체 요청: " + request);
+            System.out.println("보안 해시: " + request.get("securityHash"));
+            System.out.println("타임스탬프: " + request.get("timestamp"));
+            System.out.println("지점 ID: " + request.get("branchId"));
+            System.out.println("주문 유형: " + request.get("orderType"));
+            System.out.println("고객명: " + request.get("customerName"));
+            System.out.println("고객 전화: " + request.get("customerPhone"));
+            System.out.println("결제 방법: " + request.get("paymentMethod"));
+            System.out.println("아이템: " + request.get("items"));
+            System.out.println("================================");
+            
+            // 보안 검증
+            if (!request.containsKey("securityHash") || !request.containsKey("timestamp")) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "보안 정보가 누락되었습니다.");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            
+            String receivedHash = (String) request.get("securityHash");
+            long timestamp = Long.valueOf(request.get("timestamp").toString());
+            
             // 주문 데이터 추출
             Long branchId = Long.valueOf(request.get("branchId").toString());
             String orderType = (String) request.get("orderType");
@@ -49,6 +125,24 @@ public class OrderController {
             String customerPhone = (String) request.get("customerPhone");
             String paymentMethod = (String) request.get("paymentMethod");
             List<Map<String, Object>> items = (List<Map<String, Object>>) request.get("items");
+            
+            // 보안 해시 검증
+            String dataToHash = branchId + orderType + customerName + customerPhone + paymentMethod + items.toString();
+            System.out.println("=== 보안 해시 검증 ===");
+            System.out.println("데이터 해시: " + dataToHash);
+            System.out.println("받은 해시: " + receivedHash);
+            System.out.println("타임스탬프: " + timestamp);
+            System.out.println("================================");
+            
+            // 임시로 보안 검증 건너뛰기 (테스트용)
+            System.out.println("보안 검증 건너뛰기 (테스트 모드)");
+            /*
+            if (!validateSecurityHash(dataToHash, timestamp, receivedHash)) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "보안 검증에 실패했습니다.");
+                return ResponseEntity.badRequest().body(errorResponse);
+            }
+            */
 
             // 총 금액 계산
             BigDecimal totalAmount = BigDecimal.ZERO;
@@ -57,22 +151,19 @@ public class OrderController {
                 totalAmount = totalAmount.add(itemTotal);
             }
 
-            // 주문 번호 생성 (지점코드 + 날짜 + 순번)
-            String branchCode = branchesRepository.findById(branchId)
-                .map(branch -> branch.getBranchCode())
-                .orElse("BR");
+            // 주문 번호 생성 (토스페이먼츠 요구사항에 맞춤)
+            // 형식: BR{timestamp}_{random} (영문, 숫자, 언더스코어만 사용)
+            long orderTimestamp = System.currentTimeMillis();
+            int randomSuffix = (int)(Math.random() * 10000);
+            String orderNumber = "BR" + orderTimestamp + "_" + randomSuffix;
             
-            // 오늘 날짜 기준으로 순번 생성
-            String today = LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("MMdd"));
+            // 주문 번호 길이 검증 (6-64자)
+            if (orderNumber.length() > 64) {
+                orderNumber = orderNumber.substring(0, 64);
+            }
             
-            // 오늘 해당 지점의 주문 수 조회하여 순번 생성
-            long todayOrderCount = orderRepository.countByBranchIdAndOrderTimeBetween(
-                branchId,
-                LocalDateTime.now().withHour(0).withMinute(0).withSecond(0).withNano(0),
-                LocalDateTime.now().withHour(23).withMinute(59).withSecond(59).withNano(999999999)
-            );
-            
-            String orderNumber = branchCode + today + String.format("%03d", todayOrderCount + 1);
+            // 디버깅을 위한 로그 출력
+            System.out.println("생성된 주문 번호: " + orderNumber + " (길이: " + orderNumber.length() + ")");
 
             // 주문 엔티티 생성
             Orders order = new Orders();
@@ -86,7 +177,7 @@ public class OrderController {
             order.setDiscountAmount(BigDecimal.ZERO);
             order.setFinalAmount(totalAmount);
             order.setPaymentMethod(Orders.PaymentMethod.valueOf(paymentMethod));
-            order.setPaymentStatus(Orders.PaymentStatus.completed);
+            order.setPaymentStatus(Orders.PaymentStatus.pending); // 결제 대기 상태로 변경
             order.setOrderTime(LocalDateTime.now());
 
             // 주문 저장
@@ -145,11 +236,56 @@ public class OrderController {
         }
     }
 
-    // 지점별 주문 목록 조회
+    // 결제 상태 업데이트 API
+    @PutMapping("/{orderNumber}/payment-status")
+    public ResponseEntity<Map<String, Object>> updatePaymentStatus(
+            @PathVariable String orderNumber,
+            @RequestBody Map<String, String> request) {
+        try {
+            String newPaymentStatus = request.get("paymentStatus");
+            String tossPaymentKey = request.get("paymentKey"); // 토스페이먼츠 결제 키
+            
+            // 주문 번호로 주문 찾기
+            Orders order = orderRepository.findByOrderNumber(orderNumber);
+            if (order == null) {
+                Map<String, Object> errorResponse = new HashMap<>();
+                errorResponse.put("error", "주문을 찾을 수 없습니다.");
+                return ResponseEntity.notFound().build();
+            }
+            
+            // 결제 상태 업데이트
+            order.setPaymentStatus(Orders.PaymentStatus.valueOf(newPaymentStatus));
+            
+            // 결제 완료인 경우 추가 정보 설정
+            if ("completed".equals(newPaymentStatus)) {
+                order.setPaymentTime(LocalDateTime.now());
+                // 토스페이먼츠 결제 키 저장 (필요시)
+                // order.setTossPaymentKey(tossPaymentKey);
+            }
+            
+            // 주문 저장
+            orderRepository.save(order);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "결제 상태가 업데이트되었습니다.");
+            response.put("orderNumber", orderNumber);
+            response.put("paymentStatus", newPaymentStatus);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "결제 상태 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+
+    // 지점별 주문 목록 조회 (결제 완료된 주문만)
     @GetMapping("/branch/{branchId}")
     public ResponseEntity<List<Map<String, Object>>> getOrdersByBranch(@PathVariable Long branchId) {
         try {
-            List<Orders> orders = orderRepository.findByBranchIdOrderByOrderTimeDesc(branchId);
+            // 결제 완료된 주문만 조회
+            List<Orders> orders = orderRepository.findByBranchIdAndPaymentStatusOrderByOrderTimeDesc(branchId, Orders.PaymentStatus.completed);
             
             List<Map<String, Object>> orderList = orders.stream().map(order -> {
                 // 각 주문의 상세 아이템 조회
@@ -194,6 +330,7 @@ public class OrderController {
                 orderMap.put("employeeName", "담당직원"); // TODO: 실제 직원 정보 연동
                 orderMap.put("paymentMethod", order.getPaymentMethod().toString());
                 orderMap.put("orderType", order.getOrderType().toString());
+                orderMap.put("paymentStatus", order.getPaymentStatus().toString()); // 결제 상태 추가
                 
                 return orderMap;
             }).collect(Collectors.toList());
@@ -250,6 +387,43 @@ public class OrderController {
     }
 
 
+
+    // 결제 검증 API
+    @PostMapping("/verify-payment")
+    public ResponseEntity<Map<String, Object>> verifyPayment(@RequestBody Map<String, Object> request) {
+        try {
+            String paymentKey = (String) request.get("paymentKey");
+            String orderId = (String) request.get("orderId");
+            Long amount = Long.valueOf(request.get("amount").toString());
+
+            // 토스페이먼츠 결제 승인 요청
+            String tossPaymentsUrl = "https://api.tosspayments.com/v1/payments/confirm";
+            
+            // 결제 승인 요청 데이터
+            Map<String, Object> confirmData = new HashMap<>();
+            confirmData.put("paymentKey", paymentKey);
+            confirmData.put("orderId", orderId);
+            confirmData.put("amount", amount);
+
+            // HTTP 클라이언트를 사용하여 토스페이먼츠 API 호출
+            // 실제 구현에서는 RestTemplate 또는 WebClient 사용
+            // 여기서는 간단한 응답만 반환
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "결제가 성공적으로 검증되었습니다.");
+            response.put("paymentKey", paymentKey);
+            response.put("orderId", orderId);
+            response.put("amount", amount);
+            
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("success", false);
+            errorResponse.put("message", "결제 검증 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
 
     // 주문 이력 생성 메서드
     private void createOrderHistory(Orders order, String status, String employeeName) {

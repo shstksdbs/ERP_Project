@@ -8,6 +8,7 @@ const CartScreen = ({ selectedBranch }) => {
   
   // 전달받은 장바구니 데이터 또는 빈 배열
   const [cart, setCart] = useState(location.state?.cart || []);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // 디버깅: 장바구니 데이터 확인
   console.log('CartScreen - location.state:', location.state);
@@ -56,6 +57,16 @@ const CartScreen = ({ selectedBranch }) => {
     navigate('/');
   };
 
+  // 보안 해시 생성 함수
+  const generateSecurityHash = async (data) => {
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  };
+
   const proceedToPayment = async () => {
     // 지점이 선택되지 않은 경우 처리
     if (!selectedBranch) {
@@ -63,60 +74,83 @@ const CartScreen = ({ selectedBranch }) => {
       return;
     }
 
+    setIsProcessing(true);
+
+    // 주문 데이터 준비
+    const orderData = {
+      branchId: selectedBranch.id,
+      totalAmount: getTotalAmount(),
+      items: cart.map(item => ({
+        menuId: item.menuId || item.id || 1,
+        menuName: getItemDisplayName(item),
+        quantity: item.quantity,
+        unitPrice: getItemPrice(item) / item.quantity,
+        totalPrice: getItemPrice(item),
+        displayName: getItemDisplayName(item),
+        displayOptions: item.displayOptions || [],
+        options: convertOptionsToRequest(item)
+      }))
+    };
+
+    console.log('바로 결제 진행 - 주문 데이터:', orderData);
+    console.log('선택된 지점:', selectedBranch);
+
     try {
-      // 주문 데이터 준비
-      const orderData = {
-        branchId: selectedBranch.id, // 선택된 지점 ID
-        orderType: "takeout", // 기본값: 포장
-        customerName: "고객", // 기본값 (실제로는 입력받아야 함)
-        customerPhone: "010-0000-0000", // 기본값 (실제로는 입력받아야 함)
-        paymentMethod: "card", // 기본값: 카드
-        items: cart.map(item => ({
-          menuId: item.menuId || item.id || 1, // 메뉴 ID
-          menuName: getItemDisplayName(item), // 메뉴 이름
-          quantity: item.quantity, // 수량
-          unitPrice: getItemPrice(item) / item.quantity, // 단가
-          totalPrice: getItemPrice(item), // 총 가격
-          displayName: getItemDisplayName(item), // 표시 이름
-          displayOptions: item.displayOptions || [], // 표시 옵션
-          options: convertOptionsToRequest(item) // 상세 옵션 정보
-        }))
+      // 보안 해시 생성
+      const timestamp = Date.now();
+      const dataToHash = orderData.branchId + 'takeout' + '손님' + '000-0000-0000' + 'card' + JSON.stringify(orderData.items);
+      const securityHash = await generateSecurityHash(dataToHash + timestamp + 'your_secret_key_here_change_in_production');
+      
+      // 백엔드로 보낼 데이터 준비
+      const requestData = {
+        ...orderData,
+        customerName: '손님',
+        customerPhone: '000-0000-0000',
+        orderType: 'takeout',
+        paymentMethod: 'card',
+        securityHash: securityHash,
+        timestamp: timestamp
       };
-
-      console.log('주문 데이터:', orderData);
-      console.log('선택된 지점:', selectedBranch);
-      console.log('displayOptions 예시:', cart[0]?.displayOptions);
-      console.log('displayOptions 타입:', typeof cart[0]?.displayOptions);
-
-      // 백엔드 API 호출
-      const response = await fetch('http://localhost:8080/api/orders/create', {
+      
+      console.log('백엔드로 보낼 데이터:', requestData);
+      
+      // 백엔드에서 주문 생성
+      const orderResponse = await fetch('http://localhost:8080/api/orders/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(requestData)
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('주문 생성 성공:', result);
+      if (!orderResponse.ok) {
+        throw new Error('주문 생성에 실패했습니다.');
+      }
+
+      const orderResult = await orderResponse.json();
+      
+      // 토스페이먼츠 결제 요청
+      if (window.TossPayments) {
+        const tossPayments = window.TossPayments('test_ck_D5GePWvyJnrK0W0k6q8gLzN97Eoq');
         
-        // 주문 완료 화면으로 이동
-        navigate('/order-complete', { 
-          state: { 
-            orderId: result.orderId,
-            orderNumber: result.orderNumber,
-            totalAmount: getTotalAmount()
-          } 
+        tossPayments.requestPayment('card', {
+          amount: orderData.totalAmount,
+          orderId: orderResult.orderNumber,
+          orderName: `${selectedBranch.name} - ${orderData.items[0]?.menuName || '주문'}`,
+          customerName: '손님',
+          customerEmail: 'customer@example.com',
+          successUrl: `${window.location.origin}/payment-success`,
+          failUrl: `${window.location.origin}/payment-fail`,
         });
       } else {
-        const errorData = await response.json();
-        console.error('주문 생성 실패:', response.status, errorData);
-        alert(`주문 생성에 실패했습니다: ${errorData.error || '알 수 없는 오류'}`);
+        throw new Error('토스페이먼츠 SDK를 찾을 수 없습니다.');
       }
+
     } catch (error) {
-      console.error('주문 생성 중 오류:', error);
-      alert('주문 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+      console.error('결제 처리 중 오류:', error);
+      alert('결제 처리 중 오류가 발생했습니다: ' + error.message);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -407,10 +441,10 @@ const CartScreen = ({ selectedBranch }) => {
           <button 
             className={`${styles.orderButton} ${!selectedBranch ? styles.disabled : ''}`} 
             onClick={proceedToPayment}
-            disabled={!selectedBranch}
-            title={!selectedBranch ? '지점을 먼저 선택해주세요' : '주문하기'}
+            disabled={!selectedBranch || isProcessing}
+            title={!selectedBranch ? '지점을 먼저 선택해주세요' : '결제하기'}
           >
-            {selectedBranch ? `주문하기 (${selectedBranch.name})` : '지점 선택 필요'}
+            {selectedBranch ? (isProcessing ? '결제 처리 중...' : `결제하기`) : '지점 선택 필요'}
           </button>
         </div>
       </div>

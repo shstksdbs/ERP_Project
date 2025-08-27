@@ -59,6 +59,9 @@ public class Orders {
     @Column(name = "cancelled_time")
     private LocalDateTime cancelledTime;
     
+    @Column(name = "payment_time")
+    private LocalDateTime paymentTime;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -117,6 +120,9 @@ public class Orders {
     
     public LocalDateTime getCancelledTime() { return cancelledTime; }
     public void setCancelledTime(LocalDateTime cancelledTime) { this.cancelledTime = cancelledTime; }
+    
+    public LocalDateTime getPaymentTime() { return paymentTime; }
+    public void setPaymentTime(LocalDateTime paymentTime) { this.paymentTime = paymentTime; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

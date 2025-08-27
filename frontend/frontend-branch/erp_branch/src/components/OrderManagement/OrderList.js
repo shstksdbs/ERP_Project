@@ -123,6 +123,34 @@ export default function OrderList({ branchId }) {
     }
   };
 
+  // 결제 상태 텍스트 변환
+  const getPaymentStatusText = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'pending':
+        return '결제대기';
+      case 'completed':
+        return '결제완료';
+      case 'failed':
+        return '결제실패';
+      default:
+        return paymentStatus;
+    }
+  };
+
+  // 결제 상태 스타일 클래스
+  const getPaymentStatusClass = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'pending':
+        return styles.paymentStatusPending;
+      case 'completed':
+        return styles.paymentStatusCompleted;
+      case 'failed':
+        return styles.paymentStatusFailed;
+      default:
+        return '';
+    }
+  };
+
   const filteredOrders = orders.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
                         order.customerName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -169,7 +197,8 @@ export default function OrderList({ branchId }) {
                 <th>고객명</th>
                 <th>주문내용</th>
                 <th>총 금액</th>
-                <th>상태</th>
+                <th>주문상태</th>
+                <th>결제상태</th>
                 <th>주문시간</th>
                 <th>담당직원</th>
                 <th>결제방법</th>
@@ -198,6 +227,11 @@ export default function OrderList({ branchId }) {
                   <td>
                     <span className={`${styles.status} ${getStatusClass(order.status)}`}>
                       {getStatusText(order.status)}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`${styles.paymentStatus} ${getPaymentStatusClass(order.paymentStatus)}`}>
+                      {getPaymentStatusText(order.paymentStatus)}
                     </span>
                   </td>
                   <td>{order.orderDate}</td>
@@ -252,6 +286,34 @@ function OrderDetailModal({ order, onClose }) {
     }
   };
 
+  // 결제 상태 텍스트 변환
+  const getPaymentStatusText = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'pending':
+        return '결제대기';
+      case 'completed':
+        return '결제완료';
+      case 'failed':
+        return '결제실패';
+      default:
+        return paymentStatus;
+    }
+  };
+
+  // 결제 상태 스타일 클래스
+  const getPaymentStatusClass = (paymentStatus) => {
+    switch (paymentStatus) {
+      case 'pending':
+        return styles.statusPending;
+      case 'completed':
+        return styles.statusCompleted;
+      case 'failed':
+        return styles.statusCancelled;
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -277,6 +339,12 @@ function OrderDetailModal({ order, onClose }) {
               <span className={styles.label}>주문상태:</span>
               <span className={`${styles.value} ${getStatusClass(order.status)}`}>
                 {getStatusText(order.status)}
+              </span>
+            </div>
+            <div className={styles.infoRow}>
+              <span className={styles.label}>결제상태:</span>
+              <span className={`${styles.value} ${getPaymentStatusClass(order.paymentStatus)}`}>
+                {getPaymentStatusText(order.paymentStatus)}
               </span>
             </div>
             <div className={styles.infoRow}>
