@@ -44,7 +44,8 @@ public class DataInitializer {
         "01_menu_data.sql",        // 2. 메뉴 기본 데이터    
         "06_menu_category_migration.sql",  // 2. 메뉴 카테고리 데이터
         "03_option_data.sql",      // 3. 메뉴 옵션 데이터  
-        "04_users_data.sql"        // 4. 사용자 데이터
+        "04_users_data.sql",       // 4. 사용자 데이터
+        "07_materials_data.sql"    // 5. 원재료 데이터
     );
 
     @PostConstruct

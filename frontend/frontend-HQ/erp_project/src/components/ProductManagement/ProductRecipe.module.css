@@ -102,6 +102,16 @@
   border-radius: 6px;
   font-size: 14px;
   background-color: white;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .add-button,
@@ -177,37 +187,44 @@
 /* 각 컬럼 너비 고정 */
 .recipes-table th:nth-child(1),
 .recipes-table td:nth-child(1) {
-  width: 15%; /* 메뉴명 */
+  width: 15%;
+  /* 메뉴명 */
 }
 
 .recipes-table th:nth-child(2),
 .recipes-table td:nth-child(2) {
-  width: 12%; /* 카테고리 */
+  width: 12%;
+  /* 카테고리 */
 }
 
 .recipes-table th:nth-child(3),
 .recipes-table td:nth-child(3) {
-  width: 12%; /* 원재료 수 */
+  width: 12%;
+  /* 원재료 수 */
 }
 
 .recipes-table th:nth-child(4),
 .recipes-table td:nth-child(4) {
-  width: 15%; /* 총 원가 */
+  width: 15%;
+  /* 총 원가 */
 }
 
 .recipes-table th:nth-child(5),
 .recipes-table td:nth-child(5) {
-  width: 12%; /* 수량 */
+  width: 12%;
+  /* 수량 */
 }
 
 .recipes-table th:nth-child(6),
 .recipes-table td:nth-child(6) {
-  width: 15%; /* 최종 수정일 */
+  width: 15%;
+  /* 최종 수정일 */
 }
 
 .recipes-table th:nth-child(7),
 .recipes-table td:nth-child(7) {
-  width: 10%; /* 작업 */
+  width: 10%;
+  /* 작업 */
 }
 
 .recipes-table td {
@@ -542,6 +559,19 @@
   margin-bottom: 6px;
 }
 
+.form-group select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
 .form-group input,
 .form-group select,
 .form-group textarea {
@@ -625,65 +655,65 @@
   .product-recipe {
     padding: 16px;
   }
-  
+
   .tab-container {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .tab-button {
     text-align: left;
     border-bottom: none;
     border-left: 3px solid transparent;
   }
-  
+
   .tab-button.active {
     border-left-color: #3b82f6;
     border-bottom-color: transparent;
   }
-  
+
   .search-filter-container {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .recipe-summary {
     grid-template-columns: 1fr;
   }
-  
+
   .recipes-table {
     font-size: 12px;
   }
-  
+
   .recipes-table th,
   .recipes-table td {
     padding: 8px 12px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .analysis-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .ingredient-row {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .modal-content {
     width: 95%;
     padding: 16px;
   }
-  
+
   .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .modal-actions {
     flex-direction: column;
   }
-} 
+}

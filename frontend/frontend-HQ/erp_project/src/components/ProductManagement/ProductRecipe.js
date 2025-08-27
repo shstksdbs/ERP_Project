@@ -273,13 +273,13 @@ export default function ProductRecipe() {
                       <td>
                         <div className={styles['action-buttons']}>
                           <button
-                            className={`btn btn-small ${styles['btn-small']}`}
+                            className={`btn btn-small btn-primary ${styles['btn-small']}`}
                             onClick={() => {
                               setSelectedRecipe(recipe);
                               setShowEditRecipeModal(true);
                             }}
                           >
-                            <img src={pencilIcon} alt="수정" className={styles['action-icon']} />
+                            수정
                           </button>
                           <button
                             className={`btn btn-small btn-danger ${styles['btn-small']}`}
