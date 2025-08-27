@@ -259,7 +259,7 @@ export default function ProductRecipe() {
         const createdRecipe = await response.json();
         setRecipes([...recipes, createdRecipe]);
         setShowAddRecipeModal(false);
-        alert('레시피가 성공적으로 추가되었습니다.');
+        alert('레시피가 성공적으로 추가되었습니다.\n메뉴의 원가도 자동으로 업데이트되었습니다.');
         
         // 데이터 다시 불러오기
         setTimeout(() => {
@@ -322,7 +322,7 @@ export default function ProductRecipe() {
           recipe.id === editedRecipe.id ? editedRecipe : recipe
         ));
         setShowEditRecipeModal(false);
-        alert('레시피가 성공적으로 수정되었습니다.');
+        alert('레시피가 성공적으로 수정되었습니다.\n메뉴의 원가도 자동으로 업데이트되었습니다.');
         
         // 데이터 다시 불러오기
         setTimeout(() => {
@@ -351,13 +351,46 @@ export default function ProductRecipe() {
 
         if (response.ok) {
           setRecipes(recipes.filter(recipe => recipe.id !== recipeId));
-          alert('레시피가 성공적으로 삭제되었습니다.');
+          alert('레시피가 성공적으로 삭제되었습니다.\n메뉴의 원가도 0으로 설정되었습니다.');
+          
+          // 데이터 다시 불러오기
+          setTimeout(() => {
+            fetchRecipes();
+            fetchMenus();
+          }, 100);
         } else {
           alert('레시피 삭제에 실패했습니다.');
         }
       } catch (error) {
         console.error('레시피 삭제 중 오류 발생:', error);
         alert('레시피 삭제 중 오류가 발생했습니다.');
+      }
+    }
+  };
+
+  // 모든 메뉴의 원가를 레시피 원가로 일괄 업데이트하는 함수
+  const handleUpdateAllMenuCosts = async () => {
+    if (window.confirm('모든 메뉴의 원가를 레시피 원가로 일괄 업데이트하시겠습니까?\n이 작업은 시간이 걸릴 수 있습니다.')) {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE_URL}/recipes/update-all-menu-costs`, {
+          method: 'PUT',
+        });
+
+        if (response.ok) {
+          const result = await response.text();
+          alert(result);
+          fetchMenus(); // 메뉴 데이터 다시 불러오기
+          fetchRecipes(); // 레시피 데이터 다시 불러오기
+        } else {
+          const errorData = await response.text();
+          alert(`메뉴 원가 업데이트에 실패했습니다: ${errorData}`);
+        }
+      } catch (error) {
+        console.error('메뉴 원가 업데이트 중 오류 발생:', error);
+        alert('메뉴 원가 업데이트 중 오류가 발생했습니다.');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -458,6 +491,15 @@ export default function ProductRecipe() {
              >
                <img src={plusIcon} alt="추가" className={styles['button-icon']} />
                레시피 추가
+             </button>
+             <button
+               className={`btn btn-secondary ${styles['update-button']}`}
+               onClick={handleUpdateAllMenuCosts}
+               disabled={loading}
+               title="모든 메뉴의 원가를 레시피 원가로 일괄 업데이트합니다"
+             >
+               <img src={downloadIcon} alt="업데이트" className={styles['button-icon']} />
+               {loading ? '업데이트 중...' : '메뉴 원가 일괄 업데이트'}
              </button>
           </div>
 

@@ -280,7 +280,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     onClick={() => handleSubmenuClick('product-cost')}
                   >
                     <img src={dollorIcon} alt="원가/공급가" className={styles['sidebar-icon']} />
-                    메뉴별 원가 설정
+                    메뉴별 판매가 설정
                   </button>
                 </li>
                 <li>

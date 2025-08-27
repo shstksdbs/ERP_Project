@@ -825,9 +825,12 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
                 type="number"
                 name="price"
                 value={formData.price}
-                onChange={handleInputChange}
-                required
+                disabled
+                className={styles['disabled-input']}
               />
+              <small className={styles['field-note']}>
+                판매가 수정은 '메뉴별 판매가 설정' 탭에서 가능합니다.
+              </small>
             </div>
             <div className={styles['form-group']}>
               <label>원가</label>
@@ -839,7 +842,7 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
                 className={styles['disabled-input']}
               />
               <small className={styles['field-note']}>
-                원가 수정은 '메뉴별 원가 설정' 탭에서 가능합니다.
+                원가 수정은 '레시피 관리' 탭에서 가능합니다.
               </small>
             </div>
           </div>

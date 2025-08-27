@@ -2,6 +2,7 @@ package erp_project.erp_project.service;
 
 import erp_project.erp_project.dto.MenuResponseDto;
 import erp_project.erp_project.dto.MenuCategoryResponseDto;
+import erp_project.erp_project.dto.PriceChangeHistoryDto;
 import erp_project.erp_project.entity.Menu;
 import erp_project.erp_project.entity.MenuCategory;
 import erp_project.erp_project.repository.MenuRepository;
@@ -21,6 +22,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
+import erp_project.erp_project.entity.PriceChangeHistory;
+import erp_project.erp_project.repository.PriceChangeHistoryRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,7 @@ public class MenuService {
     
     private final MenuRepository menuRepository;
     private final MenuCategoryRepository menuCategoryRepository;
+    private final PriceChangeHistoryRepository priceChangeHistoryRepository;
     
     // 모든 메뉴 조회 (카테고리 정보 포함)
     public List<Menu> getAllMenus() {
@@ -150,6 +154,32 @@ public class MenuService {
         return menuRepository.save(menu);
     }
 
+    // 판매가만 수정
+    @Transactional
+    public MenuResponseDto updateMenuPrice(Long id, BigDecimal newPrice, String reason, String updatedBy) {
+        Menu menu = menuRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
+        
+        BigDecimal oldPrice = menu.getPrice();
+        menu.setPrice(newPrice);
+        Menu savedMenu = menuRepository.save(menu);
+        
+        // 판매가 변경 이력 저장
+        PriceChangeHistory history = PriceChangeHistory.builder()
+                .menu(menu)
+                .oldPrice(oldPrice)
+                .newPrice(newPrice)
+                .changeAmount(newPrice.subtract(oldPrice))
+                .reason(reason)
+                .updatedBy(updatedBy)
+                .menuName(menu.getName())
+                .build();
+        
+        priceChangeHistoryRepository.save(history);
+        
+        return convertToResponseDto(savedMenu);
+    }
+    
     // 메뉴 수정 (이미지 업로드 포함)
     @Transactional
     public Menu updateMenuWithImage(Long id, String name, String description, BigDecimal price, 
@@ -297,6 +327,37 @@ public class MenuService {
                         .createdAt(menu.getMenuCategory().getCreatedAt())
                         .updatedAt(menu.getMenuCategory().getUpdatedAt())
                         .build() : null)
+                .build();
+    }
+    
+    // 가격 변경 이력 조회
+    public List<PriceChangeHistoryDto> getPriceChangeHistory() {
+        List<PriceChangeHistory> histories = priceChangeHistoryRepository.findAllByOrderByChangeDateDesc();
+        return histories.stream()
+                .map(this::convertToPriceChangeHistoryDto)
+                .collect(java.util.stream.Collectors.toList());
+    }
+    
+    // 특정 메뉴의 가격 변경 이력 조회
+    public List<PriceChangeHistoryDto> getPriceChangeHistoryByMenuId(Long menuId) {
+        List<PriceChangeHistory> histories = priceChangeHistoryRepository.findByMenuIdOrderByChangeDateDesc(menuId);
+        return histories.stream()
+                .map(this::convertToPriceChangeHistoryDto)
+                .collect(java.util.stream.Collectors.toList());
+    }
+    
+    // PriceChangeHistory를 PriceChangeHistoryDto로 변환
+    private PriceChangeHistoryDto convertToPriceChangeHistoryDto(PriceChangeHistory history) {
+        return PriceChangeHistoryDto.builder()
+                .id(history.getId())
+                .menuId(history.getMenuId())
+                .menuName(history.getMenuName())
+                .oldPrice(history.getOldPrice())
+                .newPrice(history.getNewPrice())
+                .changeAmount(history.getChangeAmount())
+                .changeDate(history.getChangeDate())
+                .reason(history.getReason())
+                .updatedBy(history.getUpdatedBy())
                 .build();
     }
 }

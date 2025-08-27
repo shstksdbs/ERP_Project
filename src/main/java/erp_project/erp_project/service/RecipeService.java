@@ -71,11 +71,17 @@ public class RecipeService {
         
         Recipe savedRecipe = recipeRepository.save(recipe);
         
+        BigDecimal totalRecipeCost = BigDecimal.ZERO;
+        
         // 재료 추가
         if (requestDto.getIngredients() != null) {
             for (var ingredientRequest : requestDto.getIngredients()) {
                 Material material = materialRepository.findById(ingredientRequest.getMaterialId())
                         .orElseThrow(() -> new RuntimeException("원재료를 찾을 수 없습니다: " + ingredientRequest.getMaterialId()));
+                
+                BigDecimal ingredientTotalCost = ingredientRequest.getTotalCost() != null ? 
+                    ingredientRequest.getTotalCost() : 
+                    ingredientRequest.getQuantity().multiply(material.getCostPerUnit());
                 
                 RecipeIngredient ingredient = RecipeIngredient.builder()
                         .recipe(savedRecipe)
@@ -83,13 +89,17 @@ public class RecipeService {
                         .quantity(ingredientRequest.getQuantity())
                         .unit(ingredientRequest.getUnit())
                         .costPerUnit(ingredientRequest.getCostPerUnit() != null ? ingredientRequest.getCostPerUnit() : material.getCostPerUnit())
-                        .totalCost(ingredientRequest.getTotalCost() != null ? ingredientRequest.getTotalCost() : ingredientRequest.getQuantity().multiply(material.getCostPerUnit()))
+                        .totalCost(ingredientTotalCost)
                         .notes(ingredientRequest.getNotes())
                         .build();
                 
                 recipeIngredientRepository.save(ingredient);
+                totalRecipeCost = totalRecipeCost.add(ingredientTotalCost);
             }
         }
+        
+        // 메뉴의 base_price를 레시피 총 원가로 업데이트
+        updateMenuBasePrice(menu.getId(), totalRecipeCost);
         
         return convertToDto(savedRecipe);
     }
@@ -116,11 +126,17 @@ public class RecipeService {
         // 기존 재료 삭제
         recipeIngredientRepository.deleteByRecipeId(id);
         
+        BigDecimal totalRecipeCost = BigDecimal.ZERO;
+        
         // 새로운 재료 추가
         if (requestDto.getIngredients() != null) {
             for (var ingredientRequest : requestDto.getIngredients()) {
                 Material material = materialRepository.findById(ingredientRequest.getMaterialId())
                         .orElseThrow(() -> new RuntimeException("원재료를 찾을 수 없습니다: " + ingredientRequest.getMaterialId()));
+                
+                BigDecimal ingredientTotalCost = ingredientRequest.getTotalCost() != null ? 
+                    ingredientRequest.getTotalCost() : 
+                    ingredientRequest.getQuantity().multiply(material.getCostPerUnit());
                 
                 RecipeIngredient ingredient = RecipeIngredient.builder()
                         .recipe(recipe)
@@ -128,21 +144,80 @@ public class RecipeService {
                         .quantity(ingredientRequest.getQuantity())
                         .unit(ingredientRequest.getUnit())
                         .costPerUnit(ingredientRequest.getCostPerUnit() != null ? ingredientRequest.getCostPerUnit() : material.getCostPerUnit())
-                        .totalCost(ingredientRequest.getTotalCost() != null ? ingredientRequest.getTotalCost() : ingredientRequest.getQuantity().multiply(material.getCostPerUnit()))
+                        .totalCost(ingredientTotalCost)
                         .notes(ingredientRequest.getNotes())
                         .build();
                 
                 recipeIngredientRepository.save(ingredient);
+                totalRecipeCost = totalRecipeCost.add(ingredientTotalCost);
             }
         }
         
         Recipe updatedRecipe = recipeRepository.save(recipe);
+        
+        // 메뉴의 base_price를 레시피 총 원가로 업데이트
+        updateMenuBasePrice(menu.getId(), totalRecipeCost);
+        
         return convertToDto(updatedRecipe);
     }
     
     // 레시피 삭제
     public void deleteRecipe(Long id) {
+        Recipe recipe = recipeRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("레시피를 찾을 수 없습니다: " + id));
+        
+        Long menuId = recipe.getMenu().getId();
+        
+        // 레시피 삭제
         recipeRepository.deleteById(id);
+        
+        // 메뉴의 base_price를 0으로 설정 (레시피가 없으므로)
+        updateMenuBasePrice(menuId, BigDecimal.ZERO);
+    }
+    
+    // 메뉴의 base_price 업데이트
+    private void updateMenuBasePrice(Long menuId, BigDecimal newBasePrice) {
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + menuId));
+        
+        menu.setBasePrice(newBasePrice);
+        menuRepository.save(menu);
+    }
+    
+    // 모든 메뉴의 base_price를 레시피 원가로 일괄 업데이트
+    @Transactional
+    public String updateAllMenuBasePrices() {
+        List<Menu> allMenus = menuRepository.findAll();
+        int updatedCount = 0;
+        
+        for (Menu menu : allMenus) {
+            // 해당 메뉴의 레시피 찾기
+            Optional<Recipe> recipeOpt = recipeRepository.findByMenuId(menu.getId());
+            
+            if (recipeOpt.isPresent()) {
+                Recipe recipe = recipeOpt.get();
+                
+                // 레시피의 총 원가 계산
+                BigDecimal totalCost = BigDecimal.ZERO;
+                if (recipe.getIngredients() != null && !recipe.getIngredients().isEmpty()) {
+                    totalCost = recipe.getIngredients().stream()
+                            .map(RecipeIngredient::getTotalCost)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                }
+                
+                // 메뉴의 base_price 업데이트
+                menu.setBasePrice(totalCost);
+                menuRepository.save(menu);
+                updatedCount++;
+            } else {
+                // 레시피가 없는 메뉴는 base_price를 0으로 설정
+                menu.setBasePrice(BigDecimal.ZERO);
+                menuRepository.save(menu);
+                updatedCount++;
+            }
+        }
+        
+        return String.format("총 %d개의 메뉴 원가가 업데이트되었습니다.", updatedCount);
     }
     
     // DTO 변환

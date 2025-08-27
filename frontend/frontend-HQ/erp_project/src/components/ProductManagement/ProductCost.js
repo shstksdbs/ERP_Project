@@ -6,26 +6,41 @@ import pencilIcon from '../../assets/pencil_icon.png';
 import downloadIcon from '../../assets/download_icon.png';
 
 export default function ProductCost() {
-  const [activeTab, setActiveTab] = useState('cost-management');
+  const [activeTab, setActiveTab] = useState('price-management');
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [showEditCostModal, setShowEditCostModal] = useState(false);
+  const [showEditPriceModal, setShowEditPriceModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
-  const [costHistory, setCostHistory] = useState([]);
+  const [priceHistory, setPriceHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // API 기본 URL
   const API_BASE_URL = 'http://localhost:8080/api';
+  
+  // 현재 로그인된 사용자 정보 가져오기
+  const getCurrentUser = () => {
+    try {
+      const loginData = localStorage.getItem('erpLoginData');
+      if (loginData) {
+        const userInfo = JSON.parse(loginData);
+        return userInfo.realName || userInfo.username || '관리자';
+      }
+      return '관리자';
+    } catch (error) {
+      console.error('사용자 정보 파싱 오류:', error);
+      return '관리자';
+    }
+  };
 
-  // 상품 원가 목록 조회
-  const fetchProductCosts = async (category = 'all', searchTerm = '') => {
+  // 상품 판매가 목록 조회
+  const fetchProductPrices = async (category = 'all', searchTerm = '') => {
     setLoading(true);
     setError(null);
     try {
-      let url = `${API_BASE_URL}/product-cost/products`;
+      let url = `${API_BASE_URL}/menus`;
       const params = new URLSearchParams();
       if (category && category !== 'all') {
         params.append('category', category);
@@ -39,105 +54,120 @@ export default function ProductCost() {
 
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('상품 원가 데이터를 불러오는데 실패했습니다.');
+        throw new Error('상품 판매가 데이터를 불러오는데 실패했습니다.');
       }
       const data = await response.json();
       setProducts(data);
     } catch (err) {
       setError(err.message);
-      console.error('상품 원가 조회 오류:', err);
+      console.error('상품 판매가 조회 오류:', err);
     } finally {
       setLoading(false);
     }
   };
 
-  // 카테고리별 원가 분석 조회
-  const fetchCostAnalysis = async () => {
+  // 카테고리별 판매가 분석 조회
+  const fetchPriceAnalysis = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/product-cost/analysis`);
+      const response = await fetch(`${API_BASE_URL}/menu-categories`);
       if (!response.ok) {
-        throw new Error('원가 분석 데이터를 불러오는데 실패했습니다.');
+        throw new Error('판매가 분석 데이터를 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      // 카테고리 정보 추출
-      const categoryList = data.map(item => ({
-        id: item.categoryId,
-        name: item.categoryName,
-        code: item.categoryCode
-      }));
-      setCategories(categoryList);
+      setCategories(data);
     } catch (err) {
-      console.error('원가 분석 조회 오류:', err);
+      console.error('판매가 분석 조회 오류:', err);
     }
   };
 
-  // 원가 변경 이력 조회
-  const fetchCostHistory = async () => {
+  // 판매가 변경 이력 조회
+  const fetchPriceHistory = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/product-cost/history`);
+      const response = await fetch(`${API_BASE_URL}/menus/price-history`);
       if (!response.ok) {
-        throw new Error('원가 변경 이력을 불러오는데 실패했습니다.');
+        throw new Error('판매가 변경 이력을 불러오는데 실패했습니다.');
       }
       const data = await response.json();
-      setCostHistory(data);
+      setPriceHistory(data);
     } catch (err) {
-      console.error('원가 변경 이력 조회 오류:', err);
+      console.error('판매가 변경 이력 조회 오류:', err);
+      // 에러가 발생해도 빈 배열로 설정
+      setPriceHistory([]);
     }
   };
 
-  // 원가 수정
-  const updateProductCost = async (productId, costUpdate) => {
+  // 판매가 수정
+  const updateProductPrice = async (productId, priceUpdate) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/product-cost/${productId}/cost`, {
-        method: 'PUT',
+      const requestBody = {
+        price: parseFloat(priceUpdate.newPrice),
+        changeReason: priceUpdate.changeReason || '',
+        updatedBy: getCurrentUser()
+      };
+      
+      console.log('판매가 수정 요청 데이터:', requestBody);
+      console.log('priceUpdate 객체:', priceUpdate);
+      
+      const response = await fetch(`${API_BASE_URL}/menus/${productId}/price`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(costUpdate),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
-        throw new Error('원가 수정에 실패했습니다.');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || '판매가 수정에 실패했습니다.');
       }
 
       const updatedProduct = await response.json();
       
-      // 로컬 상태 업데이트
+      // 로컬 상태 업데이트 - 기존 product와 병합
       setProducts(products.map(product => 
-        product.id === updatedProduct.id ? updatedProduct : product
+        product.id === productId ? { ...product, price: updatedProduct.price } : product
       ));
       
-      setShowEditCostModal(false);
+      setShowEditPriceModal(false);
       setSelectedProduct(null);
       
-      // 원가 변경 이력 새로고침
-      fetchCostHistory();
+      // 이력 데이터 새로고침
+      fetchPriceHistory();
       
-      // 성공 메시지 표시 (실제로는 토스트나 알림 컴포넌트 사용)
-      alert('원가가 성공적으로 수정되었습니다.');
+      // 성공 메시지 표시
+      alert('판매가가 성공적으로 수정되었습니다.');
     } catch (err) {
       setError(err.message);
-      console.error('원가 수정 오류:', err);
-      alert('원가 수정에 실패했습니다: ' + err.message);
+      console.error('판매가 수정 오류:', err);
+      alert('판매가 수정에 실패했습니다: ' + err.message);
     }
   };
 
-  // 원가 데이터 내보내기
-  const handleExportCostData = async () => {
+  // 판매가 데이터 내보내기
+  const handleExportPriceData = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/product-cost/export`);
-      if (!response.ok) {
-        throw new Error('데이터 내보내기에 실패했습니다.');
-      }
-      
-      const csvData = await response.text();
+      // CSV 데이터 생성
+      const headers = ['메뉴명', '카테고리', '판매가', '원가', '마진율', '원가율'];
+      const csvContent = [
+        headers.join(','),
+        ...products.map(product => [
+          product.name,
+          product.category,
+          product.price || 0,
+          product.basePrice || 0,
+          product.price && product.basePrice ? 
+            (((product.price - product.basePrice) / product.price) * 100).toFixed(1) : 0,
+          product.price && product.basePrice ? 
+            ((product.basePrice / product.price) * 100).toFixed(1) : 0
+        ].join(','))
+      ].join('\n');
       
       // CSV 파일 다운로드
-      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `원가데이터_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute('download', `판매가데이터_${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -151,23 +181,23 @@ export default function ProductCost() {
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
-    fetchProductCosts();
-    fetchCostAnalysis();
-    fetchCostHistory();
+    fetchProductPrices();
+    fetchPriceAnalysis();
+    fetchPriceHistory();
   }, []);
 
   // 카테고리나 검색어 변경 시 데이터 재조회
   useEffect(() => {
-    fetchProductCosts(selectedCategory, searchTerm);
+    fetchProductPrices(selectedCategory, searchTerm);
   }, [selectedCategory, searchTerm]);
 
-  const handleEditCost = (product) => {
+  const handleEditPrice = (product) => {
     setSelectedProduct(product);
-    setShowEditCostModal(true);
+    setShowEditPriceModal(true);
   };
 
-  const handleUpdateCost = (updatedProduct) => {
-    updateProductCost(updatedProduct.id, updatedProduct);
+  const handleUpdatePrice = (updatedProduct) => {
+    updateProductPrice(updatedProduct.id, updatedProduct);
   };
 
   const filteredProducts = products.filter(product => {
@@ -186,6 +216,18 @@ export default function ProductCost() {
     return cat ? cat.name : category;
   };
 
+  // 마진율 계산
+  const calculateMargin = (price, basePrice) => {
+    if (!price || !basePrice) return 0;
+    return ((price - basePrice) / price) * 100;
+  };
+
+  // 원가율 계산
+  const calculateCostRatio = (price, basePrice) => {
+    if (!price || !basePrice) return 0;
+    return (basePrice / price) * 100;
+  };
+
   if (loading && products.length === 0) {
     return <div className={styles.loading}>데이터를 불러오는 중...</div>;
   }
@@ -197,32 +239,32 @@ export default function ProductCost() {
   return (
     <div className={styles['product-cost']}>
       <div className={styles['product-cost-header']}>
-        <h1>메뉴별 원가 설정</h1>
-        <p>각 메뉴의 원가를 설정하고 마진을 관리할 수 있습니다.</p>
+        <h1>메뉴별 판매가 설정</h1>
+        <p>각 메뉴의 판매가를 설정하고 마진을 관리할 수 있습니다.</p>
       </div>
 
       <div className={styles['tab-container']}>
         <button
-          className={`${styles['tab-button']} ${activeTab === 'cost-management' ? styles['active'] : ''}`}
-          onClick={() => setActiveTab('cost-management')}
+          className={`${styles['tab-button']} ${activeTab === 'price-management' ? styles['active'] : ''}`}
+          onClick={() => setActiveTab('price-management')}
         >
-          원가 관리
+          판매가 관리
         </button>
         <button
-          className={`${styles['tab-button']} ${activeTab === 'cost-history' ? styles['active'] : ''}`}
-          onClick={() => setActiveTab('cost-history')}
+          className={`${styles['tab-button']} ${activeTab === 'price-history' ? styles['active'] : ''}`}
+          onClick={() => setActiveTab('price-history')}
         >
-          원가 변경 이력
+          판매가 변경 이력
         </button>
         <button
-          className={`${styles['tab-button']} ${activeTab === 'cost-analysis' ? styles['active'] : ''}`}
-          onClick={() => setActiveTab('cost-analysis')}
+          className={`${styles['tab-button']} ${activeTab === 'price-analysis' ? styles['active'] : ''}`}
+          onClick={() => setActiveTab('price-analysis')}
         >
-          원가 분석
+          판매가 분석
         </button>
       </div>
 
-      {activeTab === 'cost-management' && (
+      {activeTab === 'price-management' && (
         <div className={styles['cost-management']}>
           <div className={styles['search-filter-container']}>
             <div className={styles['search-box']}>
@@ -257,10 +299,10 @@ export default function ProductCost() {
             </div>
             <button
               className={`btn btn-primary ${styles['export-button']}`}
-              onClick={handleExportCostData}
+              onClick={handleExportPriceData}
             >
               <img src={downloadIcon} alt="내보내기" className={styles['button-icon']} />
-              원가 데이터 내보내기
+              판매가 데이터 내보내기
             </button>
           </div>
 
@@ -273,7 +315,8 @@ export default function ProductCost() {
               <h3>평균 마진율</h3>
               <p className={styles['summary-number']}>
                 {filteredProducts.length > 0 
-                  ? (filteredProducts.reduce((sum, product) => sum + (product.margin || 0), 0) / filteredProducts.length).toFixed(1)
+                  ? (filteredProducts.reduce((sum, product) => 
+                      sum + calculateMargin(product.price, product.basePrice), 0) / filteredProducts.length).toFixed(1)
                   : 0}%
               </p>
             </div>
@@ -281,7 +324,8 @@ export default function ProductCost() {
               <h3>평균 원가율</h3>
               <p className={styles['summary-number']}>
                 {filteredProducts.length > 0 
-                  ? (filteredProducts.reduce((sum, product) => sum + (product.costRatio || 0), 0) / filteredProducts.length).toFixed(1)
+                  ? (filteredProducts.reduce((sum, product) => 
+                      sum + calculateCostRatio(product.price, product.basePrice), 0) / filteredProducts.length).toFixed(1)
                   : 0}%
               </p>
             </div>
@@ -303,39 +347,44 @@ export default function ProductCost() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredProducts.map(product => (
-                    <tr key={product.id}>
-                      <td>
-                        <div className={styles['product-info']}>
-                          <span className={styles['product-name']}>{product.name}</span>
-                        </div>
-                      </td>
-                      <td>{getCategoryName(product.category)}</td>
-                      <td>{product.sellingPrice ? product.sellingPrice.toLocaleString() : 0}원</td>
-                      <td>{product.costPrice ? product.costPrice.toLocaleString() : 0}원</td>
-                      <td>
-                        <span className={`${styles['margin-badge']} ${(product.margin || 0) >= 60 ? styles['high-margin'] : (product.margin || 0) >= 40 ? styles['medium-margin'] : styles['low-margin']}`}>
-                          {product.margin ? product.margin.toFixed(1) : 0}%
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`${styles['cost-ratio-badge']} ${(product.costRatio || 0) <= 30 ? styles['low-cost'] : (product.costRatio || 0) <= 50 ? styles['medium-cost'] : styles['high-cost']}`}>
-                          {product.costRatio ? product.costRatio.toFixed(1) : 0}%
-                        </span>
-                      </td>
-                      <td>{product.lastUpdated ? new Date(product.lastUpdated).toLocaleDateString() : '-'}</td>
-                      <td>
-                        <div className={styles['action-buttons']}>
-                          <button
-                            className={`btn btn-primary btn-small ${styles['btn-small']}`}
-                            onClick={() => handleEditCost(product)}
-                          >
-                            수정
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredProducts.map(product => {
+                    const margin = calculateMargin(product.price, product.basePrice);
+                    const costRatio = calculateCostRatio(product.price, product.basePrice);
+                    
+                    return (
+                      <tr key={product.id}>
+                        <td>
+                          <div className={styles['product-info']}>
+                            <span className={styles['product-name']}>{product.name}</span>
+                          </div>
+                        </td>
+                        <td>{getCategoryName(product.category)}</td>
+                        <td>{product.price ? product.price.toLocaleString() : 0}원</td>
+                        <td>{product.basePrice ? product.basePrice.toLocaleString() : 0}원</td>
+                        <td>
+                          <span className={`${styles['margin-badge']} ${margin >= 60 ? styles['high-margin'] : margin >= 40 ? styles['medium-margin'] : styles['low-margin']}`}>
+                            {margin.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`${styles['cost-ratio-badge']} ${costRatio <= 30 ? styles['low-cost'] : costRatio <= 50 ? styles['medium-cost'] : styles['high-cost']}`}>
+                            {costRatio.toFixed(1)}%
+                          </span>
+                        </td>
+                        <td>{product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : '-'}</td>
+                        <td>
+                          <div className={styles['action-buttons']}>
+                            <button
+                              className={`btn btn-primary btn-small ${styles['btn-small']}`}
+                              onClick={() => handleEditPrice(product)}
+                            >
+                              수정
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -343,18 +392,18 @@ export default function ProductCost() {
         </div>
       )}
 
-      {activeTab === 'cost-history' && (
+      {activeTab === 'price-history' && (
         <div className={styles['cost-history']}>
           <div className={styles['history-header']}>
-            <h2>원가 변경 이력</h2>
-            <p>메뉴별 원가 변경 내역을 확인할 수 있습니다.</p>
+            <h2>판매가 변경 이력</h2>
+            <p>메뉴별 판매가 변경 내역을 확인할 수 있습니다.</p>
           </div>
 
           <div className={styles['history-container']}>
-            {costHistory.length === 0 ? (
+            {priceHistory.length === 0 ? (
               <div className={styles['no-data']}>
-                <p>아직 원가 변경 이력이 없습니다.</p>
-                <p>메뉴의 원가를 수정하면 여기에 변경 이력이 표시됩니다.</p>
+                <p>아직 판매가 변경 이력이 없습니다.</p>
+                <p>메뉴의 판매가를 수정하면 여기에 변경 이력이 표시됩니다.</p>
               </div>
             ) : (
               <div className={styles['history-list']}>
@@ -362,8 +411,8 @@ export default function ProductCost() {
                   <thead className={styles['history-table-header']}>
                     <tr>
                       <th>메뉴명</th>
-                      <th>이전 원가</th>
-                      <th>변경 원가</th>
+                      <th>이전 판매가</th>
+                      <th>변경 판매가</th>
                       <th>변경 금액</th>
                       <th>변경 사유</th>
                       <th>변경일</th>
@@ -371,14 +420,14 @@ export default function ProductCost() {
                     </tr>
                   </thead>
                   <tbody>
-                    {costHistory.map(history => (
+                    {priceHistory.map(history => (
                       <tr key={history.id}>
-                        <td>{history.productName}</td>
-                        <td>{history.oldCost ? history.oldCost.toLocaleString() : 0}원</td>
-                        <td>{history.newCost ? history.newCost.toLocaleString() : 0}원</td>
+                        <td>{history.menuName || history.productName || '-'}</td>
+                        <td>{history.oldPrice ? history.oldPrice.toLocaleString() : 0}원</td>
+                        <td>{history.newPrice ? history.newPrice.toLocaleString() : 0}원</td>
                         <td>
-                          <span className={`${styles['change-amount']} ${(history.newCost || 0) > (history.oldCost || 0) ? styles['increase'] : styles['decrease']}`}>
-                            {(history.newCost || 0) > (history.oldCost || 0) ? '+' : ''}{((history.newCost || 0) - (history.oldCost || 0)).toLocaleString()}원
+                          <span className={`${styles['change-amount']} ${(history.newPrice || 0) > (history.oldPrice || 0) ? styles['increase'] : styles['decrease']}`}>
+                            {(history.newPrice || 0) > (history.oldPrice || 0) ? '+' : ''}{((history.newPrice || 0) - (history.oldPrice || 0)).toLocaleString()}원
                           </span>
                         </td>
                         <td>{history.reason || '-'}</td>
@@ -394,21 +443,23 @@ export default function ProductCost() {
         </div>
       )}
 
-      {activeTab === 'cost-analysis' && (
+      {activeTab === 'price-analysis' && (
         <div className={styles['cost-analysis']}>
           <div className={styles['analysis-header']}>
-            <h2>원가 분석</h2>
-            <p>카테고리별 원가 현황과 마진 분석을 확인할 수 있습니다.</p>
+            <h2>판매가 분석</h2>
+            <p>카테고리별 판매가 현황과 마진 분석을 확인할 수 있습니다.</p>
           </div>
 
           <div className={styles['analysis-grid']}>
             {categories.map(category => {
               const categoryProducts = products.filter(product => product.category === category.name);
               const avgMargin = categoryProducts.length > 0 
-                ? categoryProducts.reduce((sum, product) => sum + (product.margin || 0), 0) / categoryProducts.length
+                ? categoryProducts.reduce((sum, product) => 
+                    sum + calculateMargin(product.price, product.basePrice), 0) / categoryProducts.length
                 : 0;
               const avgCostRatio = categoryProducts.length > 0 
-                ? categoryProducts.reduce((sum, product) => sum + (product.costRatio || 0), 0) / categoryProducts.length
+                ? categoryProducts.reduce((sum, product) => 
+                    sum + calculateCostRatio(product.price, product.basePrice), 0) / categoryProducts.length
                 : 0;
 
               return (
@@ -433,12 +484,15 @@ export default function ProductCost() {
                     </div>
                   </div>
                   <div className={styles['category-products']}>
-                    {categoryProducts.map(product => (
-                      <div key={product.id} className={styles['mini-product-card']}>
-                        <span className={styles['mini-product-name']}>{product.name}</span>
-                        <span className={styles['mini-product-margin']}>{product.margin ? product.margin.toFixed(1) : 0}%</span>
-                      </div>
-                    ))}
+                    {categoryProducts.map(product => {
+                      const margin = calculateMargin(product.price, product.basePrice);
+                      return (
+                        <div key={product.id} className={styles['mini-product-card']}>
+                          <span className={styles['mini-product-name']}>{product.name}</span>
+                          <span className={styles['mini-product-margin']}>{margin.toFixed(1)}%</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -447,23 +501,23 @@ export default function ProductCost() {
         </div>
       )}
 
-      {/* 원가 수정 모달 */}
-      {showEditCostModal && selectedProduct && (
-        <EditCostModal
+      {/* 판매가 수정 모달 */}
+      {showEditPriceModal && selectedProduct && (
+        <EditPriceModal
           product={selectedProduct}
-          onUpdate={handleUpdateCost}
-          onClose={() => setShowEditCostModal(false)}
+          onUpdate={handleUpdatePrice}
+          onClose={() => setShowEditPriceModal(false)}
         />
       )}
     </div>
   );
 }
 
-// 원가 수정 모달 컴포넌트
-function EditCostModal({ product, onUpdate, onClose }) {
+// 판매가 수정 모달 컴포넌트
+function EditPriceModal({ product, onUpdate, onClose }) {
   const [formData, setFormData] = useState({
     ...product,
-    newCostPrice: product.costPrice ? product.costPrice.toString() : '0',
+    newPrice: product.price ? product.price.toString() : '0',
     changeReason: ''
   });
 
@@ -479,24 +533,28 @@ function EditCostModal({ product, onUpdate, onClose }) {
     e.preventDefault();
     const updatedProduct = {
       ...product,
-      newCostPrice: formData.newCostPrice,
+      newPrice: formData.newPrice,
       changeReason: formData.changeReason
     };
+    
+    console.log('EditPriceModal - formData:', formData);
+    console.log('EditPriceModal - updatedProduct:', updatedProduct);
+    
     onUpdate(updatedProduct);
   };
 
-  const margin = product.sellingPrice && formData.newCostPrice 
-    ? ((product.sellingPrice - parseFloat(formData.newCostPrice)) / product.sellingPrice * 100).toFixed(1)
+  const margin = product.price && formData.newPrice 
+    ? ((parseFloat(formData.newPrice) - (product.basePrice || 0)) / parseFloat(formData.newPrice) * 100).toFixed(1)
     : 0;
-  const costRatio = product.sellingPrice && formData.newCostPrice 
-    ? (parseFloat(formData.newCostPrice) / product.sellingPrice * 100).toFixed(1)
+  const costRatio = product.basePrice && formData.newPrice 
+    ? ((product.basePrice || 0) / parseFloat(formData.newPrice) * 100).toFixed(1)
     : 0;
 
   return (
     <div className={styles['modal-overlay']}>
       <div className={styles['modal-content']}>
         <div className={styles['modal-header']}>
-          <h2>{product.name} 원가 수정</h2>
+          <h2>{product.name} 판매가 수정</h2>
           <button className={styles['modal-close']} onClick={onClose}>×</button>
         </div>
         
@@ -507,26 +565,26 @@ function EditCostModal({ product, onUpdate, onClose }) {
               <span className={styles['info-value']}>{product.name}</span>
             </div>
             <div className={styles['info-row']}>
-              <span className={styles['info-label']}>판매가:</span>
-              <span className={styles['info-value']}>{product.sellingPrice ? product.sellingPrice.toLocaleString() : 0}원</span>
+              <span className={styles['info-label']}>현재 판매가:</span>
+              <span className={styles['info-value']}>{product.price ? product.price.toLocaleString() : 0}원</span>
             </div>
             <div className={styles['info-row']}>
-              <span className={styles['info-label']}>현재 원가:</span>
-              <span className={styles['info-value']}>{product.costPrice ? product.costPrice.toLocaleString() : 0}원</span>
+              <span className={styles['info-label']}>원가:</span>
+              <span className={styles['info-value']}>{product.basePrice ? product.basePrice.toLocaleString() : 0}원</span>
             </div>
           </div>
 
           <div className={styles['form-row']}>
             <div className={styles['form-group']}>
-              <label>새 원가 *</label>
+              <label>새 판매가 *</label>
               <input
                 type="number"
-                name="newCostPrice"
-                value={formData.newCostPrice}
+                name="newPrice"
+                value={formData.newPrice}
                 onChange={handleInputChange}
                 required
                 min="0"
-                placeholder="원가를 입력하세요"
+                placeholder="판매가를 입력하세요"
               />
             </div>
             <div className={styles['form-group']}>
@@ -561,7 +619,7 @@ function EditCostModal({ product, onUpdate, onClose }) {
               취소
             </button>
             <button type="submit" className="btn btn-primary">
-              원가 수정
+              판매가 수정
             </button>
           </div>
         </form>

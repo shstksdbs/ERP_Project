@@ -14,6 +14,7 @@ import java.util.Map;
 
 import java.math.BigDecimal;
 import java.util.List;
+import erp_project.erp_project.dto.PriceChangeHistoryDto;
 
 @RestController
 @RequestMapping("/api/menus")
@@ -174,5 +175,36 @@ public class MenuController {
     public ResponseEntity<Menu> updateMenuImage(@PathVariable Long id, @RequestBody String imageUrl) {
         Menu updatedMenu = menuService.updateMenuImage(id, imageUrl);
         return ResponseEntity.ok(updatedMenu);
+    }
+
+    // 판매가만 수정 (전용 API)
+    @PatchMapping("/{id}/price")
+    public ResponseEntity<?> updateMenuPrice(@PathVariable Long id, @RequestBody Map<String, Object> priceUpdate) {
+        try {
+            BigDecimal newPrice = new BigDecimal(priceUpdate.get("price").toString());
+            String reason = (String) priceUpdate.get("changeReason");
+            String updatedBy = (String) priceUpdate.get("updatedBy");
+            
+            MenuResponseDto updatedMenu = menuService.updateMenuPrice(id, newPrice, reason, updatedBy);
+            return ResponseEntity.ok(updatedMenu);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "판매가 수정 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
+    
+    // 판매가 변경 이력 조회
+    @GetMapping("/price-history")
+    public ResponseEntity<List<PriceChangeHistoryDto>> getPriceChangeHistory() {
+        List<PriceChangeHistoryDto> histories = menuService.getPriceChangeHistory();
+        return ResponseEntity.ok(histories);
+    }
+    
+    // 메뉴별 판매가 변경 이력 조회
+    @GetMapping("/{id}/price-history")
+    public ResponseEntity<List<PriceChangeHistoryDto>> getPriceChangeHistoryByMenuId(@PathVariable Long id) {
+        List<PriceChangeHistoryDto> histories = menuService.getPriceChangeHistoryByMenuId(id);
+        return ResponseEntity.ok(histories);
     }
 }

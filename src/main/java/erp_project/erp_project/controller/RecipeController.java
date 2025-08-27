@@ -98,4 +98,16 @@ public class RecipeController {
             return ResponseEntity.badRequest().build();
         }
     }
+    
+    // 모든 메뉴의 base_price를 레시피 원가로 일괄 업데이트
+    @PutMapping("/update-all-menu-costs")
+    public ResponseEntity<String> updateAllMenuBasePrices() {
+        try {
+            String result = recipeService.updateAllMenuBasePrices();
+            return ResponseEntity.ok(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.badRequest().body("메뉴 원가 일괄 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
 }
