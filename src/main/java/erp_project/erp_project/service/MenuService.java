@@ -149,6 +149,64 @@ public class MenuService {
         
         return menuRepository.save(menu);
     }
+
+    // 메뉴 수정 (이미지 업로드 포함)
+    @Transactional
+    public Menu updateMenuWithImage(Long id, String name, String description, BigDecimal price, 
+                                   String category, BigDecimal basePrice, Boolean isAvailable, 
+                                   Integer displayOrder, MultipartFile image) {
+        Menu menu = menuRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
+        
+        menu.setName(name);
+        menu.setDescription(description);
+        menu.setPrice(price);
+        menu.setCategory(category);
+        
+        // 카테고리 ID 설정 (카테고리 이름으로 찾기)
+        if (category != null && !category.isEmpty()) {
+            // MenuCategoryRepository를 주입받아서 카테고리 ID를 찾아야 하지만,
+            // 현재 구조에서는 category 이름만 사용하므로 기존 categoryId는 유지
+            // 필요시 MenuCategoryRepository를 주입받아서 처리 가능
+        }
+        
+        menu.setBasePrice(basePrice != null ? basePrice : BigDecimal.ZERO);
+        menu.setIsAvailable(isAvailable);
+        menu.setDisplayOrder(displayOrder != null ? displayOrder : menu.getDisplayOrder());
+        
+        // 이미지 처리
+        if (image != null && !image.isEmpty()) {
+            try {
+                // 기존 이미지 파일 삭제 (선택사항)
+                if (menu.getImageUrl() != null && !menu.getImageUrl().isEmpty()) {
+                    String existingImagePath = menu.getImageUrl();
+                    if (existingImagePath.startsWith("/uploads/")) {
+                        Path existingPath = Paths.get("uploads" + existingImagePath.substring("/uploads".length()));
+                        if (Files.exists(existingPath)) {
+                            Files.delete(existingPath);
+                        }
+                    }
+                }
+                
+                // 새 이미지 저장
+                String filename = UUID.randomUUID().toString() + "_" + image.getOriginalFilename();
+                Path uploadPath = Paths.get("uploads/menu-images");
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
+                
+                Path filePath = uploadPath.resolve(filename);
+                Files.copy(image.getInputStream(), filePath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                
+                // 이미지 URL 설정
+                menu.setImageUrl("/uploads/menu-images/" + filename);
+            } catch (IOException e) {
+                throw new RuntimeException("이미지 업로드 중 오류가 발생했습니다: " + e.getMessage());
+            }
+        }
+        
+        return menuRepository.save(menu);
+    }
     
     // 메뉴 삭제 (실제 데이터베이스에서 삭제)
     @Transactional

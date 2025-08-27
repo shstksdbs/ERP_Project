@@ -246,14 +246,14 @@ export default function ProductCategory() {
               <img src={plusIcon} alt="추가" className={styles['button-icon']} />
               카테고리 추가
             </button>
-            <button
+            {/* <button
               className={`btn btn-secondary ${styles['refresh-button']}`}
               onClick={fetchCategories}
               disabled={loading}
               style={{ marginLeft: '10px' }}
             >
               새로고침
-            </button>
+            </button> */}
           </div>
 
           <div className={styles['categories-container']}>

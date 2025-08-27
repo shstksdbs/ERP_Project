@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './ProductRegister.module.css';
 
 export default function ProductRegister() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     productName: '',
     categoryId: '',
@@ -116,6 +118,9 @@ export default function ProductRegister() {
       
       // 성공 메시지 표시
       alert('상품이 성공적으로 등록되었습니다!');
+      
+      // 상품 목록 페이지로 이동
+      navigate('/dashboard');
       
       // 폼 초기화
       setFormData({
@@ -287,7 +292,7 @@ export default function ProductRegister() {
           </div>
 
           <div className={styles['form-actions']}>
-            <button type="button" className="btn btn-primary" disabled={loading}>
+            <button type="button" className="btn btn-primary" disabled={loading} onClick={() => navigate('/dashboard')}>
               취소
             </button>
             <button type="submit" className="btn btn-primary" disabled={loading}>

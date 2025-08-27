@@ -146,6 +146,16 @@ function App() {
           } 
         />
         <Route 
+          path="/product-register" 
+          element={
+            isLoggedIn ? 
+            <Layout activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout}>
+              <ProductRegister />
+            </Layout> : 
+            <Navigate to="/login" replace />
+          } 
+        />
+        <Route 
           path="/" 
           element={
             isLoggedIn ? 

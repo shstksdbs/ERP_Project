@@ -129,6 +129,31 @@ public class MenuController {
         Menu updatedMenu = menuService.updateMenu(id, menuDetails);
         return ResponseEntity.ok(updatedMenu);
     }
+
+    // 메뉴 수정 (이미지 업로드 포함)
+    @PutMapping("/{id}/with-image")
+    public ResponseEntity<?> updateMenuWithImage(
+            @PathVariable Long id,
+            @RequestParam(value = "name", required = true) String name,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "price", required = true) BigDecimal price,
+            @RequestParam(value = "category", required = true) String category,
+            @RequestParam(value = "basePrice", required = false) BigDecimal basePrice,
+            @RequestParam(value = "isAvailable", required = true) Boolean isAvailable,
+            @RequestParam(value = "displayOrder", required = false) Integer displayOrder,
+            @RequestParam(value = "image", required = false) MultipartFile image) {
+        
+        try {
+            Menu updatedMenu = menuService.updateMenuWithImage(
+                id, name, description, price, category, basePrice, isAvailable, displayOrder, image
+            );
+            return ResponseEntity.ok(updatedMenu);
+        } catch (Exception e) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "메뉴 수정 중 오류가 발생했습니다: " + e.getMessage());
+            return ResponseEntity.badRequest().body(errorResponse);
+        }
+    }
     
     // 메뉴 삭제 (관리자용)
     @DeleteMapping("/{id}")

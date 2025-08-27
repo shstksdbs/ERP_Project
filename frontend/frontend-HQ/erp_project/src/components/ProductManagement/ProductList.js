@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './ProductList.module.css';
 import searchIcon from '../../assets/search_icon.png';
 import plusIcon from '../../assets/plus_icon.png';
@@ -8,13 +9,14 @@ import dollorIcon from '../../assets/dollor_icon.png';
 import percentIcon from '../../assets/percent_icon.png';
 
 export default function ProductList() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('product-list');
   const [products, setProducts] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [showAddProductModal, setShowAddProductModal] = useState(false);
+
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [showProductDetailModal, setShowProductDetailModal] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,13 @@ export default function ProductList() {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
       
-      const menus = await response.json();
+      let menus;
+      try {
+        menus = await response.json();
+      } catch (parseError) {
+        console.error('JSON 파싱 오류:', parseError);
+        throw new Error('서버 응답을 파싱할 수 없습니다. 응답 형식을 확인해주세요.');
+      }
       
       if (!Array.isArray(menus)) {
         throw new Error('메뉴 데이터 형식이 올바르지 않습니다.');
@@ -98,7 +106,7 @@ export default function ProductList() {
           Math.round(((menu.price - menu.basePrice) / menu.price) * 100) : 0,
         sales: Math.floor(Math.random() * 100) + 1, // 임시 데이터
         status: menu.isAvailable !== undefined ? (menu.isAvailable ? 'active' : 'inactive') : 'active',
-        image: menu.imageUrl || null,
+        image: menu.imageUrl ? (menu.imageUrl.startsWith('http') ? menu.imageUrl : `http://localhost:8080${menu.imageUrl}`) : null,
         stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
         profitMargin: menu.price && menu.basePrice ? 
           Math.round(((menu.price - menu.basePrice) / menu.price) * 100) : 0,
@@ -166,75 +174,25 @@ export default function ProductList() {
     }
   ];
 
-  // 상품 추가 (API 호출)
-  const handleAddProduct = async (newProduct) => {
-    try {
-      const menuData = {
-        name: newProduct.name,
-        description: newProduct.description,
-        price: newProduct.price,
-        category: newProduct.category, // 카테고리 이름 직접 사용
-        basePrice: newProduct.cost,
-        isAvailable: newProduct.status === 'active',
-        displayOrder: products.length + 1
-      };
 
-      const response = await fetch(`${API_BASE_URL}/menus`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        mode: 'cors',
-        body: JSON.stringify(menuData)
-      });
-
-      if (response.ok) {
-        const createdMenu = await response.json();
-        // 새로 생성된 메뉴를 products 상태에 추가
-        const transformedProduct = {
-          id: createdMenu.id,
-          name: createdMenu.name,
-          code: createdMenu.code || `MENU${createdMenu.id}`,
-          category: createdMenu.category || '카테고리 없음',
-          price: createdMenu.price,
-          cost: createdMenu.basePrice,
-          profit: createdMenu.price && createdMenu.basePrice ? 
-            Math.round(((createdMenu.price - createdMenu.basePrice) / createdMenu.price) * 100) : 0,
-          sales: Math.floor(Math.random() * 100) + 1,
-          status: createdMenu.isAvailable ? 'active' : 'inactive',
-          image: createdMenu.imageUrl,
-          stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
-          profitMargin: createdMenu.price && createdMenu.basePrice ? 
-            Math.round(((createdMenu.price - createdMenu.basePrice) / createdMenu.price) * 100) : 0,
-          salesCount: Math.floor(Math.random() * 1000) + 100, // 임시 판매량
-          rating: (Math.random() * 2 + 3).toFixed(1), // 임시 평점
-          createdAt: new Date().toISOString().split('T')[0],
-          updatedAt: new Date().toISOString().split('T')[0]
-        };
-        
-        setProducts([...products, transformedProduct]);
-        alert('상품이 성공적으로 추가되었습니다.');
-      } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-    } catch (err) {
-      console.error('상품 추가 오류:', err);
-      alert('상품 추가에 실패했습니다: ' + err.message);
-    }
-  };
 
   // 상품 수정 (API 호출)
   const handleEditProduct = async (updatedProduct) => {
     try {
+      // 카테고리 이름을 기반으로 categoryId 찾기
+      const categoryObj = categories.find(cat => cat.name === updatedProduct.category);
+      const categoryId = categoryObj ? categoryObj.id : null;
+
       const menuData = {
         name: updatedProduct.name,
         description: updatedProduct.description,
         price: updatedProduct.price,
         category: updatedProduct.category,
+        categoryId: categoryId, // 카테고리 ID 추가
         basePrice: updatedProduct.cost,
         isAvailable: updatedProduct.status === 'active',
-        displayOrder: updatedProduct.displayOrder || 0
+        displayOrder: updatedProduct.displayOrder || 0,
+        imageUrl: updatedProduct.image // 기존 이미지 URL 유지
       };
 
       const response = await fetch(`${API_BASE_URL}/menus/${updatedProduct.id}`, {
@@ -246,34 +204,23 @@ export default function ProductList() {
         body: JSON.stringify(menuData)
       });
 
-      if (response.ok) {
-        const updatedMenu = await response.json();
-        // 수정된 메뉴를 products 상태에 반영
-        const transformedProduct = {
-          ...updatedProduct,
-          name: updatedMenu.name,
-          category: updatedMenu.category,
-          price: updatedMenu.price ? parseFloat(updatedMenu.price) : 0,
-          cost: updatedMenu.basePrice ? parseFloat(updatedMenu.basePrice) : 0,
-          status: updatedMenu.isAvailable ? 'active' : 'inactive',
-          description: updatedMenu.description || '',
-          image: updatedMenu.imageUrl,
-          updatedAt: updatedMenu.updatedAt ? updatedMenu.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0],
-          stock: Math.floor(Math.random() * 100) + 20, // 임시 재고 데이터
-          profitMargin: updatedMenu.price && updatedMenu.basePrice ? 
-            Math.round(((updatedMenu.price - updatedMenu.basePrice) / updatedMenu.price) * 100) : 0,
-          salesCount: Math.floor(Math.random() * 1000) + 100, // 임시 판매량
-          rating: (Math.random() * 2 + 3).toFixed(1) // 임시 평점
-        };
-        
-        setProducts(products.map(product => 
-          product.id === updatedProduct.id ? transformedProduct : product
-        ));
-        setShowEditProductModal(false);
-        alert('상품이 성공적으로 수정되었습니다.');
+              if (response.ok) {
+          // 수정 성공 후 전체 메뉴 데이터를 다시 가져와서 이미지 데이터 유지
+          await fetchMenus();
+          setShowEditProductModal(false);
+          alert('상품이 성공적으로 수정되었습니다.');
       } else {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        // 에러 응답 처리 개선
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch (parseError) {
+          console.warn('에러 응답 파싱 실패:', parseError);
+        }
+        throw new Error(errorMessage);
       }
     } catch (err) {
       console.error('상품 수정 오류:', err);
@@ -295,8 +242,17 @@ export default function ProductList() {
           await fetchMenus();
           alert('상품이 성공적으로 삭제되었습니다.');
         } else {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+          // 에러 응답 처리 개선
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+          try {
+            const errorData = await response.json();
+            if (errorData && errorData.message) {
+              errorMessage = errorData.message;
+            }
+          } catch (parseError) {
+            console.warn('에러 응답 파싱 실패:', parseError);
+          }
+          throw new Error(errorMessage);
         }
       } catch (err) {
         console.error('상품 삭제 오류:', err);
@@ -355,7 +311,7 @@ export default function ProductList() {
     <div className={styles['product-list']}>
       <div className={styles['product-list-header']}>
         <h1>상품 목록</h1>
-        <div className={styles['header-buttons']}>
+        {/* <div className={styles['header-buttons']}>
           <button 
             className={`btn btn-secondary ${styles['test-api-button']}`}
             onClick={testApiConnection}
@@ -370,7 +326,7 @@ export default function ProductList() {
           >
             {loading ? '새로고침 중...' : '새로고침'}
           </button>
-        </div>
+        </div> */}
       </div>
 
       {/* 오류 메시지 표시 */}
@@ -498,13 +454,13 @@ export default function ProductList() {
                 </select>
               </div>
             </div>
-            <button
-              className={`btn btn-primary ${styles['add-button']}`}
-              onClick={() => setShowAddProductModal(true)}
-            >
-              <img src={plusIcon} alt="추가" className={styles['button-icon']} />
-              상품 추가
-            </button>
+                                                   <button
+                className={`btn btn-primary ${styles['add-button']}`}
+                onClick={() => navigate('/product-register')}
+              >
+                <img src={plusIcon} alt="추가" className={styles['button-icon']} />
+                상품 추가
+              </button>
           </div>
 
           <div className={styles['products-container']}>
@@ -553,18 +509,21 @@ export default function ProductList() {
                     <tbody>
                       {filteredProducts.map(product => (
                         <tr key={product.id}>
-                          <td>
-                            <div className={styles['product-info']}>
-                              {/* {product.image && (
-                                <img 
-                                  src={product.image} 
-                                  alt={product.name} 
-                                  className={styles['product-image']}
-                                />
-                              )} */}
-                              <span className={styles['product-name']}>{product.name}</span>
-                            </div>
-                          </td>
+                                                     <td>
+                             <div className={styles['product-info']}>
+                                                               {product.image && (
+                                  <img 
+                                    src={product.image} 
+                                    alt={product.name} 
+                                    className={styles['product-image']}
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                    }}
+                                  />
+                                )}
+                               <span className={styles['product-name']}>{product.name}</span>
+                             </div>
+                           </td>
                           <td>
                             <span className={`${styles['category-badge']} ${styles[`category-${product.category.toLowerCase()}`]}`}>
                               {product.category}
@@ -695,14 +654,7 @@ export default function ProductList() {
         </div>
       )}
 
-      {/* 상품 추가 모달 */}
-      {showAddProductModal && (
-        <AddProductModal
-          categories={categories}
-          onAdd={handleAddProduct}
-          onClose={() => setShowAddProductModal(false)}
-        />
-      )}
+      
 
       {/* 상품 수정 모달 */}
       {showEditProductModal && selectedProduct && (
@@ -725,148 +677,26 @@ export default function ProductList() {
   );
 }
 
-// 상품 추가 모달 컴포넌트
-function AddProductModal({ categories, onAdd, onClose }) {
-  const [formData, setFormData] = useState({
-    name: '',
-    category: '',
-    price: '',
-    cost: '',
-    description: '',
-    status: 'active'
-  });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const profitMargin = ((formData.price - formData.cost) / formData.price * 100).toFixed(1);
-    onAdd({
-      ...formData,
-      price: parseInt(formData.price),
-      cost: parseInt(formData.cost),
-      profitMargin: parseFloat(profitMargin),
-      salesCount: 0,
-      rating: 0,
-      createdAt: new Date().toISOString().split('T')[0],
-      updatedAt: new Date().toISOString().split('T')[0]
-    });
-  };
-
-  return (
-    <div className={styles['modal-overlay']}>
-      <div className={styles['modal-content']}>
-        <div className={styles['modal-header']}>
-          <h2>상품 추가</h2>
-          <button className={styles['modal-close']} onClick={onClose}>×</button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className={styles['edit-form']}>
-          <div className={styles['form-row']}>
-            <div className={styles['form-group']}>
-              <label>상품명 *</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                required
-                placeholder="상품명을 입력하세요"
-              />
-            </div>
-          </div>
-
-          <div className={styles['form-row']}>
-            <div className={styles['form-group']}>
-              <label>카테고리 *</label>
-              <select
-                name="category"
-                value={formData.category}
-                onChange={handleInputChange}
-                required
-              >
-                <option value="">카테고리를 선택하세요</option>
-                {categories.map(category => (
-                  <option key={category.id} value={category.name}>
-                    {category.displayName || category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className={styles['form-group']}>
-              <label>상태</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-              >
-                <option value="active">활성</option>
-                <option value="inactive">비활성</option>
-              </select>
-            </div>
-          </div>
-
-          <div className={styles['form-row']}>
-            <div className={styles['form-group']}>
-              <label>판매가 *</label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                required
-                placeholder="판매가를 입력하세요"
-              />
-            </div>
-            <div className={styles['form-group']}>
-              <label>원가 *</label>
-              <input
-                type="number"
-                name="cost"
-                value={formData.cost}
-                onChange={handleInputChange}
-                required
-                placeholder="원가를 입력하세요"
-              />
-            </div>
-          </div>
-
-
-
-          <div className={styles['form-group']}>
-            <label>상품 설명</label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              placeholder="상품에 대한 설명을 입력하세요"
-              rows="3"
-            />
-          </div>
-
-          <div className={styles['modal-actions']}>
-            <button type="button" className="btn btn-primary" onClick={onClose}>
-              취소
-            </button>
-            <button type="submit" className="btn btn-primary">
-              상품 추가
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
 
 // 상품 수정 모달 컴포넌트
 function EditProductModal({ product, categories, onUpdate, onClose }) {
   const [formData, setFormData] = useState(product);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  useEffect(() => {
+    if (product.image) {
+      // 이미지가 상대 경로인 경우 절대 경로로 변환
+      let imageUrl = product.image;
+      if (imageUrl && !imageUrl.startsWith('http') && imageUrl.startsWith('/uploads/')) {
+        imageUrl = `http://localhost:8080${imageUrl}`;
+      }
+      setImagePreview(imageUrl);
+    } else {
+      setImagePreview(null);
+    }
+  }, [product.image]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -876,16 +706,65 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setSelectedImage(null);
+      setImagePreview(null);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const profitMargin = ((formData.price - formData.cost) / formData.price * 100).toFixed(1);
-    onUpdate({
-      ...formData,
-      price: parseInt(formData.price),
-      cost: parseInt(formData.cost),
-      profitMargin: parseFloat(profitMargin),
-      updatedAt: new Date().toISOString().split('T')[0]
-    });
+    
+    try {
+      // 이미지가 선택된 경우 FormData로 전송
+      if (selectedImage) {
+        const formDataToSend = new FormData();
+        formDataToSend.append('name', formData.name);
+        formDataToSend.append('description', formData.description);
+        formDataToSend.append('price', formData.price);
+        formDataToSend.append('category', formData.category);
+        formDataToSend.append('basePrice', formData.cost);
+        formDataToSend.append('isAvailable', formData.status === 'active');
+        formDataToSend.append('displayOrder', formData.displayOrder || 0);
+        formDataToSend.append('image', selectedImage);
+
+        const response = await fetch(`http://localhost:8080/api/menus/${product.id}/with-image`, {
+          method: 'PUT',
+          mode: 'cors',
+          body: formDataToSend
+        });
+
+        if (response.ok) {
+          alert('상품이 성공적으로 수정되었습니다.');
+          onClose();
+          // 부모 컴포넌트에서 목록 새로고침
+          window.location.reload();
+        } else {
+          throw new Error('상품 수정에 실패했습니다.');
+        }
+      } else {
+        // 이미지가 선택되지 않은 경우 기존 방식으로 전송
+        const profitMargin = ((formData.price - formData.cost) / formData.price * 100).toFixed(1);
+        onUpdate({
+          ...formData,
+          price: parseInt(formData.price),
+          cost: parseInt(formData.cost),
+          profitMargin: parseFloat(profitMargin),
+          updatedAt: new Date().toISOString().split('T')[0]
+        });
+      }
+    } catch (error) {
+      alert('상품 수정 중 오류가 발생했습니다: ' + error.message);
+    }
   };
 
   return (
@@ -951,18 +830,62 @@ function EditProductModal({ product, categories, onUpdate, onClose }) {
               />
             </div>
             <div className={styles['form-group']}>
-              <label>원가 *</label>
+              <label>원가</label>
               <input
                 type="number"
                 name="cost"
                 value={formData.cost}
-                onChange={handleInputChange}
-                required
+                disabled
+                className={styles['disabled-input']}
               />
+              <small className={styles['field-note']}>
+                원가 수정은 '메뉴별 원가 설정' 탭에서 가능합니다.
+              </small>
             </div>
           </div>
 
 
+
+          <div className={styles['form-group']}>
+            <label>상품 이미지</label>
+            <div className={styles['image-upload-container']}>
+              {/* 현재 이미지 표시 */}
+              {imagePreview ? (
+                <div className={styles['current-image']}>
+                  <img 
+                    src={imagePreview} 
+                    alt="현재 이미지" 
+                    className={styles['image-preview']}
+                  />
+                  <p className={styles['image-label']}>현재 이미지</p>
+                </div>
+              ) : (
+                <div className={styles['no-image']}>
+                  <span className={styles['no-image-icon']}>📷</span>
+                  <p className={styles['no-image-text']}>등록된 이미지가 없습니다</p>
+                </div>
+              )}
+              
+              {/* 이미지 업로드 입력 */}
+              <div className={styles['image-upload']}>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  className={styles['file-input']}
+                  id="image-upload"
+                />
+                <label htmlFor="image-upload" className={styles['file-input-label']}>
+                  {selectedImage ? '이미지 변경됨' : '이미지 변경'}
+                </label>
+                {selectedImage && (
+                  <p className={styles['selected-file']}>
+                    선택된 파일: {selectedImage.name}
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
 
           <div className={styles['form-group']}>
             <label>상품 설명</label>
