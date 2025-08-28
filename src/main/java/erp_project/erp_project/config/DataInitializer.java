@@ -45,7 +45,10 @@ public class DataInitializer {
         "06_menu_category_migration.sql",  // 2. 메뉴 카테고리 데이터
         "03_option_data.sql",      // 3. 메뉴 옵션 데이터  
         "04_users_data.sql",       // 4. 사용자 데이터
-        "07_materials_data.sql"    // 5. 원재료 데이터
+        "07_materials_data.sql",    // 5. 원재료 데이터
+        "08_recipes_data.sql",
+        "09_recipe_ingredients_data.sql",
+        "10_sales_statistics_tables.sql"
     );
 
     @PostConstruct
@@ -125,53 +128,183 @@ public class DataInitializer {
             String sqlContent = sql.toString();
             log.info("SQL 파일 내용 길이: {} 문자", sqlContent.length());
             
-            // 개선된 SQL 분리 로직 사용
-            String[] statements = splitSqlStatements(sqlContent);
-            int successCount = 0;
-            int totalCount = 0;
-            int errorCount = 0;
-            
-            log.info("SQL 파일 {}에서 {}개의 문장을 찾았습니다.", fileName, statements.length);
-            
-            for (int i = 0; i < statements.length; i++) {
-                String statement = statements[i].trim();
-                if (!statement.isEmpty() && !statement.startsWith("--") && !statement.startsWith("/*")) {
-                    totalCount++;
-                    log.debug("문장 {} 실행 중: {}", i + 1, statement.substring(0, Math.min(100, statement.length())));
-                    
-                    try {
-                        // SELECT 문은 건너뛰기 (데이터 삽입이 아니므로)
-                        if (statement.trim().toUpperCase().startsWith("SELECT")) {
-                            log.info("SELECT 문 건너뛰기: {}", statement.substring(0, Math.min(100, statement.length())));
-                            continue;
-                        }
-                        
-                        // INSERT 문의 경우 영향받은 행 수를 확인
-                        int result = jdbcTemplate.update(statement);
-                        log.info("SQL 실행 성공 [{}]: {} (영향받은 행: {})", 
-                                 i + 1, statement.substring(0, Math.min(100, statement.length())), result);
-                        successCount++;
-                    } catch (Exception e) {
-                        errorCount++;
-                        log.error("SQL 실행 실패 [{}] ({}): {}", i + 1, fileName, e.getMessage());
-                        log.debug("실패한 SQL: {}", statement);
-                        
-                        // 특정 에러는 무시 (예: 중복 키 에러)
-                        if (e.getMessage().contains("Duplicate entry") || 
-                            e.getMessage().contains("already exists")) {
-                            log.info("중복 데이터로 인한 에러 무시: {}", e.getMessage());
-                            successCount++; // 중복 에러는 성공으로 간주
-                        }
-                    }
-                }
+            // 프로시저/트리거 파일인지 확인
+            if (fileName.contains("sales_statistics_tables")) {
+                executeProcedureAndTriggerFile(sqlContent);
+            } else {
+                // 일반 테이블 생성 SQL 실행
+                executeRegularSqlFile(sqlContent, fileName);
             }
-            
-            log.info("=== SQL 파일 {} 실행 결과: 총 {}개 중 {}개 성공, {}개 실패 ===", 
-                    fileName, totalCount, successCount, errorCount);
             
         } catch (Exception e) {
             log.error("SQL 파일 {} 읽기/실행 중 오류 발생", fileName, e);
         }
+    }
+    
+    /**
+     * 프로시저와 트리거를 포함한 파일 실행
+     */
+    private void executeProcedureAndTriggerFile(String sqlContent) {
+        log.info("프로시저/트리거 파일 실행 시작");
+        
+        try (Connection connection = dataSource.getConnection()) {
+            // 자동 커밋 비활성화
+            connection.setAutoCommit(false);
+            
+            try (Statement statement = connection.createStatement()) {
+                // DELIMITER 제거하고 프로시저/트리거 생성
+                String[] procedures = extractProceduresAndTriggers(sqlContent);
+                
+                for (String procedure : procedures) {
+                    if (!procedure.trim().isEmpty()) {
+                        try {
+                            log.info("프로시저/트리거 실행: {}", procedure.substring(0, Math.min(100, procedure.length())));
+                            statement.execute(procedure);
+                            log.info("프로시저/트리거 생성 성공");
+                        } catch (SQLException e) {
+                            log.error("프로시저/트리거 생성 실패: {}", e.getMessage());
+                            // 이미 존재하는 경우 무시
+                            if (!e.getMessage().contains("already exists")) {
+                                throw e;
+                            }
+                        }
+                    }
+                }
+                
+                connection.commit();
+                log.info("프로시저/트리거 파일 실행 완료");
+                
+            } catch (SQLException e) {
+                connection.rollback();
+                throw e;
+            }
+            
+        } catch (Exception e) {
+            log.error("프로시저/트리거 실행 중 오류: {}", e.getMessage());
+        }
+    }
+    
+    /**
+     * 프로시저와 트리거 SQL 추출 (완전히 새로 작성)
+     */
+    private String[] extractProceduresAndTriggers(String sqlContent) {
+        log.info("프로시저/트리거 SQL 추출 시작");
+        
+        // DELIMITER 제거
+        sqlContent = sqlContent.replaceAll("DELIMITER\\s+[^\\s]+;?", "");
+        
+        // 프로시저와 트리거를 개별적으로 분리
+        List<String> procedures = new ArrayList<>();
+        
+        try {
+            // CREATE PROCEDURE 찾기
+            String[] procedureParts = sqlContent.split("CREATE PROCEDURE");
+            log.info("CREATE PROCEDURE 개수: {}", procedureParts.length - 1);
+            
+            for (int i = 1; i < procedureParts.length; i++) {
+                String procedure = "CREATE PROCEDURE" + procedureParts[i];
+                
+                // END// 까지 포함하되, // 제거
+                int endIndex = procedure.indexOf("END//");
+                if (endIndex > 0) {
+                    // END//를 END로 변경
+                    procedure = procedure.substring(0, endIndex) + "END";
+                    
+                    // 세미콜론으로 끝나지 않으면 추가
+                    if (!procedure.trim().endsWith(";")) {
+                        procedure = procedure + ";";
+                    }
+                    
+                    procedures.add(procedure);
+                    log.info("프로시저 {} 추출 완료 (길이: {})", i, procedure.length());
+                    log.debug("프로시저 내용: {}...", procedure.substring(0, Math.min(300, procedure.length())));
+                } else {
+                    log.warn("프로시저 {}에서 END//를 찾을 수 없음", i);
+                }
+            }
+            
+            // CREATE TRIGGER 찾기
+            String[] triggerParts = sqlContent.split("CREATE TRIGGER");
+            log.info("CREATE TRIGGER 개수: {}", triggerParts.length - 1);
+            
+            for (int i = 1; i < triggerParts.length; i++) {
+                String trigger = "CREATE TRIGGER" + triggerParts[i];
+                
+                // END// 까지 포함하되, // 제거
+                int endIndex = trigger.indexOf("END//");
+                if (endIndex > 0) {
+                    // END//를 END로 변경
+                    trigger = trigger.substring(0, endIndex) + "END";
+                    
+                    // 세미콜론으로 끝나지 않으면 추가
+                    if (!trigger.trim().endsWith(";")) {
+                        trigger = trigger + ";";
+                    }
+                    
+                    procedures.add(trigger);
+                    log.info("트리거 {} 추출 완료 (길이: {})", i, trigger.length());
+                    log.debug("트리거 내용: {}...", trigger.substring(0, Math.min(300, trigger.length())));
+                } else {
+                    log.warn("트리거 {}에서 END//를 찾을 수 없음", i);
+                }
+            }
+            
+            log.info("총 {}개의 프로시저/트리거 추출 완료", procedures.size());
+            
+        } catch (Exception e) {
+            log.error("프로시저/트리거 추출 중 오류: {}", e.getMessage());
+        }
+        
+        return procedures.toArray(new String[0]);
+    }
+    
+    /**
+     * 일반 SQL 파일 실행
+     */
+    private void executeRegularSqlFile(String sqlContent, String fileName) {
+        // 개선된 SQL 분리 로직 사용
+        String[] statements = splitSqlStatements(sqlContent);
+        int successCount = 0;
+        int totalCount = 0;
+        int errorCount = 0;
+        
+        log.info("SQL 파일 {}에서 {}개의 문장을 찾았습니다.", fileName, statements.length);
+        
+        for (int i = 0; i < statements.length; i++) {
+            String statement = statements[i].trim();
+            if (!statement.isEmpty() && !statement.startsWith("--") && !statement.startsWith("/*")) {
+                totalCount++;
+                log.debug("문장 {} 실행 중: {}", i + 1, statement.substring(0, Math.min(100, statement.length())));
+                
+                try {
+                    // SELECT 문은 건너뛰기 (데이터 삽입이 아니므로)
+                    if (statement.trim().toUpperCase().startsWith("SELECT")) {
+                        log.info("SELECT 문 건너뛰기: {}", statement.substring(0, Math.min(100, statement.length())));
+                        continue;
+                    }
+                    
+                    // INSERT 문의 경우 영향받은 행 수를 확인
+                    int result = jdbcTemplate.update(statement);
+                    log.info("SQL 실행 성공 [{}]: {} (영향받은 행: {})", 
+                             i + 1, statement.substring(0, Math.min(100, statement.length())), result);
+                    successCount++;
+                } catch (Exception e) {
+                    errorCount++;
+                    log.error("SQL 실행 실패 [{}] ({}): {}", i + 1, fileName, e.getMessage());
+                    log.debug("실패한 SQL: {}", statement);
+                    
+                    // 특정 에러는 무시 (예: 중복 키 에러)
+                    if (e.getMessage().contains("Duplicate entry") || 
+                        e.getMessage().contains("already exists")) {
+                        log.info("중복 데이터로 인한 에러 무시: {}", e.getMessage());
+                        successCount++; // 중복 에러는 성공으로 간주
+                    }
+                }
+            }
+        }
+        
+        log.info("=== SQL 파일 {} 실행 결과: 총 {}개 중 {}개 성공, {}개 실패 ===", 
+                fileName, totalCount, successCount, errorCount);
     }
     
     /**
