@@ -41,6 +41,53 @@
   background: #2563eb;
 }
 
+/* 필터 영역 */
+.filters {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 20px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filterGroup label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.filterSelect {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  color: #374151;
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.checkbox {
+  margin: 0;
+  cursor: pointer;
+}
+
 .content {
   background: white;
   border: 1px solid #e5e7eb;
@@ -48,6 +95,67 @@
   overflow: hidden;
 }
 
+/* 로딩 및 오류 상태 */
+.loadingContainer,
+.errorContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: #6b7280;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.errorIcon {
+  width: 48px;
+  height: 48px;
+  opacity: 0.5;
+  margin-bottom: 16px;
+}
+
+.errorMessage {
+  color: #dc2626;
+  font-size: 14px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+}
+
+.retryButton {
+  padding: 8px 16px;
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  margin-top: 12px;
+}
+
+.retryButton:hover {
+  background: #b91c1c;
+}
+
+/* 빈 상태 */
 .emptyState {
   display: flex;
   flex-direction: column;
@@ -65,133 +173,136 @@
   margin-bottom: 16px;
 }
 
-/* 로딩 스피너 */
-.loadingSpinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f4f6;
-  border-top: 4px solid #3b82f6;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 16px;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-/* 오류 메시지 */
-.errorMessage {
-  color: #dc2626;
-  font-size: 14px;
-  margin: 8px 0;
-  padding: 8px 12px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: 4px;
-}
-
-/* 재시도 버튼 */
-.retryButton {
+.resetFiltersButton {
   padding: 8px 16px;
-  background: #dc2626;
-  color: white;
-  border: none;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
   font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: all 0.2s;
   margin-top: 12px;
 }
 
-.retryButton:hover {
-  background: #b91c1c;
+.resetFiltersButton:hover {
+  background: #e5e7eb;
+  border-color: #9ca3af;
 }
 
-.alertsList {
+/* 알림 목록 */
+.notificationsList {
   padding: 0;
 }
 
-.alertItem {
+.notificationItem {
   padding: 20px;
   border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s;
 }
 
-.alertItem:last-child {
+.notificationItem:last-child {
   border-bottom: none;
 }
 
-.alertItem.unread {
+.notificationItem.unread {
   background: #fef7f0;
   border-left: 4px solid #f59e0b;
 }
 
-.alertHeader {
+.notificationHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 12px;
 }
 
-.alertType {
+.notificationTypeContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notificationIcon {
+  font-size: 16px;
+}
+
+.notificationType {
   padding: 4px 8px;
+  background: #f3f4f6;
   border-radius: 4px;
-  font-size: 12px;
+  font-size: 11px;
+  color: #374151;
   font-weight: 500;
 }
 
-.alertCritical {
+.notificationCategory {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.notificationCritical {
   background: #fee2e2;
   color: #991b1b;
 }
 
-.alertWarning {
+.notificationWarning {
   background: #fef3c7;
   color: #92400e;
 }
 
-.alertTime {
+.notificationInfo {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.notificationSuccess {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.notificationTime {
   font-size: 12px;
   color: #6b7280;
 }
 
-.alertContent {
+.notificationContent {
   margin-bottom: 12px;
 }
 
-.alertMessage {
-  font-size: 14px;
+.notificationTitle {
+  font-size: 16px;
+  font-weight: 600;
   color: #1f2937;
+  margin: 0 0 8px 0;
+  line-height: 1.3;
+}
+
+.notificationMessage {
+  font-size: 14px;
+  color: #374151;
   margin-bottom: 8px;
   line-height: 1.4;
 }
 
-.alertDetails {
+.notificationDetails {
   display: flex;
   gap: 16px;
   font-size: 12px;
   color: #6b7280;
-  flex-wrap: wrap;
   align-items: center;
 }
 
-.itemName {
+.targetName {
   font-weight: 500;
   color: #374151;
 }
 
-.category {
-  padding: 4px 8px;
-  background: #f3f4f6;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #374151;
-}
-
-.stockInfo {
+.userName {
   color: #6b7280;
+  font-style: italic;
 }
 
 .markReadButton {
@@ -220,13 +331,29 @@
     align-items: stretch;
   }
 
-  .alertDetails {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .filterGroup {
+    justify-content: space-between;
+  }
+
+  .notificationHeader {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
 
-  .stockInfo {
-    width: 100%;
+  .notificationTypeContainer {
+    flex-wrap: wrap;
+  }
+
+  .notificationDetails {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
   }
 }

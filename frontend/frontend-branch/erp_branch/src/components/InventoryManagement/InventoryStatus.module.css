@@ -24,7 +24,7 @@
 .searchContainer {
   position: relative;
   flex: 1;
-  max-width: 400px;
+  max-width: 200px;
 }
 
 .searchIcon {
@@ -59,6 +59,15 @@
   font-size: 14px;
   background: white;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .categoryFilter:focus {
@@ -147,6 +156,7 @@
   background: #f3f4f6;
   border-radius: 10px;
   overflow: hidden;
+  margin: 0 auto;
 }
 
 .stockFill {
@@ -164,6 +174,7 @@
   font-size: 10px;
   font-weight: 500;
   color: #1f2937;
+  text-align: center;
 }
 
 .status {
@@ -220,4 +231,205 @@
   .stockPercentage {
     font-size: 8px;
   }
+}
+
+/* 로딩 상태 */
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 18px;
+  color: #666;
+}
+
+/* 에러 상태 */
+.error {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  text-align: center;
+  color: #d32f2f;
+}
+
+.error p {
+  margin: 5px 0;
+  font-size: 16px;
+}
+
+/* 과다 재고 상태 */
+.statusExcess {
+  background-color: #fff3e0;
+  color: #f57c00;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid #ffb74d;
+}
+
+/* 사용가능 재고 컬럼 */
+.availableStock {
+  font-weight: 600;
+  color: #2e7d32;
+}
+
+/* 테이블 컬럼 너비 조정 */
+.table th:nth-child(6), /* 사용가능 컬럼 */
+.table td:nth-child(6) {
+  min-width: 100px;
+}
+
+/* 숫자 데이터 가운데 정렬 */
+.currentStock,
+.minStock,
+.maxStock,
+.availableStock {
+  text-align: center;
+  font-weight: 600;
+}
+
+/* 재고율 바 가운데 정렬 */
+.stockBar {
+  position: relative;
+  width: 100px;
+  height: 20px;
+  background: #f3f4f6;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.stockFill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.stockPercentage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 10px;
+  font-weight: 500;
+  color: #1f2937;
+  text-align: center;
+}
+
+/* 상태별 색상 강화 */
+.statusNormal {
+  background-color: #e8f5e8;
+  color: #2e7d32;
+  border: 1px solid #81c784;
+}
+
+.statusWarning {
+  background-color: #fff3e0;
+  color: #f57c00;
+  border: 1px solid #ffb74d;
+}
+
+.statusLow {
+  background-color: #fff8e1;
+  color: #f57c00;
+  border: 1px solid #ffb74d;
+}
+
+.statusCritical {
+  background-color: #ffebee;
+  color: #d32f2f;
+  border: 1px solid #ef5350;
+}
+
+/* 카테고리 필터 개선 */
+.categoryFilter {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  min-width: 150px;
+}
+
+/* 검색 컨테이너 개선 */
+.searchContainer {
+  display: flex;
+  align-items: center;
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 4px 8px;
+  margin-right: 12px;
+}
+
+.searchInput {
+  border: none;
+  outline: none;
+  padding: 4px 8px;
+  font-size: 14px;
+  margin-left: 20px;
+}
+
+.searchIcon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  opacity: 0.6;
+}
+
+/* 헤더 액션 개선 */
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 테이블 반응형 개선 */
+@media (max-width: 1200px) {
+  .table {
+    font-size: 12px;
+  }
+  
+  .table th,
+  .table td {
+    padding: 8px 6px;
+  }
+  
+  .searchInput {
+    min-width: 150px;
+  }
+  
+  .categoryFilter {
+    min-width: 120px;
+  }
+}
+
+/* 상태 필터 스타일 */
+.statusFilter {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  font-size: 14px;
+  min-width: 120px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.statusFilter:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }

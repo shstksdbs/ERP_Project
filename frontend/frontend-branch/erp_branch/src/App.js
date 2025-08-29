@@ -23,6 +23,7 @@ import NoticeDetail from './components/Notice/NoticeDetail';
 import SettingsBasic from './components/Settings/SettingsBasic';
 import SettingsLog from './components/Settings/SettingsLog';
 import SettingsBackup from './components/Settings/SettingsBackup';
+import NotificationCenter from './components/NotificationManagement/NotificationCenter';
 import './App.css';
 
 // 지점 ID를 받는 컴포넌트
@@ -70,6 +71,7 @@ function AppContent() {
     // 마지막으로 선택된 "콘텐츠 탭"(하위메뉴)을 우선으로 사용
     const allTabs = Array.isArray(activeTab) ? activeTab : (activeTab ? [activeTab] : []);
     const contentTabKeys = [
+      'notifications',
       'order-list',
       'order-status',
       'order-history',
@@ -99,6 +101,8 @@ function AppContent() {
     switch (currentTab) {
       case 'dashboard':
         return <Dashboard {...commonProps} loginData={loginData} />;
+      case 'notifications':
+        return <NotificationCenter {...commonProps} />;
       case 'order-list':
         return <OrderList {...commonProps} />;
       case 'order-status':

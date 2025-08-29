@@ -1,5 +1,6 @@
 package erp_project.erp_project.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -52,12 +53,15 @@ public class Material {
     private MaterialStatus status;
     
     @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<MaterialStock> materialStocks = new ArrayList<>();
     
     @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<RecipeIngredient> recipeIngredients = new ArrayList<>();
     
     @OneToMany(mappedBy = "material", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<StockMovement> stockMovements = new ArrayList<>();
     
     @Column(name = "created_at", nullable = false, updatable = false)

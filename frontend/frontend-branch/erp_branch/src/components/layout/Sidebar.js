@@ -201,6 +201,9 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               대시보드
             </button>
           </li>
+          
+          
+          
           <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('order')}>
               <img src={packageOutIcon} alt="주문관리" className={styles['sidebar-icon']} />
@@ -447,6 +450,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 </li>
               </ul>
             )}
+          </li>
+          {/* 통합 알림 관리 메뉴 */}
+          <li>
+            <button className={`btn ${styles['sidebar-button']} ${activeTabs.includes('notifications') ? 'btn-selected' : 'btn-secondary'}`} onClick={() => handleTabClick('notifications')}>
+              <img src={bellIcon} alt="알림 관리" className={styles['sidebar-icon']} />
+              알림 관리
+            </button>
           </li>
           <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('settings')}>
