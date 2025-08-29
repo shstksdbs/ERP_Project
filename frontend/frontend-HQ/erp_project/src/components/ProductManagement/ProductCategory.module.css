@@ -68,6 +68,7 @@
   position: relative;
   display: flex;
   align-items: center;
+  width: 250px;
 }
 
 .search-icon {
@@ -79,7 +80,7 @@
 }
 
 .search-input {
-  width: 50%;
+  width: 100%;
   padding: 10px 12px 10px 40px;
   border: 1px solid #d1d5db;
   border-radius: 6px;

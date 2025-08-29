@@ -49,7 +49,8 @@ public class DataInitializer {
         "08_recipes_data.sql",
         "09_recipe_ingredients_data.sql",
         "10_sales_statistics_tables.sql",
-        "11_order_management_tables.sql"
+        "11_order_management_tables.sql",
+        "12_stocks_data.sql"
     );
 
     @PostConstruct

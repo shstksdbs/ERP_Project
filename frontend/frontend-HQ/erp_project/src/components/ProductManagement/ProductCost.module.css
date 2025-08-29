@@ -60,10 +60,6 @@
   align-items: center;
 }
 
-.search-box {
-  flex: 1;
-}
-
 .search-input-container {
   position: relative;
   display: flex;
@@ -119,6 +115,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 16px;
+  margin-left: auto;
 }
 
 .button-icon {
