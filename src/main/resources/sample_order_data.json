@@ -1,0 +1,46 @@
+{
+  "branchId": 1,
+  "orderType": "dine_in",
+  "customerName": "홍길동",
+  "customerPhone": "010-1234-5678",
+  "paymentMethod": "card",
+  "timestamp": 1703123456789,
+  "securityHash": "test_hash_for_development",
+  "items": [
+    {
+      "menuId": 101,
+      "menuName": "치즈버거 세트",
+      "displayName": "치즈버거 세트",
+      "unitPrice": 8500.00,
+      "quantity": 1,
+      "totalPrice": 8500.00,
+      "displayOptions": [
+        "사이드: 감자튀김",
+        "음료: 콜라",
+        "사이즈: M"
+      ]
+    },
+    {
+      "menuId": 102,
+      "menuName": "불고기버거",
+      "displayName": "불고기버거",
+      "unitPrice": 5500.00,
+      "quantity": 1,
+      "totalPrice": 5700.00,
+      "displayOptions": [
+        "양상추 추가 (+200원)",
+        "치즈 추가 (+500원)",
+        "토마토 제거"
+      ]
+    },
+    {
+      "menuId": 201,
+      "menuName": "감자튀김",
+      "displayName": "감자튀김",
+      "unitPrice": 1500.00,
+      "quantity": 2,
+      "totalPrice": 3000.00,
+      "displayOptions": []
+    }
+  ]
+}

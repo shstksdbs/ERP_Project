@@ -159,6 +159,9 @@ const BurgerOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
       cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 고유 ID
       timestamp: new Date().toISOString(),
 
+      // 메뉴 ID (CartScreen에서 사용)
+      id: menuItem.id,
+
       // 메뉴 기본 정보
       menu: baseMenuInfo,
 

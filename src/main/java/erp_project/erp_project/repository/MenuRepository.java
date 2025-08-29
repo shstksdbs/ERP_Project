@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface MenuRepository extends JpaRepository<Menu, Long> {
@@ -44,4 +45,7 @@ public interface MenuRepository extends JpaRepository<Menu, Long> {
     // 카테고리 정보와 함께 메뉴 조회 (JOIN FETCH) - 모든 메뉴 포함
     @Query("SELECT m FROM Menu m LEFT JOIN FETCH m.menuCategory ORDER BY m.menuCategory.displayOrder, m.displayOrder")
     List<Menu> findAllWithCategoryOrderByDisplayOrder();
+    
+    // 메뉴명으로 정확히 일치하는 메뉴 조회
+    Optional<Menu> findByNameAndIsAvailableTrue(String name);
 }

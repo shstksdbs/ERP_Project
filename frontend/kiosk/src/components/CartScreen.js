@@ -53,6 +53,18 @@ const CartScreen = ({ selectedBranch }) => {
     return 0;
   };
 
+  // 아이템의 타입(카테고리)을 안전하게 가져오는 함수
+  const getItemType = (item) => {
+    // item.category가 있는 경우 (직접 추가된 아이템: SIDE, DRINK)
+    if (item.category) return item.category;
+    
+    // item.menu.category가 있는 경우 (옵션 모달을 통해 추가된 아이템: BURGER, SET)
+    if (item.menu?.category) return item.menu.category;
+    
+    // 기본값으로 'BURGER' 반환
+    return 'BURGER';
+  };
+
   const goBack = () => {
     navigate('/');
   };
@@ -81,17 +93,37 @@ const CartScreen = ({ selectedBranch }) => {
       branchId: selectedBranch.id,
       totalAmount: getTotalAmount(),
       items: cart.map(item => ({
-        menuId: item.menuId || item.id || 1,
+        menuId: item.menu?.id || item.menuId || (item.menu && item.menu.id) || item.id || 1,
         menuName: getItemDisplayName(item),
         quantity: item.quantity,
         unitPrice: getItemPrice(item) / item.quantity,
         totalPrice: getItemPrice(item),
         displayName: getItemDisplayName(item),
         displayOptions: item.displayOptions || [],
-        options: convertOptionsToRequest(item)
+        options: convertOptionsToRequest(item),
+        itemType: getItemType(item)
       }))
     };
 
+    console.log('메뉴아이디:', cart.map(item => item.menuId));
+    console.log('카테고리 정보:', cart.map(item => ({ 
+      name: getItemDisplayName(item), 
+      category: item.category, 
+      menuCategory: item.menu?.category,
+      finalType: getItemType(item)
+    })));
+    
+    // 옵션 변환 결과 디버깅
+    cart.forEach((item, index) => {
+      console.log(`아이템 ${index} (${getItemDisplayName(item)}) 옵션 변환:`, {
+        displayOptions: item.displayOptions,
+        selectedOptions: item.selectedOptions,
+        itemOptions: item.options,  // item.options 구조 확인
+        convertedOptions: convertOptionsToRequest(item),
+        menuId: item.menu?.id || item.menuId || item.id || 1
+      });
+    });
+    
     console.log('바로 결제 진행 - 주문 데이터:', orderData);
     console.log('선택된 지점:', selectedBranch);
 
@@ -158,9 +190,104 @@ const CartScreen = ({ selectedBranch }) => {
   const convertOptionsToRequest = (item) => {
     const options = [];
     
+    // item.options가 있는 경우 (SetOptionModal에서 생성된 구조)
+    if (item.options && item.options.drink && item.options.side) {
+      console.log('=== item.options 처리 ===');
+      console.log('item.options:', item.options);
+      
+      // 사이드 옵션 처리
+      if (item.options.side && item.options.side.id) {
+        options.push({
+          optionId: item.options.side.id,  // 실제 menuId 사용
+          optionName: item.options.side.name,
+          quantity: 1,
+          unitPrice: item.options.side.price || 0,
+          action: "add"
+        });
+        console.log('사이드 옵션 추가:', item.options.side);
+      }
+      
+      // 음료 옵션 처리
+      if (item.options.drink && item.options.drink.id) {
+        options.push({
+          optionId: item.options.drink.id,  // 실제 menuId 사용
+          optionName: item.options.drink.name,
+          quantity: 1,
+          unitPrice: item.options.drink.price || 0,
+          action: "add"
+        });
+        console.log('음료 옵션 추가:', item.options.drink);
+      }
+      
+      // 토핑 옵션들 처리
+      if (item.options.toppings) {
+        // 추가된 토핑
+        if (item.options.toppings.add) {
+          item.options.toppings.add.forEach(topping => {
+            options.push({
+              optionId: topping.id,
+              optionName: topping.name,
+              quantity: topping.quantity || 1,
+              unitPrice: topping.price || 0,
+              action: "add"
+            });
+          });
+        }
+        
+        // 제거된 토핑
+        if (item.options.toppings.remove) {
+          item.options.toppings.remove.forEach(topping => {
+            options.push({
+              optionId: topping.id,
+              optionName: topping.name,
+              quantity: 1,
+              unitPrice: 0,
+              action: "remove"
+            });
+          });
+        }
+      }
+      
+      console.log('최종 변환된 options:', options);
+      return options;
+    }
+    
     // displayOptions가 있는 경우 (새로운 구조)
     if (item.displayOptions && item.displayOptions.length > 0) {
-      // displayOptions는 이미 문자열 배열이므로 별도 변환 불필요
+      // displayOptions를 옵션 객체로 변환
+      item.displayOptions.forEach((option) => {
+        if (option.startsWith('+')) {
+          // 추가된 옵션
+          const optionName = option.substring(1); // '+' 제거
+          options.push({
+            optionId: getOptionId(optionName),
+            optionName: optionName,
+            quantity: 1,
+            unitPrice: 0,
+            action: "add"
+          });
+        } else if (option.startsWith('-')) {
+          // 제거된 옵션
+          const optionName = option.substring(1); // '-' 제거
+          options.push({
+            optionId: getOptionId(optionName),
+            optionName: optionName,
+            quantity: 1,
+            unitPrice: 0,
+            action: "remove"
+          });
+        } else if (option.includes('사이드:') || option.includes('음료:')) {
+          // 사이드/음료 옵션
+          const optionName = option.split(': ')[1];
+          options.push({
+            optionId: getOptionId(optionName),
+            optionName: optionName,
+            quantity: 1,
+            unitPrice: 0,
+            action: "add"
+          });
+        }
+      });
       return options;
     }
     

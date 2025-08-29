@@ -31,7 +31,7 @@ ON DUPLICATE KEY UPDATE
 
 -- 사이드 변경 옵션
 INSERT INTO menu_options (name, display_name, category, price, is_available, display_order, description, created_at, updated_at) VALUES
-('frenchFries', '프렌치프라이', 'side', 0.00, true, 1, '바삭한 프렌치프라이', NOW(), NOW()),
+('frenchFries', '감자튀김', 'side', 0.00, true, 1, '바삭한 프렌치프라이', NOW(), NOW()),
 ('seasonedFries', '양념감자', 'side', 500.00, true, 2, '매콤달콤한 양념감자', NOW(), NOW()),
 ('cornSalad', '콘샐러드', 'side', 700.00, true, 3, '신선한 콘샐러드', NOW(), NOW()),
 ('onionRings', '어니언링', 'side', 800.00, true, 4, '고소한 어니언링 6개', NOW(), NOW()),

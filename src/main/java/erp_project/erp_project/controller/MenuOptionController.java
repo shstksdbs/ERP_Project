@@ -44,4 +44,22 @@ public class MenuOptionController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    
+    // 메뉴 옵션의 display_name으로 menus 테이블의 ID 찾기
+    @GetMapping("/menu-id/{displayName}")
+    public ResponseEntity<Long> getMenuIdByDisplayName(@PathVariable String displayName) {
+        Long menuId = menuOptionService.getMenuIdByDisplayName(displayName);
+        if (menuId != null) {
+            return ResponseEntity.ok(menuId);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    // 카테고리별 메뉴 옵션과 해당하는 menus 테이블 ID 함께 조회
+    @GetMapping("/category/{category}/with-menu-id")
+    public ResponseEntity<List<Object>> getMenuOptionsWithMenuId(@PathVariable String category) {
+        List<Object> optionsWithMenuId = menuOptionService.getMenuOptionsWithMenuId(category);
+        return ResponseEntity.ok(optionsWithMenuId);
+    }
 }

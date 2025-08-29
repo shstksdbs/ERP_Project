@@ -48,7 +48,8 @@ public class DataInitializer {
         "07_materials_data.sql",    // 5. 원재료 데이터
         "08_recipes_data.sql",
         "09_recipe_ingredients_data.sql",
-        "10_sales_statistics_tables.sql"
+        "10_sales_statistics_tables.sql",
+        "11_order_management_tables.sql"
     );
 
     @PostConstruct

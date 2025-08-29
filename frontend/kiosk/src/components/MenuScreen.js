@@ -130,11 +130,13 @@ const MenuScreen = () => {
       quantity: quantity,
       imageUrl: item.imageUrl || item.menu?.imageUrl,
       name: item.name || '상품', // 이름이 없을 경우 기본값 설정
-      displayOptions: [] // 기본 아이템은 옵션 없음
+      displayOptions: [], // 기본 아이템은 옵션 없음
+      category: item.category // 백엔드 카테고리 값 그대로 사용 (BURGER, SET, SIDE, DRINK)
     };
     
     // 디버깅: 이미지 URL 확인
     console.log('addToCartWithQuantity - item:', item);
+    console.log('addToCartWithQuantity - item.category:', item.category);
     console.log('addToCartWithQuantity - cartItem:', cartItem);
     
     setCart(prev => [...prev, cartItem]);
@@ -224,9 +226,9 @@ const MenuScreen = () => {
       
       {!loading && !error && (
         <div className={styles.menuGrid}>
-          {console.log('현재 선택된 카테고리:', selectedCategory)}
+          {/* {console.log('현재 선택된 카테고리:', selectedCategory)}
           {console.log('현재 카테고리의 메뉴:', menuItems[selectedCategory])}
-          {console.log('전체 메뉴 아이템:', menuItems)}
+          {console.log('전체 메뉴 아이템:', menuItems)} */}
           
           {!menuItems[selectedCategory] || menuItems[selectedCategory].length === 0 ? (
             <div className={styles.noMenuMessage}>
@@ -239,7 +241,7 @@ const MenuScreen = () => {
             </div>
           ) : (
             menuItems[selectedCategory].map(item => {
-              console.log('렌더링할 메뉴 아이템:', item);
+              // console.log('렌더링할 메뉴 아이템:', item);
               return (
                 <div key={item.id} className={styles.menuItem} onClick={() => handleMenuItemClick(item)}>
                   <div className={styles.menuImageContainer}>

@@ -32,27 +32,31 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
     try {
       setLoading(true);
 
-      // 토핑 옵션 가져오기
+      // 토핑 옵션 가져오기 (기존 방식 유지)
       const toppingResponse = await fetch('http://localhost:8080/api/menu-options/category/topping');
       const toppingData = await toppingResponse.json();
       setToppingOptions(toppingData);
 
-      // 사이드 옵션 가져오기
-      const sideResponse = await fetch('http://localhost:8080/api/menu-options/category/side');
+      // 사이드 옵션 가져오기 (새로운 API 사용)
+      const sideResponse = await fetch('http://localhost:8080/api/menu-options/category/side/with-menu-id');
       const sideData = await sideResponse.json();
+      console.log('=== 사이드 옵션 API 응답 ===');
+      console.log('sideData:', sideData);
       setSideOptions(sideData);
 
-      // 음료 옵션 가져오기
-      const drinkResponse = await fetch('http://localhost:8080/api/menu-options/category/drink');
+      // 음료 옵션 가져오기 (새로운 API 사용)
+      const drinkResponse = await fetch('http://localhost:8080/api/menu-options/category/drink/with-menu-id');
       const drinkData = await drinkResponse.json();
+      console.log('=== 음료 옵션 API 응답 ===');
+      console.log('drinkData:', drinkData);
       setDrinkOptions(drinkData);
 
-      // 기본값 설정
+      // 기본값 설정 (menuId 사용)
       if (sideData.length > 0) {
-        setSelectedSide(sideData[0].id.toString());
+        setSelectedSide(sideData[0].menuId.toString());
       }
       if (drinkData.length > 0) {
-        setSelectedDrink(drinkData[0].id.toString());
+        setSelectedDrink(drinkData[0].menuId.toString());
       }
 
       // 토핑 옵션들의 초기 상태 설정
@@ -74,6 +78,10 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
 
   // 옵션 ID로 옵션 정보를 찾는 함수
   const findOptionById = (options, id) => {
+    // 사이드와 음료는 menuId를 사용, 토핑은 기존 id 사용
+    if (options === sideOptions || options === drinkOptions) {
+      return options.find(option => option.menuId.toString() === id);
+    }
     return options.find(option => option.id.toString() === id);
   };
 
@@ -178,14 +186,16 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
           })
       },
       side: {
-        id: selectedSide,
+        id: selectedSide, // 이제 menuId가 저장됨
         name: findOptionById(sideOptions, selectedSide)?.displayName || '',
-        price: findOptionById(sideOptions, selectedSide) ? Number(findOptionById(sideOptions, selectedSide).price) : 0
+        price: findOptionById(sideOptions, selectedSide) ? Number(findOptionById(sideOptions, selectedSide).price) : 0,
+        menuId: selectedSide // menus 테이블의 ID
       },
       drink: {
-        id: selectedDrink,
+        id: selectedDrink, // 이제 menuId가 저장됨
         name: findOptionById(drinkOptions, selectedDrink)?.displayName || '',
-        price: findOptionById(drinkOptions, selectedDrink) ? Number(findOptionById(drinkOptions, selectedDrink).price) : 0
+        price: findOptionById(drinkOptions, selectedDrink) ? Number(findOptionById(drinkOptions, selectedDrink).price) : 0,
+        menuId: selectedDrink // menus 테이블의 ID
       }
     };
 
@@ -196,10 +206,23 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
     const totalPrice = (baseMenuInfo.basePrice + optionsPrice + sidePrice + drinkPrice) * quantity;
 
     // 장바구니 아이템 생성
+    console.log('=== 장바구니 아이템 생성 디버깅 ===');
+    console.log('menuItem.id:', menuItem.id);
+    console.log('baseMenuInfo.id:', baseMenuInfo.id);
+    console.log('selectedSide:', selectedSide);
+    console.log('selectedDrink:', selectedDrink);
+    console.log('sideOptions:', sideOptions);
+    console.log('drinkOptions:', drinkOptions);
+    console.log('selectedOptions.side:', selectedOptions.side);
+    console.log('selectedOptions.drink:', selectedOptions.drink);
+    
     const cartItem = {
       // 기본 식별 정보
       cartItemId: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // 고유 ID
       timestamp: new Date().toISOString(),
+
+      // 메뉴 ID (CartScreen에서 사용) - baseMenuInfo의 ID를 우선 사용
+      id: baseMenuInfo.id || menuItem.id,
 
       // 메뉴 기본 정보
       menu: baseMenuInfo,
@@ -220,6 +243,9 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
         `사이드: ${selectedOptions.side.name}`,
         `음료: ${selectedOptions.drink.name}`
       ],
+      // menus 테이블의 ID 정보 (주문 처리 시 사용)
+      sideMenuId: selectedOptions.side.id, // 이미 menuId가 저장됨
+      drinkMenuId: selectedOptions.drink.id, // 이미 menuId가 저장됨
 
       // 메타데이터
       metadata: {
@@ -360,12 +386,12 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <p className={styles.optionsDescription}>원하는 사이드 메뉴로 변경할 수 있습니다</p>
             <div className={styles.optionsGrid}>
               {sideOptions.map((option) => (
-                <label key={option.id} className={styles.optionItem}>
+                <label key={option.optionId} className={styles.optionItem}>
                   <input
                     type="radio"
                     name="side"
-                    value={option.id.toString()}
-                    checked={selectedSide === option.id.toString()}
+                    value={option.menuId.toString()}
+                    checked={selectedSide === option.menuId.toString()}
                     onChange={(e) => setSelectedSide(e.target.value)}
                   />
                   <span className={styles.optionName}>{option.displayName}</span>
@@ -385,12 +411,12 @@ const SetOptionModal = ({ isOpen, onClose, menuItem, onAddToCart }) => {
             <p className={styles.optionsDescription}>원하는 음료로 변경할 수 있습니다</p>
             <div className={styles.optionsGrid}>
               {drinkOptions.map((option) => (
-                <label key={option.id} className={styles.optionItem}>
+                <label key={option.optionId} className={styles.optionItem}>
                   <input
                     type="radio"
                     name="drink"
-                    value={option.id.toString()}
-                    checked={selectedDrink === option.id.toString()}
+                    value={option.menuId.toString()}
+                    checked={selectedDrink === option.menuId.toString()}
                     onChange={(e) => setSelectedDrink(e.target.value)}
                   />
                   <span className={styles.optionName}>{option.displayName}</span>

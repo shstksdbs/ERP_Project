@@ -7,6 +7,7 @@ import erp_project.erp_project.repository.OrderRepository;
 import erp_project.erp_project.repository.OrderItemRepository;
 import erp_project.erp_project.repository.BranchesRepository;
 import erp_project.erp_project.repository.OrderHistoryRepository;
+import erp_project.erp_project.service.AutomatedOrderService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,6 +19,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -38,6 +40,9 @@ public class OrderController {
 
     @Autowired
     private OrderHistoryRepository orderHistoryRepository;
+
+    @Autowired
+    private AutomatedOrderService automatedOrderService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -89,6 +94,47 @@ public class OrderController {
         }
         
         return isValid;
+    }
+    
+    // 아이템 타입 판단 메서드
+    private OrderItems.ItemType determineItemType(Map<String, Object> itemData) {
+        String menuName = (String) itemData.get("menuName");
+        String displayName = (String) itemData.get("displayName");
+        
+        // 메뉴 이름이나 표시 이름에 "세트"가 포함되어 있으면 SET
+        if (menuName != null && menuName.contains("세트")) {
+            return OrderItems.ItemType.SET;
+        }
+        if (displayName != null && displayName.contains("세트")) {
+            return OrderItems.ItemType.SET;
+        }
+        
+        // 메뉴 이름에 "버거"가 포함되어 있으면 BURGER
+        if (menuName != null && menuName.contains("버거")) {
+            return OrderItems.ItemType.BURGER;
+        }
+        if (displayName != null && displayName.contains("버거")) {
+            return OrderItems.ItemType.BURGER;
+        }
+        
+        // 메뉴 이름에 "음료"가 포함되어 있으면 DRINK
+        if (menuName != null && menuName.contains("음료")) {
+            return OrderItems.ItemType.DRINK;
+        }
+        if (displayName != null && displayName.contains("음료")) {
+            return OrderItems.ItemType.DRINK;
+        }
+        
+        // 메뉴 이름에 "사이드"가 포함되어 있으면 SIDE
+        if (menuName != null && menuName.contains("사이드")) {
+            return OrderItems.ItemType.SIDE;
+        }
+        if (displayName != null && displayName.contains("사이드")) {
+            return OrderItems.ItemType.SIDE;
+        }
+        
+        // 기본값은 BURGER
+        return OrderItems.ItemType.BURGER;
     }
     
     // 주문 생성 API
@@ -183,8 +229,11 @@ public class OrderController {
             // 주문 저장
             Orders savedOrder = orderRepository.save(order);
 
-            // 주문 아이템 저장
+            // 주문 아이템 저장 및 자동화 처리
+            List<OrderItems> savedOrderItems = new ArrayList<>();
+            System.out.println("=== 주문 아이템 처리 시작 ===");
             for (Map<String, Object> itemData : items) {
+                System.out.println("처리 중인 아이템: " + itemData.get("menuName"));
                 OrderItems orderItem = new OrderItems();
                 orderItem.setOrderId(savedOrder.getOrderId());
                 orderItem.setMenuId(Long.valueOf(itemData.get("menuId").toString()));
@@ -193,6 +242,26 @@ public class OrderController {
                 orderItem.setQuantity(Integer.valueOf(itemData.get("quantity").toString()));
                 orderItem.setTotalPrice(new BigDecimal(itemData.get("totalPrice").toString()));
                 orderItem.setDisplayName((String) itemData.get("displayName"));
+                
+                // 아이템 타입 설정 (세트 메뉴인지 단품인지 판단)
+                try {
+                    OrderItems.ItemType itemType = determineItemType(itemData);
+                    orderItem.setItemType(itemType);
+                    
+                    // is_set_component 설정
+                    if (itemType == OrderItems.ItemType.SET) {
+                        orderItem.setIsSetComponent(true);
+                    } else {
+                        orderItem.setIsSetComponent(false);
+                    }
+                    
+                    System.out.println("아이템 타입 설정: " + itemType + " for " + itemData.get("menuName"));
+                } catch (Exception e) {
+                    System.err.println("아이템 타입 설정 실패: " + e.getMessage());
+                    // 기본값으로 BURGER 설정
+                    orderItem.setItemType(OrderItems.ItemType.BURGER);
+                    orderItem.setIsSetComponent(false);
+                }
                 
                 // 옵션 정보를 JSON으로 저장
                 try {
@@ -218,7 +287,42 @@ public class OrderController {
                     System.err.println("displayOptions JSON 변환 실패: " + e.getMessage());
                 }
                 
-                orderItemRepository.save(orderItem);
+                // 상세 옵션 정보를 JSON으로 저장 (optionsJson)
+                try {
+                    if (itemData.get("options") != null) {
+                        Object options = itemData.get("options");
+                        if (options instanceof List) {
+                            // List를 JSON 문자열로 변환
+                            orderItem.setOptionsJson(objectMapper.writeValueAsString(options));
+                        } else if (options instanceof String) {
+                            // 이미 문자열인 경우 그대로 사용
+                            orderItem.setOptionsJson((String) options);
+                        } else {
+                            // 기타 타입은 빈 배열로 설정
+                            orderItem.setOptionsJson("[]");
+                        }
+                    } else {
+                        // null인 경우 빈 배열로 설정
+                        orderItem.setOptionsJson("[]");
+                    }
+                } catch (Exception e) {
+                    // JSON 변환 실패 시 빈 배열로 설정
+                    orderItem.setOptionsJson("[]");
+                    System.err.println("options JSON 변환 실패: " + e.getMessage());
+                }
+                
+                OrderItems savedOrderItem = orderItemRepository.save(orderItem);
+                savedOrderItems.add(savedOrderItem);
+            }
+            
+            // 자동화된 order_item_details 생성 (오류 발생 시에도 주문은 성공)
+            try {
+                automatedOrderService.processOrderItemsAutomatically(savedOrder, savedOrderItems);
+                System.out.println("order_item_details 자동 생성 완료");
+            } catch (Exception e) {
+                System.err.println("order_item_details 자동 생성 실패: " + e.getMessage());
+                e.printStackTrace();
+                // 주문은 성공했으므로 계속 진행
             }
 
             // 응답 데이터 생성
