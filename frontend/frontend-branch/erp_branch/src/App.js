@@ -116,7 +116,7 @@ function AppContent() {
       case 'inventory-history':
         return <InventoryHistory {...commonProps} />;
       case 'order-request':
-        return <OrderRequest {...commonProps} />;
+        return <OrderRequest {...commonProps} loginData={loginData} />;
       case 'ordering-status':
         return <OrderingStatus {...commonProps} />;
       case 'ordering-history':

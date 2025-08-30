@@ -1,5 +1,12 @@
 -- 12_stocks_data.sql
--- 지점별 재고 데이터 삽입 (중복 방지)
+-- =====================================================
+-- 0. UNIQUE KEY 제약조건 추가 (중복 데이터 방지)
+-- =====================================================
+
+-- material_stocks 테이블에 (material_id, branch_id) 조합으로 UNIQUE KEY 추가
+-- 이미 존재하는 경우 무시
+ALTER TABLE material_stocks 
+ADD UNIQUE KEY uk_material_branch (material_id, branch_id);
 
 -- =====================================================
 -- 1. 지점별 재고 데이터 삽입 (INSERT IGNORE 사용)

@@ -199,6 +199,11 @@
   color: #991b1b;
 }
 
+.table th:nth-child(8),
+.table td:nth-child(8) {
+  width: 10%;
+  /* 발주번호 */
+}
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .container {

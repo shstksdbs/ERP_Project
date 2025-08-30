@@ -312,8 +312,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     className={`btn ${styles['submenu-button']} ${activeTabs.includes('ordering-status') ? 'btn-selected' : 'btn-secondary'}`}
                     onClick={() => handleSubmenuClick('ordering-status')}
                   >
-                    <img src={packageInIcon} alt="발주상태" className={styles['sidebar-icon']} />
-                    발주상태
+                    <img src={packageInIcon} alt="정기발주 설정" className={styles['sidebar-icon']} />
+                    정기발주 설정
                   </button>
                 </li>
                 <li>

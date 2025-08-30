@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class LoginResponse {
     private String token;
+    private Long userId;  // 사용자 ID 추가
     private String username;
     private String realName;
     private Long branchId;
@@ -18,6 +19,7 @@ public class LoginResponse {
     public static LoginResponse fromUser(Users user, String token) {
         LoginResponse response = new LoginResponse();
         response.setToken(token);
+        response.setUserId(user.getId());  // 사용자 ID 설정
         response.setUsername(user.getUsername());
         response.setRealName(user.getRealName());
         response.setBranchId(user.getBranchId());

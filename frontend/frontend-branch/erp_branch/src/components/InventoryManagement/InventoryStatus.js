@@ -57,7 +57,7 @@ export default function InventoryStatus({ branchId }) {
       
       // 재고 상태 계산 및 데이터 가공
       const processedData = data.map((stock, index) => {
-        console.log(`처리 중인 재고 데이터 ${index}:`, stock);
+        //console.log(`처리 중인 재고 데이터 ${index}:`, stock);
         
         // material 객체가 null인지 확인
         if (!stock.material) {
@@ -82,7 +82,7 @@ export default function InventoryStatus({ branchId }) {
           supplier: stock.material.supplier || '공급업체 없음'
         };
         
-        console.log(`가공된 항목 ${index}:`, processedItem);
+        //console.log(`가공된 항목 ${index}:`, processedItem);
         return processedItem;
       }).filter(item => item !== null); // null 항목 제거
       

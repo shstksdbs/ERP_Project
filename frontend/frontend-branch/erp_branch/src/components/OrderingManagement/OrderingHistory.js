@@ -1,63 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import styles from './OrderingHistory.module.css';
 import searchIcon from '../../assets/search_icon.png';
-import historyIcon from '../../assets/history_icon.png';
+import packageInIcon from '../../assets/packageIn_icon.png';
+import supplyRequestService from '../../services/supplyRequestService';
 
 export default function OrderingHistory({ branchId }) {
-  const [orders, setOrders] = useState([]);
+  const [supplyRequests, setSupplyRequests] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [loading, setLoading] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
-  // 샘플 데이터
+  // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
-    const sampleOrders = [
-      {
-        id: 1,
-        orderNumber: 'PO001',
-        orderDate: '2024-01-15',
-        items: [
-          { name: '카페라떼', quantity: 50, price: 1800 },
-          { name: '샌드위치', quantity: 20, price: 3000 }
-        ],
-        totalAmount: 150000,
-        status: 'delivered',
-        expectedDelivery: '2024-01-18',
-        actualDelivery: '2024-01-18',
-        employeeName: '김직원'
-      },
-      {
-        id: 2,
-        orderNumber: 'PO002',
-        orderDate: '2024-01-14',
-        items: [
-          { name: '우유', quantity: 30, price: 2500 },
-          { name: '커피원두', quantity: 5, price: 15000 }
-        ],
-        totalAmount: 82500,
-        status: 'delivered',
-        expectedDelivery: '2024-01-20',
-        actualDelivery: '2024-01-19',
-        employeeName: '박직원'
-      },
-      {
-        id: 3,
-        orderNumber: 'PO003',
-        orderDate: '2024-01-13',
-        items: [
-          { name: '아메리카노', quantity: 100, price: 1200 }
-        ],
-        totalAmount: 120000,
-        status: 'cancelled',
-        expectedDelivery: '2024-01-16',
-        actualDelivery: null,
-        employeeName: '김직원'
-      }
-    ];
+    if (branchId) {
+      loadSupplyRequests();
+    }
+  }, [branchId]);
 
-    setOrders(sampleOrders);
-  }, []);
+  // 발주 요청 목록 로드
+  const loadSupplyRequests = async () => {
+    try {
+      setLoading(true);
+      const data = await supplyRequestService.getSupplyRequests(branchId);
+      setSupplyRequests(data);
+    } catch (error) {
+      console.error('발주 요청 목록 로드 실패:', error);
+      setSupplyRequests([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // 검색 및 필터링
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -66,56 +42,137 @@ export default function OrderingHistory({ branchId }) {
     setSelectedStatus(e.target.value);
   };
 
-  const handleDateChange = (e) => {
-    const { name, value } = e.target;
-    setDateRange(prev => ({ ...prev, [name]: value }));
-  };
-
+  // 발주 상세 정보 클릭
   const handleOrderClick = (order) => {
-    // 발주 상세 정보를 보여주는 로직을 추가할 수 있습니다
-    console.log('Selected order:', order);
+    setSelectedOrder(order);
+    setShowDetailModal(true);
+  };
+  
+  // 모달 닫기
+  const handleCloseModal = () => {
+    setShowDetailModal(false);
+    setSelectedOrder(null);
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ko-KR').format(amount);
-  };
-
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'pending':
-        return '승인대기';
-      case 'approved':
-        return '승인완료';
-      case 'delivered':
-        return '배송완료';
-      case 'cancelled':
-        return '취소';
-      default:
-        return status;
+  // 발주 삭제
+  const handleDeleteOrder = async (orderId, e) => {
+    e.stopPropagation();
+    
+    if (!window.confirm('정말로 이 발주를 삭제하시겠습니까?')) {
+      return;
+    }
+    
+    try {
+      // 실제 삭제 API 호출
+      await supplyRequestService.deleteSupplyRequest(orderId);
+      
+      // 목록에서 제거
+      setSupplyRequests(prev => prev.filter(request => request.id !== orderId));
+      alert('발주가 삭제되었습니다.');
+    } catch (error) {
+      console.error('발주 삭제 실패:', error);
+      
+      // 에러 메시지에서 서버 응답 추출
+      let errorMessage = '발주 삭제에 실패했습니다.';
+      if (error.message && error.message.includes('message:')) {
+        const serverMessage = error.message.split('message:')[1]?.trim();
+        if (serverMessage) {
+          errorMessage = serverMessage;
+        }
+      }
+      
+      alert(errorMessage);
     }
   };
 
+  // 통화 포맷팅
+  const formatCurrency = (amount) => {
+    if (!amount) return '0원';
+    return new Intl.NumberFormat('ko-KR').format(amount) + '원';
+  };
+
+  // 날짜 포맷팅
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ko-KR');
+    } catch (error) {
+      return dateString;
+    }
+  };
+
+  // 상태 텍스트 반환
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'PENDING':
+        return '승인대기';
+      case 'APPROVED':
+        return '승인완료';
+      case 'IN_TRANSIT':
+        return '배송중';
+      case 'DELIVERED':
+        return '배송완료';
+      case 'CANCELLED':
+        return '취소';
+      default:
+        return status || '알 수 없음';
+    }
+  };
+
+  // 상태별 CSS 클래스 반환
   const getStatusClass = (status) => {
     switch (status) {
-      case 'pending':
+      case 'PENDING':
         return styles.statusPending;
-      case 'approved':
+      case 'APPROVED':
         return styles.statusApproved;
-      case 'delivered':
+      case 'IN_TRANSIT':
         return styles.statusDelivered;
-      case 'cancelled':
+      case 'DELIVERED':
+        return styles.statusDelivered;
+      case 'CANCELLED':
         return styles.statusCancelled;
       default:
         return '';
     }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
-    const matchesDateRange = (!dateRange.start || order.orderDate >= dateRange.start) &&
-                            (!dateRange.end || order.orderDate <= dateRange.end);
-    return matchesSearch && matchesStatus && matchesDateRange;
+  // 우선순위 텍스트 반환
+  const getPriorityText = (priority) => {
+    switch (priority) {
+      case 'LOW':
+        return '낮음';
+      case 'NORMAL':
+        return '보통';
+      case 'HIGH':
+        return '높음';
+      case 'URGENT':
+        return '긴급';
+      default:
+        return priority || '보통';
+    }
+  };
+
+  // 발주 상품 목록을 문자열로 변환
+  const getOrderItemsText = (items) => {
+    if (!items || items.length === 0) return '상품 정보 없음';
+    
+    return items.map(item => {
+      if (item.materialName) {
+        return `${item.materialName} x${item.requestedQuantity || 0}${item.unit || ''}`;
+      } else {
+        return `상품 x${item.requestedQuantity || 0}`;
+      }
+    }).join('\n');
+  };
+
+  // 필터링된 발주 요청 목록
+  const filteredRequests = supplyRequests.filter(request => {
+    const matchesSearch = request.id?.toString().includes(searchTerm) || 
+                         (request.requestDate && new Date(request.requestDate).toLocaleDateString('ko-KR').includes(searchTerm));
+    const matchesStatus = selectedStatus === 'all' || request.status === selectedStatus;
+    return matchesSearch && matchesStatus;
   });
 
   return (
@@ -127,7 +184,7 @@ export default function OrderingHistory({ branchId }) {
             <img src={searchIcon} alt="검색" className={styles.searchIcon} />
             <input
               type="text"
-              placeholder="발주번호로 검색"
+              placeholder="발주번호 또는 날짜로 검색"
               value={searchTerm}
               onChange={handleSearch}
               className={styles.searchInput}
@@ -139,75 +196,191 @@ export default function OrderingHistory({ branchId }) {
             className={styles.statusFilter}
           >
             <option value="all">전체 상태</option>
-            <option value="delivered">배송완료</option>
-            <option value="cancelled">취소</option>
+            <option value="PENDING">승인대기</option>
+            <option value="APPROVED">승인완료</option>
+            <option value="IN_TRANSIT">배송중</option>
+            <option value="DELIVERED">배송완료</option>
+            <option value="CANCELLED">취소</option>
           </select>
-          <div className={styles.dateRange}>
-            <input
-              type="date"
-              name="start"
-              value={dateRange.start}
-              onChange={handleDateChange}
-              className={styles.dateInput}
-              placeholder="시작일"
-            />
-            <span className={styles.dateSeparator}>~</span>
-            <input
-              type="date"
-              name="end"
-              value={dateRange.end}
-              onChange={handleDateChange}
-              className={styles.dateInput}
-              placeholder="종료일"
-            />
-          </div>
         </div>
       </div>
 
       <div className={styles.content}>
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead className={styles.tableHeader}>
-              <tr>
-                <th>발주번호</th>
-                <th>발주일</th>
-                <th>발주내용</th>
-                <th>총 금액</th>
-                <th>상태</th>
-                <th>예상배송일</th>
-                <th>실제배송일</th>
-                <th>담당자</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((order) => (
-                <tr key={order.id} onClick={() => handleOrderClick(order)} className={styles.tableRow}>
-                  <td className={styles.orderNumber}>{order.orderNumber}</td>
-                  <td>{order.orderDate}</td>
-                  <td>
-                    <div className={styles.orderItems}>
-                      {order.items.map((item, index) => (
-                        <div key={index} className={styles.orderItem}>
-                          {item.name} x{item.quantity}
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                  <td className={styles.amount}>{formatCurrency(order.totalAmount)}원</td>
-                  <td>
-                    <span className={`${styles.status} ${getStatusClass(order.status)}`}>
-                      {getStatusText(order.status)}
-                    </span>
-                  </td>
-                  <td>{order.expectedDelivery}</td>
-                  <td>{order.actualDelivery || '-'}</td>
-                  <td>{order.employeeName}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        {loading ? (
+          <div className={styles.loading}>로딩 중...</div>
+        ) : supplyRequests.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>발주 이력이 없습니다.</p>
+          </div>
+        ) : (
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead className={styles.tableHeader}>
+                <tr>
+                  <th>발주번호</th>
+                  <th>발주일</th>
+                  <th>신청자</th>
+                  <th>발주내용</th>
+                  <th>총 금액</th>
+                  <th>상태</th>
+                  <th>우선순위</th>
+                                     <th>예상배송일</th>
+                   <th>작업</th>
+                 </tr>
+               </thead>
+              <tbody>
+                {filteredRequests.map((request) => (
+                  <tr key={request.id} onClick={() => handleOrderClick(request)} className={styles.tableRow}>
+                                         <td className={styles.orderNumber}>
+                       <div>SR{request.id?.toString().padStart(6, '0')}</div>
+                       {request.notes && (
+                         <div className={styles.orderNotes}>
+                           {request.notes}
+                         </div>
+                       )}
+                     </td>
+                     <td>{formatDate(request.requestDate)}</td>
+                     <td className={styles.requester}>
+                       {request.requesterName || '알 수 없음'}
+                     </td>
+                    <td>
+                      <div className={styles.orderItems}>
+                        {getOrderItemsText(request.items)}
+                      </div>
+                    </td>
+                    <td className={styles.amount}>{formatCurrency(request.totalCost)}</td>
+                    <td>
+                      <span className={`${styles.status} ${getStatusClass(request.status)}`}>
+                        {getStatusText(request.status)}
+                      </span>
+                    </td>
+                    <td>
+                      <span className={styles.priority}>
+                        {getPriorityText(request.priority)}
+                      </span>
+                    </td>
+                                         <td>{formatDate(request.expectedDeliveryDate)}</td>
+                                          <td className={styles.actions}>
+                        
+                        <button 
+                          className={styles.deleteButton}
+                          disabled={request.status !== 'PENDING'}
+                          onClick={(e) => handleDeleteOrder(request.id, e)}
+                          title={request.status !== 'PENDING' ? `현재 상태: ${getStatusText(request.status)} - 승인대기 상태에서만 삭제 가능합니다` : '발주 삭제'}
+                        >
+                          삭제
+                        </button>
+                        <button 
+                          className={styles.detailButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOrderClick(request);
+                          }}
+                        >
+                          상세
+                        </button>
+                      </td>
+                   </tr>
+                 ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
+      
+      {/* 발주 상세 정보 모달 */}
+      {showDetailModal && selectedOrder && (
+        <div className={styles.modalOverlay} onClick={handleCloseModal}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>발주 상세 정보</h3>
+              <button onClick={handleCloseModal} className={styles.closeButton}>
+                ×
+              </button>
+            </div>
+            
+            <div className={styles.modalContent}>
+              <div className={styles.detailSection}>
+                <h4>기본 정보</h4>
+                <div className={styles.detailGrid}>
+                  <div className={styles.detailItem}>
+                    <label>발주번호:</label>
+                    <span>SR{selectedOrder.id?.toString().padStart(6, '0')}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>발주일:</label>
+                    <span>{formatDate(selectedOrder.requestDate)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>신청자:</label>
+                    <span>{selectedOrder.requesterName || '알 수 없음'}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>상태:</label>
+                    <span className={`${styles.status} ${getStatusClass(selectedOrder.status)}`}>
+                      {getStatusText(selectedOrder.status)}
+                    </span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>우선순위:</label>
+                    <span>{getPriorityText(selectedOrder.priority)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>예상배송일:</label>
+                    <span>{formatDate(selectedOrder.expectedDeliveryDate)}</span>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <label>총 금액:</label>
+                    <span className={styles.amount}>{formatCurrency(selectedOrder.totalCost)}</span>
+                  </div>
+                  {selectedOrder.notes && (
+                    <div className={styles.detailItem}>
+                      <label>비고:</label>
+                      <span>{selectedOrder.notes}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className={styles.detailSection}>
+                <h4>발주 원재료 목록</h4>
+                <div className={styles.itemsTable}>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>원재료명</th>
+                        <th>카테고리</th>
+                        <th>수량</th>
+                        <th>단위</th>
+                        <th>단가</th>
+                        <th>소계</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedOrder.items && selectedOrder.items.map((item) => (
+                        <tr key={item.id}>
+                          <td>{item.materialName || '알 수 없음'}</td>
+                          <td>{item.materialCategory || '-'}</td>
+                          <td>{item.requestedQuantity || 0}</td>
+                          <td>{item.unit || '-'}</td>
+                          <td>{formatCurrency(item.costPerUnit)}</td>
+                          <td>{formatCurrency(item.totalCost)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+            
+            <div className={styles.modalFooter}>
+              <button onClick={handleCloseModal} className={styles.closeButton}>
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

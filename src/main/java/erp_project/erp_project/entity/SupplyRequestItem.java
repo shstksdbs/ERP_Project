@@ -21,9 +21,8 @@ public class SupplyRequestItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "supply_request_id", nullable = false)
-    private SupplyRequest supplyRequest;
+    @Column(name = "supply_request_id", nullable = false)
+    private Long supplyRequestId;
     
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "material_id", nullable = false)

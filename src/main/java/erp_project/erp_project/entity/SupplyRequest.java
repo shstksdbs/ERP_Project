@@ -24,15 +24,20 @@ public class SupplyRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "requesting_branch_id", nullable = false)
-    private Branches requestingBranch;
+    @Column(name = "requesting_branch_id", nullable = false)
+    private Long requestingBranchId;
+    
+    @Column(name = "requester_id")
+    private Long requesterId;
+    
+    @Column(name = "requester_name", length = 100)
+    private String requesterName;
     
     @Column(name = "request_date", nullable = false)
     private LocalDateTime requestDate;
     
     @Column(name = "expected_delivery_date")
-    private LocalDate expectedDeliveryDate;
+    private String expectedDeliveryDate;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
@@ -48,14 +53,16 @@ public class SupplyRequest {
     @Column(name = "notes", columnDefinition = "TEXT")
     private String notes;
     
-    @OneToMany(mappedBy = "supplyRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SupplyRequestItem> items = new ArrayList<>();
-    
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
     
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    // totalCost setter 메서드 추가
+    public void setTotalCost(BigDecimal totalCost) {
+        this.totalCost = totalCost;
+    }
     
     @PrePersist
     protected void onCreate() {

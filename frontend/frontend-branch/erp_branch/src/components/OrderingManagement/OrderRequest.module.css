@@ -15,13 +15,14 @@
 }
 
 .content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 32px;
 }
 
-.productSection,
-.orderSection {
+.materialSection,
+.orderSection,
+.historySection {
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
@@ -45,6 +46,7 @@
 .filters {
   display: flex;
   gap: 12px;
+ 
 }
 
 .searchContainer {
@@ -83,6 +85,15 @@
   font-size: 14px;
   background: white;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .categoryFilter:focus {
@@ -91,86 +102,110 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
-.productGrid {
+.loading {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.materialGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
   max-height: 500px;
   overflow-y: auto;
 }
 
-.productCard {
+.materialCard {
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   padding: 16px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: box-shadow 0.2s;
+  background: white;
+  transition: all 0.2s ease;
 }
 
-.productCard:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.materialCard:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.productInfo {
-  flex: 1;
+.materialInfo {
+  margin-bottom: 16px;
 }
 
-.productName {
-  font-size: 16px;
-  font-weight: 500;
+.materialName {
+  font-size: 18px;
+  font-weight: 600;
   color: #1f2937;
-  margin: 0 0 4px 0;
+  margin: 0 0 8px 0;
 }
 
-.productCategory {
+.materialCategory {
   display: inline-block;
-  padding: 2px 6px;
   background: #f3f4f6;
+  color: #374151;
+  padding: 4px 8px;
   border-radius: 4px;
   font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
 }
 
 .stockInfo {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.costInfo {
+  margin-bottom: 12px;
+}
+
+.cost {
+  font-size: 16px;
+  font-weight: 600;
+  color: #059669;
+}
+
+.unit {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.supplierInfo {
   font-size: 12px;
   color: #6b7280;
   margin-bottom: 8px;
 }
 
-.priceInfo {
-  display: flex;
-  align-items: baseline;
-  gap: 4px;
-}
-
-.price {
-  font-weight: 500;
-  color: #059669;
-  font-size: 14px;
-}
-
-.unit {
+.lowStockWarning {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 8px;
+  border-radius: 4px;
   font-size: 12px;
-  color: #6b7280;
+  font-weight: 500;
+  text-align: center;
 }
 
 .addButton {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
+  width: 100%;
   background: #3b82f6;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 12px;
+  padding: 12px;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
 }
 
 .addButton:hover {
@@ -178,31 +213,24 @@
 }
 
 .addIcon {
-  width: 12px;
-  height: 12px;
+  width: 16px;
+  height: 16px;
 }
 
 .orderList {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.emptyOrder {
-  text-align: center;
-  padding: 40px 20px;
-  color: #6b7280;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .orderItem {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid #f3f4f6;
-}
-
-.orderItem:last-child {
-  border-bottom: none;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
 }
 
 .orderItemInfo {
@@ -210,7 +238,7 @@
 }
 
 .orderItemName {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
   color: #1f2937;
   margin: 0 0 4px 0;
@@ -229,113 +257,324 @@
 }
 
 .quantityButton {
-  width: 24px;
-  height: 24px;
-  background: #f3f4f6;
-  border: none;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  background: white;
   border-radius: 4px;
-  font-size: 14px;
   cursor: pointer;
-  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 500;
+  color: #374151;
 }
 
 .quantityButton:hover {
-  background: #e5e7eb;
+  background: #f3f4f6;
 }
 
 .quantity {
+  font-size: 16px;
   font-weight: 500;
   color: #1f2937;
-  min-width: 20px;
+  min-width: 40px;
   text-align: center;
 }
 
-.orderItemPrice {
+.quantityInput {
+  width: 60px;
+  height: 32px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 14px;
   font-weight: 500;
+  color: #1f2937;
+  background: white;
+}
+
+.quantityInput:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.orderItemCost {
+  font-size: 16px;
+  font-weight: 600;
   color: #059669;
-  min-width: 80px;
+  min-width: 100px;
   text-align: right;
+}
+
+.removeButton {
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-left: 12px;
+}
+
+.removeButton:hover {
+  background: #c82333;
 }
 
 .orderTotal {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  padding: 16px;
   border-top: 2px solid #e5e7eb;
   margin-top: 16px;
+  background: #f9fafb;
+  border-radius: 0 0 6px 6px;
 }
 
 .totalLabel {
+  font-size: 16px;
   font-weight: 500;
   color: #1f2937;
-  font-size: 16px;
 }
 
 .totalAmount {
+  font-size: 20px;
   font-weight: 600;
   color: #059669;
-  font-size: 18px;
+}
+
+.emptyOrder,
+.emptyHistory {
+  text-align: center;
+  padding: 40px;
+  color: #6b7280;
 }
 
 .submitButton {
-  padding: 8px 16px;
-  background: #10b981;
+  background: #059669;
   color: white;
   border: none;
   border-radius: 6px;
+  padding: 12px 24px;
   font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .submitButton:hover {
-  background: #059669;
+  background: #047857;
+}
+
+.submitButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 발주 신청 폼 스타일 */
+.orderFormOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.orderForm {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.orderForm h3 {
+  margin: 0 0 24px 0;
+  font-size: 20px;
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.formGroup {
+  margin-bottom: 20px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #374151;
+}
+
+
+.formGroup input,
+.formGroup select,
+.formGroup textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+}
+
+.formGroup input:focus,
+.formGroup select:focus,
+.formGroup textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.formGroup select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.disabledInput {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.formButtons {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+.cancelButton {
+  background: #6b7280;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #4b5563;
+}
+
+.cancelButton:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+/* 발주 요청 히스토리 스타일 */
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.historyItem {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.historyHeader {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.requestDate {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.status,
+.priority {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+  text-transform: uppercase;
+}
+
+.historyDetails {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #374151;
+}
+
+.historyNotes {
+  font-size: 14px;
+  color: #6b7280;
+  font-style: italic;
+  padding: 8px;
+  background: #f3f4f6;
+  border-radius: 4px;
 }
 
 /* 반응형 디자인 */
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .content {
     grid-template-columns: 1fr;
     gap: 24px;
   }
-}
-
-@media (max-width: 768px) {
-  .container {
-    padding: 0 16px;
+  
+  .materialGrid {
+    grid-template-columns: 1fr;
   }
-
-  .sectionHeader {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
+  
   .filters {
     flex-direction: column;
+    gap: 8px;
   }
-
+  
   .searchInput {
     width: 100%;
   }
-
-  .productGrid {
-    grid-template-columns: 1fr;
+  
+  .orderForm {
+    width: 95%;
+    margin: 20px;
   }
-
-  .orderItem {
+  
+  .formButtons {
     flex-direction: column;
-    align-items: stretch;
+  }
+  
+  .historyHeader {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
   }
-
-  .orderItemQuantity {
-    margin: 0;
-    justify-content: center;
-  }
-
-  .orderItemPrice {
-    text-align: center;
+  
+  .historyDetails {
+    flex-direction: column;
+    gap: 8px;
   }
 }

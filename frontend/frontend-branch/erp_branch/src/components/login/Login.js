@@ -118,6 +118,7 @@ export default function Login() {
         
         // 로그인 성공 - localStorage에 직접 저장
         const loginData = {
+          userId: data.userId,  // 사용자 ID 추가
           username: formData.username,
           branchId: formData.branchId,
           branchName: selectedBranch ? selectedBranch.branchName : '',
