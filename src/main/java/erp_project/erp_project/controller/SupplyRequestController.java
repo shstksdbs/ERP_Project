@@ -66,6 +66,8 @@ public class SupplyRequestController {
                                 .notes(request.getNotes())
                                 .createdAt(request.getCreatedAt())
                                 .updatedAt(request.getUpdatedAt())
+                                .processedBy(request.getProcessedBy())
+                                .processedAt(request.getProcessedAt())
                                 .items(items.stream().map(item -> SupplyRequestItemResponse.builder()
                                         .id(item.getId())
                                         .materialId(item.getMaterial().getId())
@@ -238,6 +240,8 @@ public class SupplyRequestController {
                     .notes(supplyRequest.getNotes())
                     .createdAt(supplyRequest.getCreatedAt())
                     .updatedAt(supplyRequest.getUpdatedAt())
+                    .processedBy(supplyRequest.getProcessedBy())
+                    .processedAt(supplyRequest.getProcessedAt())
                     .items(items.stream().map(item -> SupplyRequestItemResponse.builder()
                             .id(item.getId())
                             .materialId(item.getMaterial().getId())
@@ -274,6 +278,17 @@ public class SupplyRequestController {
             
             SupplyRequest supplyRequest = requestOpt.get();
             supplyRequest.setStatus(SupplyRequest.SupplyRequestStatus.valueOf(request.getStatus()));
+            
+            // 처리자 정보와 처리 시간이 있으면 저장
+            if (request.getProcessedBy() != null) {
+                if (request.getProcessedAt() != null) {
+                    supplyRequest.setProcessedBy(request.getProcessedBy());
+                    supplyRequest.setProcessedAt(request.getProcessedAt());
+                } else {
+                    supplyRequest.setProcessedInfo(request.getProcessedBy());
+                }
+            }
+            
             SupplyRequest updatedRequest = supplyRequestRepository.save(supplyRequest);
             
             return ResponseEntity.ok(updatedRequest);
@@ -288,7 +303,9 @@ public class SupplyRequestController {
      * PATCH /api/supply-requests/{id}/cancel
      */
     @PatchMapping("/{id}/cancel")
-    public ResponseEntity<SupplyRequest> cancelSupplyRequest(@PathVariable Long id) {
+    public ResponseEntity<SupplyRequest> cancelSupplyRequest(
+            @PathVariable Long id,
+            @RequestBody(required = false) StatusUpdateRequest request) {
         try {
             Optional<SupplyRequest> requestOpt = supplyRequestRepository.findById(id);
             if (requestOpt.isEmpty()) {
@@ -297,6 +314,17 @@ public class SupplyRequestController {
             
             SupplyRequest supplyRequest = requestOpt.get();
             supplyRequest.setStatus(SupplyRequest.SupplyRequestStatus.CANCELLED);
+            
+            // 처리자 정보와 처리 시간이 있으면 저장
+            if (request != null && request.getProcessedBy() != null) {
+                if (request.getProcessedAt() != null) {
+                    supplyRequest.setProcessedBy(request.getProcessedBy());
+                    supplyRequest.setProcessedAt(request.getProcessedAt());
+                } else {
+                    supplyRequest.setProcessedInfo(request.getProcessedBy());
+                }
+            }
+            
             SupplyRequest cancelledRequest = supplyRequestRepository.save(supplyRequest);
             
             return ResponseEntity.ok(cancelledRequest);
@@ -361,9 +389,17 @@ public class SupplyRequestController {
     
     public static class StatusUpdateRequest {
         private String status;
+        private String processedBy; // 처리자명
+        private LocalDateTime processedAt; // 처리 시간
         
         public String getStatus() { return status; }
         public void setStatus(String status) { this.status = status; }
+        
+        public String getProcessedBy() { return processedBy; }
+        public void setProcessedBy(String processedBy) { this.processedBy = processedBy; }
+        
+        public LocalDateTime getProcessedAt() { return processedAt; }
+        public void setProcessedAt(LocalDateTime processedAt) { this.processedAt = processedAt; }
     }
     
     // 발주 상세 조회 응답 DTO
@@ -380,6 +416,8 @@ public class SupplyRequestController {
         private String notes;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private String processedBy;
+        private LocalDateTime processedAt;
         private List<SupplyRequestItemResponse> items;
         
         // Builder 패턴
@@ -450,6 +488,16 @@ public class SupplyRequestController {
                 return this;
             }
             
+            public SupplyRequestDetailResponseBuilder processedBy(String processedBy) {
+                response.processedBy = processedBy;
+                return this;
+            }
+            
+            public SupplyRequestDetailResponseBuilder processedAt(LocalDateTime processedAt) {
+                response.processedAt = processedAt;
+                return this;
+            }
+            
             public SupplyRequestDetailResponseBuilder items(List<SupplyRequestItemResponse> items) {
                 response.items = items;
                 return this;
@@ -473,6 +521,8 @@ public class SupplyRequestController {
         public String getNotes() { return notes; }
         public LocalDateTime getCreatedAt() { return createdAt; }
         public LocalDateTime getUpdatedAt() { return updatedAt; }
+        public String getProcessedBy() { return processedBy; }
+        public LocalDateTime getProcessedAt() { return processedAt; }
         public List<SupplyRequestItemResponse> getItems() { return items; }
     }
     
@@ -490,6 +540,8 @@ public class SupplyRequestController {
         private String notes;
         private LocalDateTime createdAt;
         private LocalDateTime updatedAt;
+        private String processedBy;
+        private LocalDateTime processedAt;
         private List<SupplyRequestItemResponse> items;
         
         // Builder 패턴
@@ -557,6 +609,16 @@ public class SupplyRequestController {
             
             public SupplyRequestSummaryResponseBuilder updatedAt(LocalDateTime updatedAt) {
                 response.updatedAt = updatedAt;
+                return this;
+            }
+            
+            public SupplyRequestSummaryResponseBuilder processedBy(String processedBy) {
+                response.processedBy = processedBy;
+                return this;
+            }
+            
+            public SupplyRequestSummaryResponseBuilder processedAt(LocalDateTime processedAt) {
+                response.processedAt = processedAt;
                 return this;
             }
             

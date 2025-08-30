@@ -59,6 +59,27 @@ public class SupplyRequest {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "processed_by", length = 100)
+    private String processedBy;
+    
+    @Column(name = "processed_at")
+    private LocalDateTime processedAt;
+    
+    // 처리자 정보 설정 메서드 추가
+    public void setProcessedInfo(String processedBy) {
+        this.processedBy = processedBy;
+        this.processedAt = LocalDateTime.now();
+    }
+    
+    // 개별 setter 메서드 추가
+    public void setProcessedBy(String processedBy) {
+        this.processedBy = processedBy;
+    }
+    
+    public void setProcessedAt(LocalDateTime processedAt) {
+        this.processedAt = processedAt;
+    }
+    
     // totalCost setter 메서드 추가
     public void setTotalCost(BigDecimal totalCost) {
         this.totalCost = totalCost;
