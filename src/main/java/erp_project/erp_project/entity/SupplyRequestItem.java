@@ -24,6 +24,11 @@ public class SupplyRequestItem {
     @Column(name = "supply_request_id", nullable = false)
     private Long supplyRequestId;
     
+    // supplyRequestId setter 메서드 추가
+    public void setSupplyRequestId(Long supplyRequestId) {
+        this.supplyRequestId = supplyRequestId;
+    }
+    
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "material_id", nullable = false)
     private Material material;

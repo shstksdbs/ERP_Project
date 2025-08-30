@@ -57,4 +57,8 @@ public interface RegularOrderRepository extends JpaRepository<RegularOrder, Long
     // 정기발주명으로 검색
     @Query("SELECT ro FROM RegularOrder ro WHERE ro.branchId = :branchId AND ro.orderName LIKE %:keyword% ORDER BY ro.createdAt DESC")
     List<RegularOrder> findByOrderNameContaining(@Param("branchId") Long branchId, @Param("keyword") String keyword);
+    
+    // 실행할 정기발주 조회 (활성이고 다음 발주일이 오늘 이전인 것들)
+    @Query("SELECT ro FROM RegularOrder ro WHERE ro.isActive = true AND ro.nextOrderDate <= :date")
+    List<RegularOrder> findByIsActiveTrueAndNextOrderDateLessThanEqual(@Param("date") LocalDate date);
 }

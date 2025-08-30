@@ -6,7 +6,7 @@ import plusIcon from '../../assets/plus_icon.png';
 import { regularOrderService } from '../../services/regularOrderService';
 import { materialService } from '../../services/materialService';
 
-export default function RegularOrdering({ branchId }) {
+export default function RegularOrdering({ branchId, onDataChange }) {
   const [regularOrders, setRegularOrders] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('all');
@@ -153,19 +153,19 @@ export default function RegularOrdering({ branchId }) {
   const handleEditRegularOrder = async (order) => {
     try {
       console.log('📝 수정 모달 열기 - 원본 order:', order);
-      
+
       // 서버에서 최신 데이터를 새로 가져와서 깨끗하게 시작
       const latestOrder = await regularOrderService.getRegularOrderById(order.id);
       console.log('📡 서버에서 가져온 최신 데이터:', latestOrder);
-      
+
       const mappedItems = latestOrder.items ? latestOrder.items.map(item => ({
         ...item,
         id: item.id || `existing_${item.materialId}_${Date.now()}`, // 기존 아이템에 더 안정적인 ID 부여
         isExisting: true // 기존 아이템 표시
       })) : [];
-      
+
       console.log('🔄 매핑된 아이템들:', mappedItems);
-      
+
       setEditingOrder({
         id: latestOrder.id,
         orderName: latestOrder.orderName,
@@ -176,7 +176,7 @@ export default function RegularOrdering({ branchId }) {
         isActive: latestOrder.isActive,
         items: mappedItems
       });
-      
+
       // 수정 모달용 아이템 입력 필드도 초기화
       setEditingItem({
         materialId: null,
@@ -185,7 +185,7 @@ export default function RegularOrdering({ branchId }) {
         unit: '',
         costPerUnit: ''
       });
-      
+
       setShowEditModal(true);
     } catch (error) {
       console.error('정기발주 데이터 로드 오류:', error);
@@ -222,7 +222,7 @@ export default function RegularOrdering({ branchId }) {
       unit: '',
       costPerUnit: ''
     });
-    
+
     // 카테고리 필터도 초기화 (전체 카테고리로)
     setSelectedCategory('all');
   };
@@ -317,8 +317,29 @@ export default function RegularOrdering({ branchId }) {
       // 정기발주 생성 API 호출
       const createdOrder = await regularOrderService.createRegularOrder(orderData);
 
-      // 성공 시 목록에 추가
-      setRegularOrders(prev => [createdOrder, ...prev]);
+      // 성공 시 목록에 추가 (아이템 정보 포함)
+      const orderWithItems = {
+        ...createdOrder,
+        items: newRegularOrder.items.map(item => ({
+          ...item,
+          materialId: item.materialId,
+          materialName: item.materialName,
+          requestedQuantity: item.requestedQuantity,
+          unit: item.unit,
+          costPerUnit: item.costPerUnit
+        }))
+      };
+
+      setRegularOrders(prev => [orderWithItems, ...prev]);
+
+      // OrderingHistory 컴포넌트에 데이터 변경 알림
+      if (onDataChange) {
+        onDataChange();
+      }
+
+      // 등록 후 즉시 데이터 새로고침
+      await loadRegularOrders();
+
       handleCloseModal();
       alert('정기발주가 추가되었습니다.');
     } catch (error) {
@@ -346,10 +367,45 @@ export default function RegularOrdering({ branchId }) {
       try {
         await regularOrderService.deleteRegularOrder(id);
         setRegularOrders(prev => prev.filter(order => order.id !== id));
+
+        // OrderingHistory 컴포넌트에 데이터 변경 알림
+        if (onDataChange) {
+          onDataChange();
+        }
+
         alert('정기발주가 삭제되었습니다.');
       } catch (error) {
         console.error('정기발주 삭제 오류:', error);
         alert('정기발주 삭제에 실패했습니다.');
+      }
+    }
+  };
+
+  // 정기발주 즉시 실행
+  const handleExecuteRegularOrder = async (id) => {
+    if (window.confirm('이 정기발주를 즉시 실행하시겠습니까?')) {
+      try {
+        const response = await fetch(`http://localhost:8080/api/regular-order-executions/execute/${id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (response.ok) {
+          alert('정기발주가 성공적으로 실행되었습니다.');
+          // 실행 후 데이터 새로고침
+          await loadRegularOrders();
+          if (onDataChange) {
+            onDataChange();
+          }
+        } else {
+          const errorData = await response.json();
+          alert('정기발주 실행에 실패했습니다: ' + (errorData.message || '알 수 없는 오류'));
+        }
+      } catch (error) {
+        console.error('정기발주 실행 오류:', error);
+        alert('정기발주 실행에 실패했습니다.');
       }
     }
   };
@@ -360,7 +416,7 @@ export default function RegularOrdering({ branchId }) {
       console.log('수정할 정기발주 ID:', id);
       console.log('현재 editingOrder:', editingOrder);
       console.log('현재 editingOrder.items:', editingOrder.items);
-      
+
       // 모든 아이템을 전송 (백엔드에서 기존 아이템을 삭제하고 새로 저장)
       // 기존 아이템도 포함하여 전송해야 삭제 처리가 가능함
       const items = editingOrder.items.map(item => ({
@@ -370,7 +426,7 @@ export default function RegularOrdering({ branchId }) {
         unit: item.unit,
         costPerUnit: item.costPerUnit
       }));
-      
+
       console.log('전송할 items:', items);
       console.log('전송할 items 개수:', items.length);
 
@@ -393,14 +449,32 @@ export default function RegularOrdering({ branchId }) {
       console.log('✅ API 응답:', updatedOrder);
 
       // 성공 시 목록 업데이트 (아이템 정보 포함)
+      const updatedOrderWithItems = {
+        ...updatedOrder,
+        items: editingOrder.items.map(item => ({
+          ...item,
+          materialId: item.materialId,
+          materialName: item.materialName,
+          requestedQuantity: item.requestedQuantity,
+          unit: item.unit,
+          costPerUnit: item.costPerUnit
+        }))
+      };
+
       setRegularOrders(prev =>
         prev.map(order =>
-          order.id === id ? {
-            ...updatedOrder,
-            items: editingOrder.items // 현재 수정된 아이템 정보 사용
-          } : order
+          order.id === id ? updatedOrderWithItems : order
         )
       );
+
+      // OrderingHistory 컴포넌트에 데이터 변경 알림
+      if (onDataChange) {
+        onDataChange();
+      }
+
+      // 수정 후 즉시 데이터 새로고침
+      await loadRegularOrders();
+
       handleCloseEditModal();
       alert('정기발주가 수정되었습니다.');
     } catch (error) {
@@ -454,7 +528,7 @@ export default function RegularOrdering({ branchId }) {
     console.log('🔍 handleRemoveExistingItem 호출됨');
     console.log('삭제할 아이템 ID:', itemId);
     console.log('삭제 전 editingOrder.items:', editingOrder.items);
-    
+
     setEditingOrder(prev => {
       const filteredItems = prev.items.filter(item => item.id !== itemId);
       console.log('삭제 후 filteredItems:', filteredItems);
@@ -595,15 +669,34 @@ export default function RegularOrdering({ branchId }) {
                   <td>{order.nextOrderDate}</td>
                   <td>{order.lastOrderDate || '-'}</td>
                   <td>{order.createdBy}</td>
-                  <td className={styles.amount}>{formatCurrency(order.totalAmount || 0)}원</td>
+                  <td className={styles.amount}>
+                    {order.items && order.items.length > 0 ? (
+                      formatCurrency(
+                        order.items.reduce((total, item) => {
+                          const itemTotal = (item.requestedQuantity || 0) * (item.costPerUnit || 0);
+                          return total + itemTotal;
+                        }, 0)
+                      )
+                    ) : (
+                      '0원'
+                    )}
+                  </td>
                   <td className={styles.actions}>
                     <div className={styles['action-buttons']}>
+                    <button
+                        className={`btn btn-success btn-small ${styles['btn-small']}`}
+                        onClick={() => handleExecuteRegularOrder(order.id)}
+                        title="정기발주 즉시 실행"
+                      >
+                        즉시 발주
+                      </button>
                       <button
                         className={`btn btn-primary btn-small ${styles['btn-small']}`}
                         onClick={() => handleEditRegularOrder(order)}
                       >
                         수정
                       </button>
+                      
                       <button
                         className={`btn btn-small btn-danger ${styles['btn-small']}`}
                         onClick={() => handleDeleteRegularOrder(order.id)}
@@ -762,16 +855,16 @@ export default function RegularOrdering({ branchId }) {
                       readOnly
                     />
                   </div>
-                  
+
                 </div>
                 <div className={styles.addItemButton}>
-                    <button
-                      className={`btn btn-primary ${styles['add-button']}`}
-                      onClick={handleAddItem}
-                    >
-                      아이템 추가
-                    </button>
-                  </div>
+                  <button
+                    className={`btn btn-primary ${styles['add-button']}`}
+                    onClick={handleAddItem}
+                  >
+                    아이템 추가
+                  </button>
+                </div>
 
                 {/* 추가된 아이템 목록 */}
                 {newRegularOrder.items.length > 0 && (
@@ -906,7 +999,7 @@ export default function RegularOrdering({ branchId }) {
 
               <div className={styles.detailSection}>
                 <h4>발주 아이템</h4>
-                
+
                 {/* 새로운 아이템 추가 폼 */}
                 <div className={styles.detailGrid}>
                   <div className={styles.detailItem}>
@@ -983,7 +1076,7 @@ export default function RegularOrdering({ branchId }) {
                     />
                   </div>
                 </div>
-                
+
                 <div className={styles.addItemButton}>
                   <button
                     className={`btn btn-primary ${styles['add-button']}`}
@@ -1009,8 +1102,8 @@ export default function RegularOrdering({ branchId }) {
                       </thead>
                       <tbody>
                         {editingOrder.items.map((item, index) => (
-                          <tr key={item.id} style={{ 
-                            backgroundColor: item.isExisting ? '#f8f9fa' : '#e8f5e8' 
+                          <tr key={item.id} style={{
+                            backgroundColor: item.isExisting ? '#f8f9fa' : '#e8f5e8'
                           }}>
                             <td>
                               {item.materialName}

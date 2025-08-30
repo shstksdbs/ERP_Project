@@ -3,6 +3,7 @@ import styles from './OrderingHistory.module.css';
 import searchIcon from '../../assets/search_icon.png';
 import packageInIcon from '../../assets/packageIn_icon.png';
 import supplyRequestService from '../../services/supplyRequestService';
+import { regularOrderService } from '../../services/regularOrderService';
 
 export default function OrderingHistory({ branchId }) {
   const [supplyRequests, setSupplyRequests] = useState([]);
@@ -11,13 +12,46 @@ export default function OrderingHistory({ branchId }) {
   const [loading, setLoading] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [regularOrders, setRegularOrders] = useState([]);
+  const [activeTab, setActiveTab] = useState('supply-history');
 
   // 컴포넌트 마운트 시 데이터 로드
   useEffect(() => {
     if (branchId) {
       loadSupplyRequests();
+      loadRegularOrders();
     }
   }, [branchId]);
+
+  // 정기발주 데이터 주기적 새로고침 (5초마다)
+  useEffect(() => {
+    if (branchId && activeTab === 'regular-orders') {
+      const interval = setInterval(() => {
+        refreshRegularOrders();
+      }, 5000); // 5초마다 새로고침
+
+      return () => clearInterval(interval);
+    }
+  }, [branchId, activeTab]);
+
+  // 페이지 포커스 시 정기발주 데이터 새로고침
+  useEffect(() => {
+    const handleFocus = () => {
+      if (activeTab === 'regular-orders') {
+        refreshRegularOrders();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [activeTab]);
+
+  // 탭 변경 시 즉시 데이터 새로고침
+  useEffect(() => {
+    if (activeTab === 'regular-orders' && branchId) {
+      refreshRegularOrders();
+    }
+  }, [activeTab, branchId]);
 
   // 발주 요청 목록 로드
   const loadSupplyRequests = async () => {
@@ -33,6 +67,36 @@ export default function OrderingHistory({ branchId }) {
     }
   };
 
+  // 정기발주 목록 로드
+  const loadRegularOrders = async () => {
+    try {
+      const data = await regularOrderService.getAllRegularOrders(branchId);
+      console.log('📊 로드된 정기발주 데이터:', data);
+      
+      // 각 정기발주에 대해 아이템 정보가 있는지 확인
+      const ordersWithItems = data.map(order => {
+        if (order.items && order.items.length > 0) {
+          console.log(`✅ 정기발주 ${order.orderName}의 아이템:`, order.items);
+        } else {
+          console.log(`⚠️ 정기발주 ${order.orderName}의 아이템 없음`);
+        }
+        return order;
+      });
+      
+      setRegularOrders(ordersWithItems);
+    } catch (error) {
+      console.error('정기발주 목록 로드 실패:', error);
+      setRegularOrders([]);
+    }
+  };
+
+  // 정기발주 데이터 새로고침
+  const refreshRegularOrders = async () => {
+    if (branchId) {
+      await loadRegularOrders();
+    }
+  };
+
   // 검색 및 필터링
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -40,6 +104,14 @@ export default function OrderingHistory({ branchId }) {
 
   const handleStatusFilter = (e) => {
     setSelectedStatus(e.target.value);
+  };
+
+  // 탭 변경 시 정기발주 데이터 새로고침
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    if (tabName === 'regular-orders') {
+      refreshRegularOrders();
+    }
   };
 
   // 발주 상세 정보 클릭
@@ -154,6 +226,48 @@ export default function OrderingHistory({ branchId }) {
     }
   };
 
+  // 우선순위별 CSS 클래스 반환
+  const getPriorityClass = (priority) => {
+    switch (priority) {
+      case 'LOW':
+        return styles.priorityLow;
+      case 'NORMAL':
+        return styles.priorityNormal;
+      case 'HIGH':
+        return styles.priorityHigh;
+      case 'URGENT':
+        return styles.priorityUrgent;
+      default:
+        return styles.priorityNormal;
+    }
+  };
+
+  // 정기발주 상태 텍스트 반환
+  const getRegularOrderStatusText = (isActive) => {
+    return isActive ? '활성' : '비활성';
+  };
+
+  // 정기발주 상태별 CSS 클래스 반환
+  const getRegularOrderStatusClass = (isActive) => {
+    return isActive ? styles.statusApproved : styles.statusCancelled;
+  };
+
+  // 정기발주 주기 텍스트 반환
+  const getCycleText = (cycleType, cycleValue) => {
+    switch (cycleType) {
+      case 'DAILY':
+        return '매일';
+      case 'WEEKLY':
+        return '매주';
+      case 'MONTHLY':
+        return `매${cycleValue}개월`;
+      case 'YEARLY':
+        return `매${cycleValue}년`;
+      default:
+        return cycleType;
+    }
+  };
+
   // 발주 상품 목록을 문자열로 변환
   const getOrderItemsText = (items) => {
     if (!items || items.length === 0) return '상품 정보 없음';
@@ -175,116 +289,242 @@ export default function OrderingHistory({ branchId }) {
     return matchesSearch && matchesStatus;
   });
 
+  // 필터링된 정기발주 목록
+  const filteredRegularOrders = regularOrders.filter(order => {
+    const matchesSearch = order.orderName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         order.description?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = selectedStatus === 'all' || 
+                         (selectedStatus === 'active' && order.isActive) ||
+                         (selectedStatus === 'inactive' && !order.isActive);
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <h1 className={styles.title}>발주이력</h1>
-        <div className={styles.headerActions}>
-          <div className={styles.searchContainer}>
-            <img src={searchIcon} alt="검색" className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="발주번호 또는 날짜로 검색"
-              value={searchTerm}
-              onChange={handleSearch}
-              className={styles.searchInput}
-            />
-          </div>
-          <select
-            value={selectedStatus}
-            onChange={handleStatusFilter}
-            className={styles.statusFilter}
-          >
-            <option value="all">전체 상태</option>
-            <option value="PENDING">승인대기</option>
-            <option value="APPROVED">승인완료</option>
-            <option value="IN_TRANSIT">배송중</option>
-            <option value="DELIVERED">배송완료</option>
-            <option value="CANCELLED">취소</option>
-          </select>
-        </div>
+        
+                 {/* 탭 버튼들 */}
+         {/* <div className={styles.tabContainer}>
+           <button
+             className={`${styles.tabButton} ${activeTab === 'supply-history' ? styles.activeTab : ''}`}
+             onClick={() => handleTabChange('supply-history')}
+           >
+             일반발주 이력
+           </button>
+           <button
+             className={`${styles.tabButton} ${activeTab === 'regular-orders' ? styles.activeTab : ''}`}
+             onClick={() => handleTabChange('regular-orders')}
+           >
+             정기발주 이력
+           </button>
+         </div> */}
+
+                 <div className={styles.headerActions}>
+           <div className={styles.searchContainer}>
+             <img src={searchIcon} alt="검색" className={styles.searchIcon} />
+             <input
+               type="text"
+               placeholder={activeTab === 'supply-history' ? "발주번호 또는 날짜로 검색" : "정기발주명 또는 설명으로 검색"}
+               value={searchTerm}
+               onChange={handleSearch}
+               className={styles.searchInput}
+             />
+           </div>
+           <select
+             value={selectedStatus}
+             onChange={handleStatusFilter}
+             className={styles.statusFilter}
+           >
+             {activeTab === 'supply-history' ? (
+               <>
+                 <option value="all">전체 상태</option>
+                 <option value="PENDING">승인대기</option>
+                 <option value="APPROVED">승인완료</option>
+                 <option value="IN_TRANSIT">배송중</option>
+                 <option value="DELIVERED">배송완료</option>
+                 <option value="CANCELLED">취소</option>
+               </>
+             ) : (
+               <>
+                 <option value="all">전체 상태</option>
+                 <option value="active">활성</option>
+                 <option value="inactive">비활성</option>
+               </>
+             )}
+           </select>
+           {activeTab === 'regular-orders' && (
+             <button
+               className={styles.refreshButton}
+               onClick={refreshRegularOrders}
+               title="정기발주 데이터 새로고침"
+             >
+               새로고침
+             </button>
+           )}
+         </div>
       </div>
 
       <div className={styles.content}>
-        {loading ? (
-          <div className={styles.loading}>로딩 중...</div>
-        ) : supplyRequests.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>발주 이력이 없습니다.</p>
-          </div>
-        ) : (
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead className={styles.tableHeader}>
-                <tr>
-                  <th>발주번호</th>
-                  <th>발주일</th>
-                  <th>신청자</th>
-                  <th>발주내용</th>
-                  <th>총 금액</th>
-                  <th>상태</th>
-                  <th>우선순위</th>
-                                     <th>예상배송일</th>
-                   <th>작업</th>
-                 </tr>
-               </thead>
-              <tbody>
-                {filteredRequests.map((request) => (
-                  <tr key={request.id} onClick={() => handleOrderClick(request)} className={styles.tableRow}>
-                                         <td className={styles.orderNumber}>
-                       <div>SR{request.id?.toString().padStart(6, '0')}</div>
-                       {request.notes && (
-                         <div className={styles.orderNotes}>
-                           {request.notes}
-                         </div>
-                       )}
-                     </td>
-                     <td>{formatDate(request.requestDate)}</td>
-                     <td className={styles.requester}>
-                       {request.requesterName || '알 수 없음'}
-                     </td>
-                    <td>
-                      <div className={styles.orderItems}>
-                        {getOrderItemsText(request.items)}
-                      </div>
-                    </td>
-                    <td className={styles.amount}>{formatCurrency(request.totalCost)}</td>
-                    <td>
-                      <span className={`${styles.status} ${getStatusClass(request.status)}`}>
-                        {getStatusText(request.status)}
-                      </span>
-                    </td>
-                    <td>
-                      <span className={styles.priority}>
-                        {getPriorityText(request.priority)}
-                      </span>
-                    </td>
-                                         <td>{formatDate(request.expectedDeliveryDate)}</td>
-                                          <td className={styles.actions}>
-                        
-                        <button 
-                          className={styles.deleteButton}
-                          disabled={request.status !== 'PENDING'}
-                          onClick={(e) => handleDeleteOrder(request.id, e)}
-                          title={request.status !== 'PENDING' ? `현재 상태: ${getStatusText(request.status)} - 승인대기 상태에서만 삭제 가능합니다` : '발주 삭제'}
-                        >
-                          삭제
-                        </button>
-                        <button 
-                          className={styles.detailButton}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOrderClick(request);
-                          }}
-                        >
-                          상세
-                        </button>
-                      </td>
-                   </tr>
-                 ))}
-              </tbody>
-            </table>
-          </div>
+        {activeTab === 'supply-history' && (
+          <>
+            {loading ? (
+              <div className={styles.loading}>로딩 중...</div>
+            ) : supplyRequests.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>발주 이력이 없습니다.</p>
+              </div>
+            ) : (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead className={styles.tableHeader}>
+                    <tr>
+                      <th>발주번호</th>
+                      <th>발주일</th>
+                      <th>신청자</th>
+                      <th>발주내용</th>
+                      <th>총 금액</th>
+                      <th>상태</th>
+                      <th>우선순위</th>
+                      <th>예상배송일</th>
+                      <th>작업</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRequests.map((request) => (
+                      <tr key={request.id} onClick={() => handleOrderClick(request)} className={styles.tableRow}>
+                        <td className={styles.orderNumber}>
+                          <div>SR{request.id?.toString().padStart(6, '0')}</div>
+                          {request.notes && (
+                            <div className={styles.orderNotes}>
+                              {request.notes}
+                            </div>
+                          )}
+                        </td>
+                        <td>{formatDate(request.requestDate)}</td>
+                        <td className={styles.requester}>
+                          {request.requesterName || '알 수 없음'}
+                        </td>
+                        <td>
+                          <div className={styles.orderItems}>
+                            {getOrderItemsText(request.items)}
+                          </div>
+                        </td>
+                        <td className={styles.amount}>{formatCurrency(request.totalCost)}</td>
+                        <td>
+                          <span className={`${styles.status} ${getStatusClass(request.status)}`}>
+                            {getStatusText(request.status)}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`${styles.priority} ${getPriorityClass(request.priority)}`}>
+                            {getPriorityText(request.priority)}
+                          </span>
+                        </td>
+                        <td>{formatDate(request.expectedDeliveryDate)}</td>
+                        <td className={styles.actions}>
+                          <button 
+                            className={styles.deleteButton}
+                            disabled={request.status !== 'PENDING'}
+                            onClick={(e) => handleDeleteOrder(request.id, e)}
+                            title={request.status !== 'PENDING' ? `현재 상태: ${getStatusText(request.status)} - 승인대기 상태에서만 삭제 가능합니다` : '발주 삭제'}
+                          >
+                            삭제
+                          </button>
+                          <button 
+                            className={styles.detailButton}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOrderClick(request);
+                            }}
+                          >
+                            상세
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
+        )}
+
+        {activeTab === 'regular-orders' && (
+          <>
+            {regularOrders.length === 0 ? (
+              <div className={styles.emptyState}>
+                <p>정기발주 이력이 없습니다.</p>
+              </div>
+            ) : (
+              <div className={styles.tableContainer}>
+                <table className={styles.table}>
+                  <thead className={styles.tableHeader}>
+                                         <tr>
+                       <th>정기발주명</th>
+                       <th>설명</th>
+                       <th>발주주기</th>
+                       <th>발주내용</th>
+                       <th>총 가격</th>
+                       <th>상태</th>
+                       <th>다음발주일</th>
+                       <th>등록자</th>
+                       <th>등록일</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRegularOrders.map((order) => (
+                      <tr key={order.id} className={styles.tableRow}>
+                        <td className={styles.orderNumber}>
+                          <div>{order.orderName}</div>
+                        </td>
+                        <td>{order.description || '-'}</td>
+                        <td>{getCycleText(order.cycleType, order.cycleValue)}</td>
+                                                 <td>
+                           <div className={styles.orderItems}>
+                             {order.items && order.items.length > 0 ? (
+                               order.items.map((item, index) => (
+                                 <div key={index} className={styles.orderItem}>
+                                   {item.materialName} x{item.requestedQuantity}{item.unit}
+                                   {item.costPerUnit && (
+                                     <span className={styles.itemCost}>
+                                       ({(item.requestedQuantity * item.costPerUnit).toLocaleString()}원)
+                                     </span>
+                                   )}
+                                 </div>
+                               ))
+                             ) : (
+                               <span className={styles.noItems}>발주내용 없음</span>
+                             )}
+                           </div>
+                         </td>
+                        <td>
+                          <span className={`${styles.status} ${getRegularOrderStatusClass(order.isActive)}`}>
+                            {getRegularOrderStatusText(order.isActive)}
+                          </span>
+                        </td>
+                                                 <td className={styles.amount}>
+                           {order.items && order.items.length > 0 ? (
+                             formatCurrency(
+                               order.items.reduce((total, item) => {
+                                 const itemTotal = (item.requestedQuantity || 0) * (item.costPerUnit || 0);
+                                 return total + itemTotal;
+                               }, 0)
+                             )
+                           ) : (
+                             '0원'
+                           )}
+                         </td>
+                         <td>{formatDate(order.nextOrderDate)}</td>
+                         <td>{order.createdBy || '-'}</td>
+                         <td>{formatDate(order.createdAt)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
       </div>
       
