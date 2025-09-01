@@ -58,6 +58,110 @@
   border-color: var(--gray-700);
 }
 
+.search-button {
+  padding: 10px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: background-color 0.2s;
+}
+
+.search-button:hover {
+  background-color: #2563eb;
+}
+
+.refresh-button {
+  padding: 10px 16px;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+  background-color: #059669;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error {
+  text-align: center;
+  padding: 60px 20px;
+  color: #ef4444;
+  font-size: 16px;
+}
+
+.error button {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background-color: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.error button:hover {
+  background-color: #dc2626;
+}
+
+.history-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.summary-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.summary-card h3 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.summary-number {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.item-category {
+  display: block;
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+}
+
 .filter-box {
   min-width: 150px;
 }
@@ -133,7 +237,7 @@
 
 .history-table th:nth-child(2),
 .history-table td:nth-child(2) {
-  width: 10%; /* 유형 */
+  width: 8%; /* 유형 */
 }
 
 .history-table th:nth-child(3),
@@ -153,17 +257,17 @@
 
 .history-table th:nth-child(6),
 .history-table td:nth-child(6) {
-  width: 20%; /* 사유 */
+  width: 10%; /* 사유 */
 }
 
 .history-table th:nth-child(7),
 .history-table td:nth-child(7) {
-  width: 12%; /* 담당자 */
+  width: 10%; /* 담당자 */
 }
 
 .history-table th:nth-child(8),
 .history-table td:nth-child(8) {
-  width: 13%; /* 일시 */
+  width: 20%; /* 일시 */
 }
 
 .history-table td {

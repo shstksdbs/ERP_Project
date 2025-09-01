@@ -372,7 +372,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               </ul>
             )}
           </li>
-          <li>
+          {/* <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('employees')}>
               <img src={usersIcon} alt="직원관리" className={styles['sidebar-icon']} />
               직원관리
@@ -383,7 +383,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 style={{ marginLeft: 'auto' }}
               />
             </button>
-            {/* 직원관리 하위 메뉴 */}
+
             {(activeTabs.includes('employees') || activeTabs.some(tab => isEmployeesSubmenu(tab))) && (
               <ul className={styles['submenu-ul']}>
                 <li>
@@ -415,7 +415,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 </li>
               </ul>
             )}
-          </li>
+          </li> 
+          */}
           <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('notice')}>
               <img src={noticeIcon} alt="공지사항" className={styles['sidebar-icon']} />

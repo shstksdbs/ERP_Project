@@ -200,7 +200,7 @@ export default function OrderingHistory({ branchId }) {
       case 'APPROVED':
         return styles.statusApproved;
       case 'IN_TRANSIT':
-        return styles.statusDelivered;
+        return styles.statusInTransit;
       case 'DELIVERED':
         return styles.statusDelivered;
       case 'CANCELLED':

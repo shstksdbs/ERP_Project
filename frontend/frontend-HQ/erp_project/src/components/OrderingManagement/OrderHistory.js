@@ -5,127 +5,146 @@ import historyIcon from '../../assets/history_icon.png';
 import plusIcon from '../../assets/plus_icon.png';
 import pencilIcon from '../../assets/pencil_icon.png';
 import downloadIcon from '../../assets/download_icon.png';
+import { supplyRequestAPI, branchAPI, materialAPI, userAPI } from '../../services/api';
 
 export default function OrderHistory() {
   const [activeTab, setActiveTab] = useState('order-history');
   const [orderHistory, setOrderHistory] = useState([]);
   const [branches, setBranches] = useState([]);
-  const [products, setProducts] = useState([]);
+  const [materials, setMaterials] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [selectedBranch, setSelectedBranch] = useState('all');
   const [selectedPeriod, setSelectedPeriod] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // 샘플 데이터
-  useEffect(() => {
-    // 지점 데이터
-    setBranches([
-      { id: 1, name: '강남점', region: '서울' },
-      { id: 2, name: '홍대점', region: '서울' },
-      { id: 3, name: '부산점', region: '부산' },
-      { id: 4, name: '대구점', region: '대구' },
-      { id: 5, name: '인천점', region: '인천' }
-    ]);
+  // 데이터 로딩 함수들
+  const loadBranches = async () => {
+    try {
+      const branchesData = await branchAPI.getAllBranches();
+      setBranches(branchesData);
+    } catch (error) {
+      console.error('지점 데이터 로딩 실패:', error);
+      setError('지점 데이터를 불러오는데 실패했습니다.');
+    }
+  };
 
-    // 상품 데이터
-    setProducts([
-      { id: 1, name: '아메리카노', category: '음료' },
-      { id: 2, name: '카페라떼', category: '음료' },
-      { id: 3, name: '카푸치노', category: '음료' },
-      { id: 4, name: '티라떼', category: '음료' },
-      { id: 5, name: '에스프레소', category: '음료' }
-    ]);
+  const loadMaterials = async () => {
+    try {
+      const materialsData = await materialAPI.getAllMaterials();
+      setMaterials(materialsData);
+    } catch (error) {
+      console.error('재료 데이터 로딩 실패:', error);
+      setError('재료 데이터를 불러오는데 실패했습니다.');
+    }
+  };
 
-    // 발주 이력 데이터
-    setOrderHistory([
-      {
-        id: 1,
-        orderNumber: 'ORD-2024-001',
-        branchId: 1,
-        branchName: '강남점',
-        orderDate: '2024-01-15',
-        deliveryDate: '2024-01-18',
-        status: 'delivered',
-        totalAmount: 250000,
-        totalItems: 15,
-        processor: '김관리',
-        processedDate: '2024-01-16',
-        items: [
-          { productId: 1, productName: '아메리카노', quantity: 50, unitPrice: 5000, totalPrice: 250000 },
-          { productId: 2, productName: '카페라떼', quantity: 30, unitPrice: 6000, totalPrice: 180000 }
-        ]
-      },
-      {
-        id: 2,
-        orderNumber: 'ORD-2024-002',
-        branchId: 2,
-        branchName: '홍대점',
-        orderDate: '2024-01-14',
-        deliveryDate: '2024-01-17',
-        status: 'delivered',
-        totalAmount: 180000,
-        totalItems: 12,
-        processor: '이처리',
-        processedDate: '2024-01-15',
-        items: [
-          { productId: 3, productName: '카푸치노', quantity: 40, unitPrice: 5500, totalPrice: 220000 },
-          { productId: 4, productName: '티라떼', quantity: 25, unitPrice: 6500, totalPrice: 162500 }
-        ]
-      },
-      {
-        id: 3,
-        orderNumber: 'ORD-2024-003',
-        branchId: 3,
-        branchName: '부산점',
-        orderDate: '2024-01-13',
-        deliveryDate: '2024-01-16',
-        status: 'delivered',
-        totalAmount: 320000,
-        totalItems: 20,
-        processor: '박승인',
-        processedDate: '2024-01-14',
-        items: [
-          { productId: 1, productName: '아메리카노', quantity: 60, unitPrice: 5000, totalPrice: 300000 },
-          { productId: 5, productName: '에스프레소', quantity: 20, unitPrice: 4000, totalPrice: 80000 }
-        ]
-      },
-      {
-        id: 4,
-        orderNumber: 'ORD-2024-004',
-        branchId: 1,
-        branchName: '강남점',
-        orderDate: '2024-01-12',
-        deliveryDate: '2024-01-15',
-        status: 'rejected',
-        totalAmount: 150000,
-        totalItems: 10,
-        processor: '김관리',
-        processedDate: '2024-01-13',
-        items: [
-          { productId: 2, productName: '카페라떼', quantity: 25, unitPrice: 6000, totalPrice: 150000 }
-        ]
-      },
-      {
-        id: 5,
-        orderNumber: 'ORD-2024-005',
-        branchId: 4,
-        branchName: '대구점',
-        orderDate: '2024-01-11',
-        deliveryDate: '2024-01-14',
-        status: 'delivered',
-        totalAmount: 280000,
-        totalItems: 18,
-        processor: '최처리',
-        processedDate: '2024-01-12',
-        items: [
-          { productId: 3, productName: '카푸치노', quantity: 35, unitPrice: 5500, totalPrice: 192500 },
-          { productId: 4, productName: '티라떼', quantity: 30, unitPrice: 6500, totalPrice: 195000 }
-        ]
+  const loadSupplyRequests = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let requestsData;
+
+      if (selectedStatus !== 'all') {
+        requestsData = await supplyRequestAPI.getSupplyRequestsByStatus(selectedStatus);
+      } else if (selectedBranch !== 'all') {
+        requestsData = await supplyRequestAPI.getSupplyRequestsByBranch(selectedBranch);
+      } else {
+        requestsData = await supplyRequestAPI.getAllSupplyRequests();
       }
-    ]);
+
+      // 데이터 변환 및 가공
+      const processedData = await Promise.all(
+        requestsData.map(async (request) => {
+          // 디버깅을 위한 로그 (필요시 주석 해제)
+          // console.log('원본 발주 요청 데이터:', request);
+
+          // 지점 정보 가져오기
+          const branch = branches.find(b => b.id === request.requestingBranchId);
+          if (!branch) {
+            console.warn(`지점을 찾을 수 없음: branchId=${request.requestingBranchId}, available branches:`, branches.map(b => ({ id: b.id, name: b.branchName })));
+          }
+
+          // 요청자 정보 가져오기
+          let requester = {};
+          if (request.requesterId) {
+            try {
+              requester = await userAPI.getUserById(request.requesterId);
+            } catch (error) {
+              console.error('요청자 정보 로딩 실패:', error);
+            }
+          }
+
+          // 발주 아이템 정보 가져오기 (백엔드에서 이미 포함되어 있음)
+          const items = request.items || [];
+
+          const processedOrder = {
+            id: request.id,
+            orderNumber: `SUP-${request.id.toString().padStart(6, '0')}`,
+            branchId: request.requestingBranchId,
+            branchName: branch ? branch.branchName : '알 수 없음',
+            orderDate: request.requestDate ? new Date(request.requestDate).toLocaleDateString('ko-KR') : '알 수 없음',
+            deliveryDate: request.expectedDeliveryDate || '미정',
+            status: request.status?.toLowerCase() || 'pending',
+            totalAmount: request.totalCost || 0,
+            totalItems: items.length,
+            processor: request.processedBy || request.processed_by || '미처리',
+            processedDate: request.processedAt ? new Date(request.processedAt).toLocaleDateString('ko-KR') :
+              (request.processed_at ? new Date(request.processed_at).toLocaleDateString('ko-KR') : '미처리'),
+            priority: request.priority || 'NORMAL',
+            notes: request.notes || '',
+            items: items,
+            originalData: request
+          };
+
+          // console.log('가공된 발주 데이터:', processedOrder);
+          return processedOrder;
+        })
+      );
+
+      // 기간 필터링 적용
+      if (selectedPeriod !== 'all') {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        processedData = processedData.filter(request => {
+          const orderDate = new Date(request.originalData.requestDate);
+
+          if (selectedPeriod === 'recent') {
+            return orderDate >= thirtyDaysAgo;
+          } else if (selectedPeriod === 'month') {
+            return orderDate.getMonth() === currentMonth && orderDate.getFullYear() === currentYear;
+          }
+          return true;
+        });
+      }
+
+      setOrderHistory(processedData);
+    } catch (error) {
+      console.error('발주 요청 데이터 로딩 실패:', error);
+      setError('발주 요청 데이터를 불러오는데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 초기 데이터 로딩
+  useEffect(() => {
+    loadBranches();
+    loadMaterials();
   }, []);
+
+  // 필터 변경 시 데이터 재로딩
+  useEffect(() => {
+    if (branches.length > 0 && materials.length > 0) {
+      loadSupplyRequests();
+    }
+  }, [selectedStatus, selectedBranch, selectedPeriod, branches, materials]);
 
   const handleViewDetail = (order) => {
     setSelectedOrder(order);
@@ -134,26 +153,21 @@ export default function OrderHistory() {
 
   const handleExportHistoryData = () => {
     console.log('발주 이력 데이터 내보내기');
+    // CSV 내보내기 로직 구현
   };
 
   const filteredOrderHistory = orderHistory.filter(order => {
     const matchesSearch = order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         order.branchName.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = selectedStatus === 'all' || order.status === selectedStatus;
-    const matchesBranch = selectedBranch === 'all' || order.branchId === parseInt(selectedBranch);
-    const matchesPeriod = selectedPeriod === 'all' || 
-                         (selectedPeriod === 'recent' && new Date(order.orderDate) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)) ||
-                         (selectedPeriod === 'month' && new Date(order.orderDate).getMonth() === new Date().getMonth());
-    
-    return matchesSearch && matchesStatus && matchesBranch && matchesPeriod;
+      order.branchName.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
   const getStatusText = (status) => {
     switch (status) {
       case 'delivered': return '배송완료';
-      case 'shipping': return '배송중';
+      case 'in_transit': return '배송중';
       case 'approved': return '승인됨';
-      case 'rejected': return '거절됨';
+      case 'cancelled': return '취소됨';
       case 'pending': return '대기중';
       default: return '알 수 없음';
     }
@@ -162,29 +176,55 @@ export default function OrderHistory() {
   const getStatusColor = (status) => {
     switch (status) {
       case 'delivered': return '#10b981';
-      case 'shipping': return '#3b82f6';
+      case 'in_transit': return '#3b82f6';
       case 'approved': return '#8b5cf6';
-      case 'rejected': return '#ef4444';
+      case 'cancelled': return '#ef4444';
       case 'pending': return '#f59e0b';
       default: return '#6b7280';
     }
   };
 
-  const getBranchName = (branchId) => {
-    const branch = branches.find(b => b.id === branchId);
-    return branch ? branch.name : '알 수 없음';
+  const getPriorityText = (priority) => {
+    switch (priority) {
+      case 'LOW': return '낮음';
+      case 'NORMAL': return '보통';
+      case 'HIGH': return '높음';
+      case 'URGENT': return '긴급';
+      default: return '보통';
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'LOW': return '#6b7280';
+      case 'NORMAL': return '#3b82f6';
+      case 'HIGH': return '#f59e0b';
+      case 'URGENT': return '#ef4444';
+      default: return '#3b82f6';
+    }
   };
 
   const getTotalItems = (order) => {
-    return order.items.reduce((total, item) => total + item.quantity, 0);
+    return order.items ? order.items.length : 0;
   };
 
   // 통계 계산
   const totalOrders = orderHistory.length;
-  const totalAmount = orderHistory.reduce((sum, order) => sum + order.totalAmount, 0);
+  const totalAmount = orderHistory.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
   const averageAmount = totalOrders > 0 ? Math.round(totalAmount / totalOrders) : 0;
   const deliveredOrders = orderHistory.filter(order => order.status === 'delivered').length;
-  const rejectedOrders = orderHistory.filter(order => order.status === 'rejected').length;
+  const pendingOrders = orderHistory.filter(order => order.status === 'pending').length;
+  const rejectedOrders = orderHistory.filter(order => order.status === 'cancelled').length;
+
+  if (error) {
+    return (
+      <div className={styles['error-container']}>
+        <h2>오류가 발생했습니다</h2>
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>새로고침</button>
+      </div>
+    );
+  }
 
   return (
     <div className={styles['order-history']}>
@@ -219,9 +259,9 @@ export default function OrderHistory() {
           <div className={styles['search-filter-container']}>
             <div className={styles['search-box']}>
               <div className={styles['search-input-container']}>
-                <img 
-                  src={searchIcon} 
-                  alt="검색" 
+                <img
+                  src={searchIcon}
+                  alt="검색"
                   className={styles['search-icon']}
                 />
                 <input
@@ -240,11 +280,11 @@ export default function OrderHistory() {
                 className={styles['filter-select']}
               >
                 <option value="all">전체 상태</option>
-                <option value="delivered">배송완료</option>
-                <option value="shipping">배송중</option>
-                <option value="approved">승인됨</option>
-                <option value="rejected">거절됨</option>
                 <option value="pending">대기중</option>
+                <option value="approved">승인됨</option>
+                <option value="in_transit">배송중</option>
+                <option value="delivered">배송완료</option>
+                <option value="cancelled">취소됨</option>
               </select>
             </div>
             <div className={styles['filter-box']}>
@@ -293,65 +333,83 @@ export default function OrderHistory() {
               <p className={styles['summary-number']}>{averageAmount.toLocaleString()}원</p>
             </div>
             <div className={styles['summary-card']}>
-              <h3>배송완료율</h3>
-              <p className={styles['summary-number']}>
-                {totalOrders > 0 ? Math.round((deliveredOrders / totalOrders) * 100) : 0}%
-              </p>
+              <h3>대기중인 발주</h3>
+              <p className={styles['summary-number']}>{pendingOrders}건</p>
             </div>
           </div>
 
           <div className={styles['orders-container']}>
-            <div className={styles['orders-list']}>
-              <table className={styles['orders-table']}>
-                <thead className={styles['orders-table-header']}>
-                  <tr>
-                    <th>발주번호</th>
-                    <th>지점명</th>
-                    <th>발주일</th>
-                    <th>배송일</th>
-                    <th>총 금액</th>
-                    <th>총 수량</th>
-                    <th>상태</th>
-                    <th>처리자</th>
-                    <th>처리일</th>
-                    <th>작업</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrderHistory.map(order => (
-                    <tr key={order.id}>
-                      <td>{order.orderNumber}</td>
-                      <td>{order.branchName}</td>
-                      <td>{order.orderDate}</td>
-                      <td>{order.deliveryDate}</td>
-                      <td>{order.totalAmount.toLocaleString()}원</td>
-                      <td>{getTotalItems(order)}개</td>
-                      <td>
-                        <span 
-                          className={styles['status-badge']}
-                          style={{ backgroundColor: getStatusColor(order.status) }}
-                        >
-                          {getStatusText(order.status)}
-                        </span>
-                      </td>
-                      <td>{order.processor}</td>
-                      <td>{order.processedDate}</td>
-                      <td>
-                        <div className={styles['action-buttons']}>
-                          <button
-                            className={`btn btn-small ${styles['btn-detail']}`}
-                            onClick={() => handleViewDetail(order)}
-                          >
-                            
-                            상세보기
-                          </button>
-                        </div>
-                      </td>
+            {loading ? (
+              <div className={styles['loading-container']}>
+                <p>데이터를 불러오는 중...</p>
+              </div>
+            ) : (
+              <div className={styles['orders-list']}>
+                <table className={styles['orders-table']}>
+                  <thead className={styles['orders-table-header']}>
+                    <tr>
+                      <th>발주번호</th>
+                      <th>지점명</th>
+                      <th>발주일</th>
+                      <th>배송일</th>
+                      <th>우선순위</th>
+                      <th>총 금액</th>
+                      <th>상태</th>
+                      <th>처리자</th>
+                      <th>처리일</th>
+                      <th>작업</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredOrderHistory.length > 0 ? (
+                      filteredOrderHistory.map(order => (
+                        <tr key={order.id}>
+                          <td>{order.orderNumber}</td>
+                          <td>{order.branchName}</td>
+                          <td>{order.orderDate}</td>
+                          <td>{order.deliveryDate}</td>
+                          <td>
+                            <span
+                              className={styles['priority-badge']}
+                              style={{ backgroundColor: getPriorityColor(order.priority) }}
+                            >
+                              {getPriorityText(order.priority)}
+                            </span>
+                          </td>
+                          <td>{order.totalAmount ? order.totalAmount.toLocaleString() : 0}원</td>
+                          <td>
+                            <span
+                              className={styles['status-badge']}
+                              style={{ backgroundColor: getStatusColor(order.status) }}
+                            >
+                              {getStatusText(order.status)}
+                            </span>
+                          </td>
+                          <td>{order.processor}</td>
+                          <td>{order.processedDate}</td>
+                          <td>
+                            <div className={styles['action-buttons']}>
+                              <button
+                                className={`btn btn-small ${styles['btn-small']}`}
+                                onClick={() => handleViewDetail(order)}
+                              >
+                                상세
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="10" className={styles['no-data']}>
+                          발주 이력이 없습니다.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -368,14 +426,21 @@ export default function OrderHistory() {
               <div className={styles['branch-analysis']}>
                 {branches.map(branch => {
                   const branchOrders = orderHistory.filter(order => order.branchId === branch.id);
-                  const totalAmount = branchOrders.reduce((sum, order) => sum + order.totalAmount, 0);
+                  const totalAmount = branchOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
                   const deliveredCount = branchOrders.filter(order => order.status === 'delivered').length;
-                  
+
                   return (
                     <div key={branch.id} className={styles['branch-item']}>
                       <div className={styles['branch-info']}>
-                        <h4>{branch.name}</h4>
-                        <p>{branch.region}</p>
+                        <div className={styles['branch-info-header']}>
+                          <h4>{branch.branchName}</h4>
+                          <div className={styles['branch-code']}>
+                            <span className={styles['code-label']}></span>
+                            <span className={styles['code-value']}>{branch.branchCode || branch.id}</span>
+                          </div>
+                        </div>
+
+                        <p className={styles['branch-address']}>{branch.address || '주소 정보 없음'}</p>
                       </div>
                       <div className={styles['branch-stats']}>
                         <div className={styles['stat-item']}>
@@ -406,9 +471,9 @@ export default function OrderHistory() {
                     <span className={styles['status-count']}>{deliveredOrders}건</span>
                   </div>
                   <div className={styles['status-bar']}>
-                    <div 
-                      className={styles['status-progress']} 
-                      style={{ 
+                    <div
+                      className={styles['status-progress']}
+                      style={{
                         width: `${totalOrders > 0 ? (deliveredOrders / totalOrders) * 100 : 0}%`,
                         backgroundColor: '#10b981'
                       }}
@@ -421,9 +486,9 @@ export default function OrderHistory() {
                     <span className={styles['status-count']}>{rejectedOrders}건</span>
                   </div>
                   <div className={styles['status-bar']}>
-                    <div 
-                      className={styles['status-progress']} 
-                      style={{ 
+                    <div
+                      className={styles['status-progress']}
+                      style={{
                         width: `${totalOrders > 0 ? (rejectedOrders / totalOrders) * 100 : 0}%`,
                         backgroundColor: '#ef4444'
                       }}
@@ -436,69 +501,173 @@ export default function OrderHistory() {
         </div>
       )}
 
-      {activeTab === 'statistics-report' && (
-        <div className={styles['statistics-report']}>
-          <div className={styles['report-header']}>
-            <h2>통계 보고서</h2>
-            <p>발주 이력에 대한 종합적인 통계 보고서를 제공합니다.</p>
-          </div>
-          <div className={styles['report-grid']}>
-            <div className={styles['report-card']}>
-              <h3>월별 발주 통계</h3>
-              <div className={styles['monthly-stats']}>
-                <div className={styles['monthly-item']}>
-                  <span className={styles['month-label']}>1월</span>
-                  <span className={styles['month-value']}>15건</span>
-                  <span className={styles['month-amount']}>2,500,000원</span>
-                </div>
-                <div className={styles['monthly-item']}>
-                  <span className={styles['month-label']}>2월</span>
-                  <span className={styles['month-value']}>12건</span>
-                  <span className={styles['month-amount']}>1,800,000원</span>
-                </div>
-                <div className={styles['monthly-item']}>
-                  <span className={styles['month-label']}>3월</span>
-                  <span className={styles['month-value']}>18건</span>
-                  <span className={styles['month-amount']}>3,200,000원</span>
-                </div>
-              </div>
-            </div>
+             {activeTab === 'statistics-report' && (
+         <div className={styles['statistics-report']}>
+           <div className={styles['report-header']}>
+             <h2>통계 보고서</h2>
+             <p>발주 이력에 대한 종합적인 통계 보고서를 제공합니다.</p>
+           </div>
+           <div className={styles['report-grid']}>
+             <div className={styles['report-card']}>
+               <h3>월별 발주 통계</h3>
+               <div className={styles['monthly-stats']}>
+                 {(() => {
+                   const months = [];
+                   const now = new Date();
+                   for (let i = 11; i >= 0; i--) {
+                     const month = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                     const monthOrders = orderHistory.filter(order => {
+                       const orderDate = new Date(order.originalData.requestDate);
+                       return orderDate.getFullYear() === month.getFullYear() && 
+                              orderDate.getMonth() === month.getMonth();
+                     });
+                     const monthAmount = monthOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+                     
+                     months.push({
+                       label: `${month.getMonth() + 1}월`,
+                       count: monthOrders.length,
+                       amount: monthAmount
+                     });
+                   }
+                   
+                   return months.map((month, index) => (
+                     <div key={index} className={styles['monthly-item']}>
+                       <span className={styles['month-label']}>{month.label}</span>
+                       <span className={styles['month-value']}>{month.count}건</span>
+                       <span className={styles['month-amount']}>{month.amount.toLocaleString()}원</span>
+                     </div>
+                   ));
+                 })()}
+               </div>
+             </div>
 
-            <div className={styles['report-card']}>
-              <h3>상품별 발주 현황</h3>
-              <div className={styles['product-stats']}>
-                {products.map(product => {
-                  const productOrders = orderHistory.filter(order => 
-                    order.items.some(item => item.productId === product.id)
-                  );
-                  const totalQuantity = productOrders.reduce((sum, order) => {
-                    const item = order.items.find(item => item.productId === product.id);
-                    return sum + (item ? item.quantity : 0);
-                  }, 0);
-                  
-                  return (
-                    <div key={product.id} className={styles['product-item']}>
-                      <div className={styles['product-info']}>
-                        <h4>{product.name}</h4>
-                        <p>{product.category}</p>
-                      </div>
-                      <div className={styles['product-stats']}>
-                        <span className={styles['quantity']}>{totalQuantity}개</span>
-                        <span className={styles['orders']}>{productOrders.length}건</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+             <div className={styles['report-card']}>
+               <h3>상품별 발주 현황</h3>
+               <div className={styles['product-stats']}>
+                 {materials.map(material => {
+                   const materialOrders = orderHistory.filter(order =>
+                     order.items.some(item => item.productId === material.id)
+                   );
+                   const totalQuantity = materialOrders.reduce((sum, order) => {
+                     const item = order.items.find(item => item.productId === material.id);
+                     return sum + (item ? item.quantity : 0);
+                   }, 0);
+                   const totalAmount = materialOrders.reduce((sum, order) => {
+                     const item = order.items.find(item => item.productId === material.id);
+                     return sum + (item ? (item.totalPrice || 0) : 0);
+                   }, 0);
+
+                   return (
+                     <div key={material.id} className={styles['product-item']}>
+                       <div className={styles['product-info']}>
+                         <h4>{material.name}</h4>
+                         <p>{material.category || '카테고리 없음'}</p>
+                       </div>
+                       <div className={styles['product-stats']}>
+                         <span className={styles['quantity']}>{totalQuantity}개</span>
+                         <span className={styles['orders']}>{materialOrders.length}건</span>
+                         <span className={styles['amount']}>{totalAmount.toLocaleString()}원</span>
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+             </div>
+
+             <div className={styles['report-card']}>
+               <h3>지점별 발주 성과</h3>
+               <div className={styles['branch-performance']}>
+                 {branches.map(branch => {
+                   const branchOrders = orderHistory.filter(order => order.branchId === branch.id);
+                   const totalAmount = branchOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+                   const deliveredCount = branchOrders.filter(order => order.status === 'delivered').length;
+                   const pendingCount = branchOrders.filter(order => order.status === 'pending').length;
+                   const deliveryRate = branchOrders.length > 0 ? Math.round((deliveredCount / branchOrders.length) * 100) : 0;
+                   
+                   return (
+                     <div key={branch.id} className={styles['branch-performance-item']}>
+                       <div className={styles['branch-performance-info']}>
+                         <h4>{branch.branchName}</h4>
+                         <p>{branch.address || '주소 정보 없음'}</p>
+                       </div>
+                       <div className={styles['branch-performance-stats']}>
+                         <div className={styles['performance-stat']}>
+                           <span className={styles['performance-label']}>총 발주</span>
+                           <span className={styles['performance-value']}>{branchOrders.length}건</span>
+                         </div>
+                         <div className={styles['performance-stat']}>
+                           <span className={styles['performance-label']}>총 금액</span>
+                           <span className={styles['performance-value']}>{totalAmount.toLocaleString()}원</span>
+                         </div>
+                         <div className={styles['performance-stat']}>
+                           <span className={styles['performance-label']}>배송완료율</span>
+                           <span className={styles['performance-value']}>{deliveryRate}%</span>
+                         </div>
+                         <div className={styles['performance-stat']}>
+                           <span className={styles['performance-label']}>대기중</span>
+                           <span className={styles['performance-value']}>{pendingCount}건</span>
+                         </div>
+                       </div>
+                     </div>
+                   );
+                 })}
+               </div>
+             </div>
+
+             <div className={styles['report-card']}>
+               <h3>우선순위별 발주 분석</h3>
+               <div className={styles['priority-analysis-report']}>
+                 {(() => {
+                   const priorities = [
+                     { key: 'URGENT', label: '긴급', color: '#ef4444' },
+                     { key: 'HIGH', label: '높음', color: '#f59e0b' },
+                     { key: 'NORMAL', label: '보통', color: '#3b82f6' },
+                     { key: 'LOW', label: '낮음', color: '#6b7280' }
+                   ];
+                   
+                   return priorities.map(priority => {
+                     const priorityOrders = orderHistory.filter(order => order.priority === priority.key);
+                     const priorityAmount = priorityOrders.reduce((sum, order) => sum + (order.totalAmount || 0), 0);
+                     const deliveredCount = priorityOrders.filter(order => order.status === 'delivered').length;
+                     const deliveryRate = priorityOrders.length > 0 ? Math.round((deliveredCount / priorityOrders.length) * 100) : 0;
+                     
+                     return (
+                       <div key={priority.key} className={styles['priority-report-item']}>
+                         <div className={styles['priority-report-header']}>
+                           <span 
+                             className={styles['priority-report-dot']} 
+                             style={{ backgroundColor: priority.color }}
+                           ></span>
+                           <span className={styles['priority-report-label']}>{priority.label}</span>
+                         </div>
+                         <div className={styles['priority-report-stats']}>
+                           <div className={styles['priority-report-stat']}>
+                             <span className={styles['priority-report-count']}>{priorityOrders.length}건</span>
+                             <span className={styles['priority-report-percentage']}>
+                               {totalOrders > 0 ? Math.round((priorityOrders.length / totalOrders) * 100) : 0}%
+                             </span>
+                           </div>
+                           <div className={styles['priority-report-amount']}>
+                             {priorityAmount.toLocaleString()}원
+                           </div>
+                           <div className={styles['priority-report-delivery']}>
+                             배송완료율: {deliveryRate}%
+                           </div>
+                         </div>
+                       </div>
+                     );
+                   });
+                 })()}
+               </div>
+             </div>
+           </div>
+         </div>
+       )}
 
       {showDetailModal && selectedOrder && (
-        <OrderDetailModal 
-          order={selectedOrder} 
-          onClose={() => setShowDetailModal(false)} 
+        <OrderDetailModal
+          order={selectedOrder}
+          onClose={() => setShowDetailModal(false)}
         />
       )}
     </div>
@@ -540,7 +709,7 @@ function OrderDetailModal({ order, onClose }) {
               <span className={styles['info-value']}>{order.processedDate}</span>
             </div>
           </div>
-          
+
           <div className={styles['order-items']}>
             <h4>발주 상품 목록</h4>
             <table className={styles['items-table']}>

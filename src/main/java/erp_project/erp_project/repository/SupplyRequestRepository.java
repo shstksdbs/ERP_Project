@@ -15,9 +15,19 @@ public interface SupplyRequestRepository extends JpaRepository<SupplyRequest, Lo
     List<SupplyRequest> findAllByOrderByCreatedAtDesc();
     
     /**
+     * 모든 발주 요청을 요청일 기준 내림차순으로 조회
+     */
+    List<SupplyRequest> findAllByOrderByRequestDateDesc();
+    
+    /**
      * 특정 지점의 발주 요청 목록을 생성일 기준 내림차순으로 조회
      */
     List<SupplyRequest> findByRequestingBranchIdOrderByCreatedAtDesc(Long branchId);
+    
+    /**
+     * 특정 지점의 발주 요청 목록을 요청일 기준 내림차순으로 조회
+     */
+    List<SupplyRequest> findByRequestingBranchIdOrderByRequestDateDesc(Long branchId);
     
     /**
      * 특정 지점의 발주 요청 목록 조회

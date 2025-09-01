@@ -328,10 +328,10 @@ export default function OrderStatus() {
           { productId: 2, productName: '카페라떼', quantity: 30, unit: '개', unitPrice: 5500, totalPrice: 165000 },
           { productId: 4, productName: '샌드위치', quantity: 20, unit: '개', unitPrice: 8000, totalPrice: 160000 }
         ],
-                 requestNote: '신메뉴 출시 준비로 인한 대량 발주',
-         priority: 'HIGH',
-         processedBy: null,
-         processedAt: null
+        requestNote: '신메뉴 출시 준비로 인한 대량 발주',
+        priority: 'HIGH',
+        processedBy: null,
+        processedAt: null
       },
       {
         id: 2,
@@ -347,10 +347,10 @@ export default function OrderStatus() {
           { productId: 3, productName: '카푸치노', quantity: 25, unit: '개', unitPrice: 5500, totalPrice: 137500 },
           { productId: 6, productName: '티라미수', quantity: 15, unit: '개', unitPrice: 6500, totalPrice: 97500 }
         ],
-                 requestNote: '주말 이벤트 준비',
-         priority: 'NORMAL',
-         processedBy: '김본사',
-         processedAt: '2024-03-15 14:30'
+        requestNote: '주말 이벤트 준비',
+        priority: 'NORMAL',
+        processedBy: '김본사',
+        processedAt: '2024-03-15 14:30'
       },
       {
         id: 3,
@@ -366,11 +366,11 @@ export default function OrderStatus() {
           { productId: 5, productName: '샐러드', quantity: 40, unit: '개', unitPrice: 12000, totalPrice: 480000 },
           { productId: 7, productName: '치즈케이크', quantity: 30, unit: '개', unitPrice: 7000, totalPrice: 210000 }
         ],
-                 requestNote: '건강식품 트렌드 대응',
-         priority: 'URGENT',
-         processedBy: '김본사',
-         processedAt: '2024-03-14 09:15',
-         rejectReason: '재고 부족으로 인한 발주 거절'
+        requestNote: '건강식품 트렌드 대응',
+        priority: 'URGENT',
+        processedBy: '김본사',
+        processedAt: '2024-03-14 09:15',
+        rejectReason: '재고 부족으로 인한 발주 거절'
       },
       {
         id: 4,
@@ -386,10 +386,10 @@ export default function OrderStatus() {
           { productId: 8, productName: '감자튀김', quantity: 100, unit: '개', unitPrice: 3500, totalPrice: 350000 },
           { productId: 1, productName: '아메리카노', quantity: 20, unit: '개', unitPrice: 4500, totalPrice: 90000 }
         ],
-                 requestNote: '일반 발주',
-         priority: 'LOW',
-         processedBy: '이본사',
-         processedAt: '2024-03-13 11:20'
+        requestNote: '일반 발주',
+        priority: 'LOW',
+        processedBy: '이본사',
+        processedAt: '2024-03-13 11:20'
       },
       {
         id: 5,
@@ -405,10 +405,10 @@ export default function OrderStatus() {
           { productId: 2, productName: '카페라떼', quantity: 35, unit: '개', unitPrice: 5500, totalPrice: 192500 },
           { productId: 4, productName: '샌드위치', quantity: 15, unit: '개', unitPrice: 8000, totalPrice: 120000 }
         ],
-                 requestNote: '신규 메뉴 테스트',
-         priority: 'NORMAL',
-         processedBy: '박본사',
-         processedAt: '2024-03-12 16:45'
+        requestNote: '신규 메뉴 테스트',
+        priority: 'NORMAL',
+        processedBy: '박본사',
+        processedAt: '2024-03-12 16:45'
       }
     ];
 
@@ -543,17 +543,17 @@ export default function OrderStatus() {
     return statusMap[status] || status;
   };
 
-    const getPriorityText = (priority) => {
+  const getPriorityText = (priority) => {
     const priorityMap = {
       'LOW': '낮음',
       'NORMAL': '보통',
       'HIGH': '높음',
       'URGENT': '긴급'
     };
-    
+
     // 우선순위값이 null이거나 undefined인 경우 처리
     if (!priority) return '보통';
-    
+
     return priorityMap[priority] || priority;
   };
 
@@ -567,22 +567,22 @@ export default function OrderStatus() {
       'IN_TRANSIT': '#3b82f6',
       'DELIVERED': '#6b7280'
     };
-    
+
     // 디버깅을 위한 로그 추가 (상태 변경 시에만 로그 출력)
     if (status && (status === 'APPROVED' || status === 'IN_TRANSIT')) {
       console.log('getStatusColor 호출:', { status, type: typeof status });
     }
-    
+
     // 상태값이 null이거나 undefined인 경우 처리
     if (!status) return '#f59e0b';
-    
+
     // 정확한 매칭을 위해 원본 상태값 확인
     const color = colorMap[status] || '#6b7280';
-    
+
     if (status && (status === 'APPROVED' || status === 'IN_TRANSIT')) {
       console.log('상태 색상 결과:', { status, color });
     }
-    
+
     return color;
   };
 
@@ -787,16 +787,16 @@ export default function OrderStatus() {
               <table className={styles['orders-table']}>
                 <thead className={styles['orders-table-header']}>
                   <tr>
-                                         <th>발주번호</th>
-                     <th>가맹점</th>
-                     <th>발주일</th>
-                     <th>배송예정일</th>
-                     <th>발주 내용</th>
-                     <th>총 금액</th>
-                     <th>우선순위</th>
-                     <th>상태</th>
-                     <th>처리자</th>
-                     <th>작업</th>
+                    <th>발주번호</th>
+                    <th>가맹점</th>
+                    <th>발주일</th>
+                    <th>배송예정일</th>
+                    <th>발주 내용</th>
+                    <th>총 금액</th>
+                    <th>우선순위</th>
+                    <th>상태</th>
+                    <th>처리자</th>
+                    <th>작업</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -867,22 +867,22 @@ export default function OrderStatus() {
                           )}
                         </div>
                       </td>
-                                             <td>{(order.totalAmount || 0).toLocaleString()}원</td>
-                                               <td>
-                          <span 
-                            className={`${styles['priority-badge']} ${styles[`priority-${order.priority?.toLowerCase() || 'normal'}`]}`}
-                          >
-                            {getPriorityText(order.priority)}
-                          </span>
-                        </td>
-                       <td>
-                         <span 
-                           className={styles['status-badge']}
-                           style={{ backgroundColor: getStatusColor(order.status) }}
-                         >
-                           {getStatusText(order.status)}
-                         </span>
-                       </td>
+                      <td>{(order.totalAmount || 0).toLocaleString()}원</td>
+                      <td>
+                        <span
+                          className={`${styles['priority-badge']} ${styles[`priority-${order.priority?.toLowerCase() || 'normal'}`]}`}
+                        >
+                          {getPriorityText(order.priority)}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={styles['status-badge']}
+                          style={{ backgroundColor: getStatusColor(order.status) }}
+                        >
+                          {getStatusText(order.status)}
+                        </span>
+                      </td>
                       <td>
                         {order.processedBy ? (
                           <div className={styles['processor-info']}>

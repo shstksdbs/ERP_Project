@@ -207,32 +207,27 @@
   min-width: 50px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 우선순위별 색상 스타일 */
 .priorityLow {
   background-color: #d1fae5;
   color: #065f46;
-  border: 1px solid #a7f3d0;
 }
 
 .priorityNormal {
   background-color: #dbeafe;
   color: #1e40af;
-  border: 1px solid #93c5fd;
 }
 
 .priorityHigh {
   background-color: #fef3c7;
   color: #92400e;
-  border: 1px solid #fcd34d;
 }
 
 .priorityUrgent {
   background-color: #fee2e2;
   color: #991b1b;
-  border: 1px solid #fca5a5;
   animation: pulse 2s infinite;
 }
 
@@ -316,27 +311,48 @@
 
 /* 상태별 색상 스타일 */
 .statusPending {
-  background-color: #fef3c7;
-  color: #92400e;
-  border: 1px solid #fcd34d;
+  background-color: #f59e0b;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
 }
 
 .statusApproved {
-  background-color: #dbeafe;
-  color: #1e40af;
-  border: 1px solid #93c5fd;
+  background-color: #10b981;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.statusInTransit {
+  background-color: #3b82f6;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
 }
 
 .statusDelivered {
-  background-color: #d1fae5;
-  color: #065f46;
-  border: 1px solid #a7f3d0;
+  background-color: #6b7280;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
 }
 
 .statusCancelled {
-  background-color: #fee2e2;
-  color: #991b1b;
-  border: 1px solid #fca5a5;
+  background-color: #ef4444;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 500;
+  color: white;
 }
 
 .orderNumber {
@@ -392,7 +408,6 @@
   min-width: 60px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 반응형 디자인 */

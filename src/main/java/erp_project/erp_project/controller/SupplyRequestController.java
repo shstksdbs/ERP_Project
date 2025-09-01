@@ -4,10 +4,14 @@ import erp_project.erp_project.entity.SupplyRequest;
 import erp_project.erp_project.entity.SupplyRequestItem;
 import erp_project.erp_project.entity.Material;
 import erp_project.erp_project.entity.Branches;
+import erp_project.erp_project.entity.MaterialStock;
+import erp_project.erp_project.entity.StockMovement;
 import erp_project.erp_project.repository.SupplyRequestRepository;
 import erp_project.erp_project.repository.SupplyRequestItemRepository;
 import erp_project.erp_project.repository.MaterialRepository;
 import erp_project.erp_project.repository.BranchesRepository;
+import erp_project.erp_project.repository.MaterialStockRepository;
+import erp_project.erp_project.repository.StockMovementRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -31,6 +35,8 @@ public class SupplyRequestController {
     private final SupplyRequestItemRepository supplyRequestItemRepository;
     private final MaterialRepository materialRepository;
     private final BranchesRepository branchesRepository;
+    private final MaterialStockRepository materialStockRepository;
+    private final StockMovementRepository stockMovementRepository;
     
     /**
      * 발주 요청 목록 조회
@@ -86,6 +92,112 @@ public class SupplyRequestController {
             return ResponseEntity.ok(summaryResponses);
         } catch (Exception e) {
             log.error("발주 요청 목록 조회 실패", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * 상태별 발주 요청 조회
+     * GET /api/supply-requests/status/{status}
+     */
+    @GetMapping("/status/{status}")
+    public ResponseEntity<List<SupplyRequestSummaryResponse>> getSupplyRequestsByStatus(
+            @PathVariable String status) {
+        try {
+            SupplyRequest.SupplyRequestStatus requestStatus = SupplyRequest.SupplyRequestStatus.valueOf(status.toUpperCase());
+            List<SupplyRequest> requests = supplyRequestRepository.findByStatus(requestStatus);
+            
+            List<SupplyRequestSummaryResponse> summaryResponses = requests.stream()
+                    .map(request -> {
+                        List<SupplyRequestItem> items = supplyRequestItemRepository.findBySupplyRequestId(request.getId());
+                        
+                        return SupplyRequestSummaryResponse.builder()
+                                .id(request.getId())
+                                .requestingBranchId(request.getRequestingBranchId())
+                                .requesterId(request.getRequesterId())
+                                .requesterName(request.getRequesterName())
+                                .requestDate(request.getRequestDate())
+                                .expectedDeliveryDate(request.getExpectedDeliveryDate())
+                                .status(request.getStatus())
+                                .priority(request.getPriority())
+                                .totalCost(request.getTotalCost())
+                                .notes(request.getNotes())
+                                .createdAt(request.getCreatedAt())
+                                .updatedAt(request.getUpdatedAt())
+                                .processedBy(request.getProcessedBy())
+                                .processedAt(request.getProcessedAt())
+                                .items(items.stream().map(item -> SupplyRequestItemResponse.builder()
+                                        .id(item.getId())
+                                        .materialId(item.getMaterial().getId())
+                                        .materialName(item.getMaterial().getName())
+                                        .materialCategory(item.getMaterial().getCategory())
+                                        .requestedQuantity(item.getRequestedQuantity())
+                                        .unit(item.getUnit())
+                                        .costPerUnit(item.getCostPerUnit())
+                                        .totalCost(item.getTotalCost())
+                                        .build())
+                                        .collect(Collectors.toList()))
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(summaryResponses);
+        } catch (IllegalArgumentException e) {
+            log.error("잘못된 상태값: {}", status, e);
+            return ResponseEntity.badRequest().build();
+        } catch (Exception e) {
+            log.error("상태별 발주 요청 조회 실패: status={}", status, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+    
+    /**
+     * 지점별 발주 요청 조회
+     * GET /api/supply-requests/branch/{branchId}
+     */
+    @GetMapping("/branch/{branchId}")
+    public ResponseEntity<List<SupplyRequestSummaryResponse>> getSupplyRequestsByBranch(
+            @PathVariable Long branchId) {
+        try {
+            List<SupplyRequest> requests = supplyRequestRepository.findByRequestingBranchId(branchId);
+            
+            List<SupplyRequestSummaryResponse> summaryResponses = requests.stream()
+                    .map(request -> {
+                        List<SupplyRequestItem> items = supplyRequestItemRepository.findBySupplyRequestId(request.getId());
+                        
+                        return SupplyRequestSummaryResponse.builder()
+                                .id(request.getId())
+                                .requestingBranchId(request.getRequestingBranchId())
+                                .requesterId(request.getRequesterId())
+                                .requesterName(request.getRequesterName())
+                                .requestDate(request.getRequestDate())
+                                .expectedDeliveryDate(request.getExpectedDeliveryDate())
+                                .status(request.getStatus())
+                                .priority(request.getPriority())
+                                .totalCost(request.getTotalCost())
+                                .notes(request.getNotes())
+                                .createdAt(request.getCreatedAt())
+                                .updatedAt(request.getUpdatedAt())
+                                .processedBy(request.getProcessedBy())
+                                .processedAt(request.getProcessedAt())
+                                .items(items.stream().map(item -> SupplyRequestItemResponse.builder()
+                                        .id(item.getId())
+                                        .materialId(item.getMaterial().getId())
+                                        .materialName(item.getMaterial().getName())
+                                        .materialCategory(item.getMaterial().getCategory())
+                                        .requestedQuantity(item.getRequestedQuantity())
+                                        .unit(item.getUnit())
+                                        .costPerUnit(item.getCostPerUnit())
+                                        .totalCost(item.getTotalCost())
+                                        .build())
+                                        .collect(Collectors.toList()))
+                                .build();
+                    })
+                    .collect(Collectors.toList());
+            
+            return ResponseEntity.ok(summaryResponses);
+        } catch (Exception e) {
+            log.error("지점별 발주 요청 조회 실패: branchId={}", branchId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -277,7 +389,8 @@ public class SupplyRequestController {
             }
             
             SupplyRequest supplyRequest = requestOpt.get();
-            supplyRequest.setStatus(SupplyRequest.SupplyRequestStatus.valueOf(request.getStatus()));
+            SupplyRequest.SupplyRequestStatus newStatus = SupplyRequest.SupplyRequestStatus.valueOf(request.getStatus());
+            supplyRequest.setStatus(newStatus);
             
             // 처리자 정보와 처리 시간이 있으면 저장
             if (request.getProcessedBy() != null) {
@@ -287,6 +400,11 @@ public class SupplyRequestController {
                 } else {
                     supplyRequest.setProcessedInfo(request.getProcessedBy());
                 }
+            }
+            
+            // 배송 완료 상태로 변경 시 재고 업데이트
+            if (newStatus == SupplyRequest.SupplyRequestStatus.DELIVERED) {
+                updateInventoryOnDelivery(supplyRequest);
             }
             
             SupplyRequest updatedRequest = supplyRequestRepository.save(supplyRequest);
@@ -645,6 +763,8 @@ public class SupplyRequestController {
         public String getNotes() { return notes; }
         public LocalDateTime getCreatedAt() { return createdAt; }
         public LocalDateTime getUpdatedAt() { return updatedAt; }
+        public String getProcessedBy() { return processedBy; }
+        public LocalDateTime getProcessedAt() { return processedAt; }
         public List<SupplyRequestItemResponse> getItems() { return items; }
     }
     
@@ -721,5 +841,353 @@ public class SupplyRequestController {
         public String getUnit() { return unit; }
         public BigDecimal getCostPerUnit() { return costPerUnit; }
         public BigDecimal getTotalCost() { return totalCost; }
+    }
+
+    /**
+     * 배송 완료 시 재고 업데이트
+     */
+    private void updateInventoryOnDelivery(SupplyRequest supplyRequest) {
+        try {
+            log.info("배송 완료 시 재고 업데이트 시작: supplyRequestId={}, branchId={}", 
+                    supplyRequest.getId(), supplyRequest.getRequestingBranchId());
+            
+            // 발주 아이템 목록 조회
+            List<SupplyRequestItem> items = supplyRequestItemRepository.findBySupplyRequestId(supplyRequest.getId());
+            
+            for (SupplyRequestItem item : items) {
+                Long materialId = item.getMaterial().getId();
+                Long branchId = supplyRequest.getRequestingBranchId();
+                BigDecimal quantity = item.getRequestedQuantity();
+                String unit = item.getUnit();
+                BigDecimal costPerUnit = item.getCostPerUnit();
+                
+                log.info("재고 업데이트: materialId={}, branchId={}, quantity={}, unit={}", 
+                        materialId, branchId, quantity, unit);
+                
+                // 해당 지점의 재고 정보 조회
+                MaterialStock existingStock = materialStockRepository.findByBranchIdAndMaterialId(branchId, materialId);
+                
+                if (existingStock != null) {
+                    // 기존 재고가 있는 경우 수량 증가
+                    BigDecimal newCurrentStock = existingStock.getCurrentStock().add(quantity);
+                    existingStock.setCurrentStock(newCurrentStock);
+                    existingStock.setLastUpdated(LocalDateTime.now());
+                    
+                    materialStockRepository.save(existingStock);
+                    log.info("기존 재고 업데이트 완료: materialId={}, branchId={}, 기존수량={}, 추가수량={}, 새수량={}", 
+                            materialId, branchId, existingStock.getCurrentStock().subtract(quantity), quantity, newCurrentStock);
+                    
+                } else {
+                    // 기존 재고가 없는 경우 새로 생성
+                    Material material = item.getMaterial();
+                    Branches branch = branchesRepository.findById(branchId)
+                            .orElseThrow(() -> new RuntimeException("지점을 찾을 수 없습니다: " + branchId));
+                    
+                    MaterialStock newStock = MaterialStock.builder()
+                            .material(material)
+                            .branch(branch)
+                            .currentStock(quantity)
+                            .minStock(BigDecimal.ZERO)
+                            .maxStock(BigDecimal.valueOf(1000)) // 기본값 설정
+                            .reservedStock(BigDecimal.ZERO)
+                            .lastUpdated(LocalDateTime.now())
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    
+                    materialStockRepository.save(newStock);
+                    log.info("새 재고 생성 완료: materialId={}, branchId={}, 수량={}", 
+                            materialId, branchId, quantity);
+                }
+                
+                // 재고 이동 이력 기록
+                try {
+                    log.info("StockMovement 생성 시작: materialId={}, branchId={}, quantity={}, costPerUnit={}", 
+                            materialId, branchId, quantity, costPerUnit);
+                    
+                    StockMovement movement = StockMovement.builder()
+                            .material(item.getMaterial())
+                            .branch(branchesRepository.findById(branchId).orElse(null))
+                            .movementType(StockMovement.MovementType.SUPPLY_IN)
+                            .quantity(quantity)
+                            .unit(unit)
+                            .costPerUnit(costPerUnit)
+                            .totalCost(quantity.multiply(costPerUnit))
+                            .referenceId(supplyRequest.getId())
+                            .referenceType("SUPPLY_REQUEST")
+                            .notes("발주 요청 배송 완료로 인한 재고 입고")
+                            .movementDate(LocalDateTime.now())
+                            .createdAt(LocalDateTime.now())
+                            .build();
+                    
+                    log.info("StockMovement 객체 생성 완료: {}", movement);
+                    
+                    StockMovement savedMovement = stockMovementRepository.save(movement);
+                    log.info("재고 이동 이력 저장 완료: id={}, materialId={}, branchId={}, 수량={}, 타입={}", 
+                            savedMovement.getId(), materialId, branchId, quantity, StockMovement.MovementType.SUPPLY_IN);
+                            
+                } catch (Exception e) {
+                    log.error("StockMovement 저장 실패: materialId={}, branchId={}, error={}", materialId, branchId, e.getMessage(), e);
+                    // StockMovement 저장 실패는 전체 트랜잭션에 영향을 주지 않도록 처리
+                }
+            }
+            
+            log.info("배송 완료 시 재고 업데이트 완료: supplyRequestId={}", supplyRequest.getId());
+            
+        } catch (Exception e) {
+            log.error("배송 완료 시 재고 업데이트 실패: supplyRequestId={}", supplyRequest.getId(), e);
+            throw new RuntimeException("재고 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 발주 이력 응답 DTO
+     */
+    public static class SupplyRequestHistoryResponse {
+        private Long id;
+        private String orderNumber;
+        private Long branchId;
+        private String branchName;
+        private String branchRegion;
+        private Long requesterId;
+        private String requesterName;
+        private LocalDateTime requestDate;
+        private String expectedDeliveryDate;
+        private SupplyRequest.SupplyRequestStatus status;
+        private SupplyRequest.SupplyRequestPriority priority;
+        private BigDecimal totalCost;
+        private Integer totalItems;
+        private String notes;
+        private LocalDateTime createdAt;
+        private LocalDateTime updatedAt;
+        private String processedBy;
+        private LocalDateTime processedAt;
+        private List<SupplyRequestItemDetailResponse> items;
+        
+        // Builder 패턴
+        public static SupplyRequestHistoryResponseBuilder builder() {
+            return new SupplyRequestHistoryResponseBuilder();
+        }
+        
+        public static class SupplyRequestHistoryResponseBuilder {
+            private SupplyRequestHistoryResponse response = new SupplyRequestHistoryResponse();
+            
+            public SupplyRequestHistoryResponseBuilder id(Long id) {
+                response.id = id;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder orderNumber(String orderNumber) {
+                response.orderNumber = orderNumber;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder branchId(Long branchId) {
+                response.branchId = branchId;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder branchName(String branchName) {
+                response.branchName = branchName;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder branchRegion(String branchRegion) {
+                response.branchRegion = branchRegion;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder requesterId(Long requesterId) {
+                response.requesterId = requesterId;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder requesterName(String requesterName) {
+                response.requesterName = requesterName;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder requestDate(LocalDateTime requestDate) {
+                response.requestDate = requestDate;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder expectedDeliveryDate(String expectedDeliveryDate) {
+                response.expectedDeliveryDate = expectedDeliveryDate;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder status(SupplyRequest.SupplyRequestStatus status) {
+                response.status = status;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder priority(SupplyRequest.SupplyRequestPriority priority) {
+                response.priority = priority;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder totalCost(BigDecimal totalCost) {
+                response.totalCost = totalCost;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder totalItems(Integer totalItems) {
+                response.totalItems = totalItems;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder notes(String notes) {
+                response.notes = notes;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder createdAt(LocalDateTime createdAt) {
+                response.createdAt = createdAt;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder updatedAt(LocalDateTime updatedAt) {
+                response.updatedAt = updatedAt;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder processedBy(String processedBy) {
+                response.processedBy = processedBy;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder processedAt(LocalDateTime processedAt) {
+                response.processedAt = processedAt;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponseBuilder items(List<SupplyRequestItemDetailResponse> items) {
+                response.items = items;
+                return this;
+            }
+            
+            public SupplyRequestHistoryResponse build() {
+                return response;
+            }
+        }
+        
+        // Getters
+        public Long getId() { return id; }
+        public String getOrderNumber() { return orderNumber; }
+        public Long getBranchId() { return branchId; }
+        public String getBranchName() { return branchName; }
+        public String getBranchRegion() { return branchRegion; }
+        public Long getRequesterId() { return requesterId; }
+        public String getRequesterName() { return requesterName; }
+        public LocalDateTime getRequestDate() { return requestDate; }
+        public String getExpectedDeliveryDate() { return expectedDeliveryDate; }
+        public SupplyRequest.SupplyRequestStatus getStatus() { return status; }
+        public SupplyRequest.SupplyRequestPriority getPriority() { return priority; }
+        public BigDecimal getTotalCost() { return totalCost; }
+        public Integer getTotalItems() { return totalItems; }
+        public String getNotes() { return notes; }
+        public LocalDateTime getCreatedAt() { return createdAt; }
+        public LocalDateTime getUpdatedAt() { return updatedAt; }
+        public String getProcessedBy() { return processedBy; }
+        public LocalDateTime getProcessedAt() { return processedAt; }
+        public List<SupplyRequestItemDetailResponse> getItems() { return items; }
+    }
+
+    /**
+     * 발주 상품 상세 응답 DTO
+     */
+    public static class SupplyRequestItemDetailResponse {
+        private Long id;
+        private Long materialId;
+        private String materialName;
+        private String materialCategory;
+        private BigDecimal requestedQuantity;
+        private BigDecimal approvedQuantity;
+        private BigDecimal deliveredQuantity;
+        private String unit;
+        private BigDecimal costPerUnit;
+        private BigDecimal totalCost;
+        private SupplyRequestItem.SupplyRequestItemStatus status;
+        
+        // Builder 패턴
+        public static SupplyRequestItemDetailResponseBuilder builder() {
+            return new SupplyRequestItemDetailResponseBuilder();
+        }
+        
+        public static class SupplyRequestItemDetailResponseBuilder {
+            private SupplyRequestItemDetailResponse response = new SupplyRequestItemDetailResponse();
+            
+            public SupplyRequestItemDetailResponseBuilder id(Long id) {
+                response.id = id;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder materialId(Long materialId) {
+                response.materialId = materialId;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder materialName(String materialName) {
+                response.materialName = materialName;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder materialCategory(String materialCategory) {
+                response.materialCategory = materialCategory;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder requestedQuantity(BigDecimal requestedQuantity) {
+                response.requestedQuantity = requestedQuantity;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder approvedQuantity(BigDecimal approvedQuantity) {
+                response.approvedQuantity = approvedQuantity;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder deliveredQuantity(BigDecimal deliveredQuantity) {
+                response.deliveredQuantity = deliveredQuantity;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder unit(String unit) {
+                response.unit = unit;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder costPerUnit(BigDecimal costPerUnit) {
+                response.costPerUnit = costPerUnit;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder totalCost(BigDecimal totalCost) {
+                response.totalCost = totalCost;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponseBuilder status(SupplyRequestItem.SupplyRequestItemStatus status) {
+                response.status = status;
+                return this;
+            }
+            
+            public SupplyRequestItemDetailResponse build() {
+                return response;
+            }
+        }
+        
+        // Getters
+        public Long getId() { return id; }
+        public Long getMaterialId() { return materialId; }
+        public String getMaterialName() { return materialName; }
+        public String getMaterialCategory() { return materialCategory; }
+        public BigDecimal getRequestedQuantity() { return requestedQuantity; }
+        public BigDecimal getApprovedQuantity() { return approvedQuantity; }
+        public BigDecimal getDeliveredQuantity() { return deliveredQuantity; }
+        public String getUnit() { return unit; }
+        public BigDecimal getCostPerUnit() { return costPerUnit; }
+        public BigDecimal getTotalCost() { return totalCost; }
+        public SupplyRequestItem.SupplyRequestItemStatus getStatus() { return status; }
     }
 }
