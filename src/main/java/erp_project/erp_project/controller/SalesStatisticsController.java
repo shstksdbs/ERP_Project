@@ -34,7 +34,7 @@ public class SalesStatisticsController {
     }
     
     /**
-     * 시간대별 매출 분석
+     * 시간대별 매출 분석 (전체 지점)
      */
     @GetMapping("/hourly")
     public ResponseEntity<List<SalesStatistics>> getHourlySalesAnalysis(
@@ -42,6 +42,19 @@ public class SalesStatisticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
         List<SalesStatistics> hourlyAnalysis = salesStatisticsService.getHourlySalesAnalysis(startDate, endDate);
+        return ResponseEntity.ok(hourlyAnalysis);
+    }
+    
+    /**
+     * 지점별 시간대별 매출 분석
+     */
+    @GetMapping("/hourly/{branchId}")
+    public ResponseEntity<List<SalesStatistics>> getHourlySalesByBranch(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<SalesStatistics> hourlyAnalysis = salesStatisticsService.getHourlySalesByBranch(branchId, startDate, endDate);
         return ResponseEntity.ok(hourlyAnalysis);
     }
     
@@ -72,6 +85,54 @@ public class SalesStatisticsController {
     }
     
     /**
+     * 메뉴별 인기 순위 (매출 기준) - 메뉴 이름 포함
+     */
+    @GetMapping("/menu/top-sales-with-name/{branchId}")
+    public ResponseEntity<List<Object[]>> getTopSellingMenusBySalesWithName(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<Object[]> topMenus = salesStatisticsService.getTopSellingMenusBySalesWithName(branchId, startDate, endDate);
+        return ResponseEntity.ok(topMenus);
+    }
+    
+    /**
+     * 메뉴별 인기 순위 (수량 기준) - 메뉴 이름 포함
+     */
+    @GetMapping("/menu/top-quantity-with-name/{branchId}")
+    public ResponseEntity<List<Object[]>> getTopSellingMenusByQuantityWithName(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<Object[]> topMenus = salesStatisticsService.getTopSellingMenusByQuantityWithName(branchId, startDate, endDate);
+        return ResponseEntity.ok(topMenus);
+    }
+    
+    // 상품별 매출 통계 조회
+    @GetMapping("/product-sales/{branchId}")
+    public ResponseEntity<List<Object[]>> getProductSalesStatistics(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<Object[]> productStats = salesStatisticsService.getProductSalesStatistics(branchId, startDate, endDate);
+        return ResponseEntity.ok(productStats);
+    }
+    
+    // 카테고리별 매출 통계 조회
+    @GetMapping("/category-sales/{branchId}")
+    public ResponseEntity<List<Object[]>> getCategorySalesStatistics(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+        
+        List<Object[]> categoryStats = salesStatisticsService.getCategorySalesStatistics(branchId, startDate, endDate);
+        return ResponseEntity.ok(categoryStats);
+    }
+    
+    /**
      * 카테고리별 인기 순위 (매출 기준)
      */
     @GetMapping("/category/top-sales/{branchId}")
@@ -96,5 +157,46 @@ public class SalesStatisticsController {
         // 여기서는 간단히 첫 번째 지점(본사)의 통계를 반환
         List<SalesStatistics> summary = salesStatisticsService.getDailySalesByBranch(1L, startDate, endDate);
         return ResponseEntity.ok(summary);
+    }
+    
+    /**
+     * 지점별 월별 매출 조회
+     */
+    @GetMapping("/monthly/{branchId}")
+    public ResponseEntity<List<SalesStatistics>> getMonthlySalesByBranch(
+            @PathVariable Long branchId,
+            @RequestParam int year,
+            @RequestParam int month) {
+        
+        List<SalesStatistics> monthlySales = salesStatisticsService.getMonthlySalesByBranch(branchId, year, month);
+        return ResponseEntity.ok(monthlySales);
+    }
+    
+    /**
+     * 디버깅: 특정 지점의 특정 날짜 통계 데이터 조회
+     */
+    @GetMapping("/debug/daily/{branchId}")
+    public ResponseEntity<SalesStatistics> getDailyStatisticsForDebug(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        
+        SalesStatistics stats = salesStatisticsService.getDailyStatisticsForDebug(branchId, date);
+        if (stats != null) {
+            return ResponseEntity.ok(stats);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    
+    /**
+     * 디버깅: 특정 지점의 특정 날짜 시간별 통계 데이터 조회
+     */
+    @GetMapping("/debug/hourly/{branchId}")
+    public ResponseEntity<List<SalesStatistics>> getHourlyStatisticsForDebug(
+            @PathVariable Long branchId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        
+        List<SalesStatistics> stats = salesStatisticsService.getHourlyStatisticsForDebug(branchId, date);
+        return ResponseEntity.ok(stats);
     }
 }

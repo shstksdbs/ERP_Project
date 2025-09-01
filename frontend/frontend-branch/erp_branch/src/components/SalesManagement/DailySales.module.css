@@ -105,20 +105,22 @@
   margin-bottom: 24px;
 }
 
+/* 시간대별 매출 차트 */
 .hourlyChart {
   display: flex;
-  align-items: end;
   gap: 8px;
+  align-items: end;
   height: 200px;
   padding: 20px 0;
+  overflow-x: auto;
 }
 
 .hourlyBar {
-  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  min-width: 40px;
 }
 
 .hourlyLabel {
@@ -140,16 +142,36 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  right: 0;
-  background: linear-gradient(to top, #3b82f6, #1d4ed8);
+  width: 100%;
+  background: #3b82f6;
   border-radius: 4px;
   transition: height 0.3s ease;
 }
 
 .hourlyValue {
-  font-size: 10px;
-  color: #374151;
+  font-size: 11px;
+  color: #6b7280;
   text-align: center;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* Chart.js 시간대별 차트 컨테이너 */
+.hourlyChartContainer {
+  width: 100%;
+  height: 400px;
+  padding: 20px 0;
+  position: relative;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.hourlyChartCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 20px;
 }
 
 .topProducts {
@@ -210,11 +232,96 @@
 
 .noData {
   text-align: center;
-  padding: 60px 20px;
+  padding: 48px;
   color: #6b7280;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  font-size: 16px;
+}
+
+/* 새로 추가된 스타일 */
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error {
+  text-align: center;
+  padding: 48px;
+  color: #dc2626;
+  font-size: 16px;
+}
+
+.retryButton {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.retryButton:hover {
+  background: #2563eb;
+}
+
+.paymentMethods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.paymentMethod {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.paymentMethod span:first-child {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.paymentMethod span:last-child {
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.debugInfo {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.debugInfo p {
+  margin: 8px 0;
+  color: #374151;
+}
+
+.debugInfo strong {
+  color: #1f2937;
+}
+
+.debugButton {
+  padding: 8px 16px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.debugButton:hover {
+  background: #059669;
 }
 
 /* 반응형 디자인 */

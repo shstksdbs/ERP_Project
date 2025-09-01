@@ -21,15 +21,28 @@
   margin-top: 16px;
 }
 
-.monthInput {
+.yearSelect,
+.monthSelect {
   padding: 12px 16px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
   font-size: 14px;
   background: white;
+  min-width: 120px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
-.monthInput:focus {
+.yearSelect:focus,
+.monthSelect:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -99,94 +112,108 @@
 }
 
 .sectionTitle {
-  font-size: 20px;
-  font-weight: 500;
-  color: #1f2937;
-  margin-bottom: 24px;
-}
-
-.categoryBreakdown {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.categoryCard {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid #f3f4f6;
-  border-radius: 8px;
-  transition: box-shadow 0.2s;
-}
-
-.categoryCard:hover {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.categoryInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.categoryName {
-  font-size: 16px;
-  font-weight: 500;
-  color: #1f2937;
-  margin: 0 0 4px 0;
-}
-
-.categorySales {
-  font-size: 14px;
-  color: #059669;
-  font-weight: 500;
-  margin: 0;
-}
-
-.categoryBar {
-  flex: 1;
-  height: 8px;
-  background: #f3f4f6;
-  border-radius: 4px;
-  overflow: hidden;
-  margin: 0 16px;
-}
-
-.categoryBarFill {
-  height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #1d4ed8);
-  border-radius: 4px;
-  transition: width 0.3s ease;
-}
-
-.categoryPercentage {
+  font-size: 18px;
   font-weight: 600;
-  color: #374151;
-  min-width: 40px;
-  text-align: right;
+  color: #1f2937;
+  margin-bottom: 20px;
+}
+
+/* 차트 헤더와 토글 */
+.chartHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding: 0 15px;
+}
+
+.chartHeader .sectionTitle {
+  margin-bottom: 0;
+}
+
+.chartToggle {
+  display: flex;
+  gap: 6px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  padding: 6px;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04);
+}
+
+.toggleButton {
+  padding: 10px 20px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: 'Arial', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.toggleButton:hover {
+  background: rgba(226, 232, 240, 0.8);
+  color: #475569;
+  transform: translateY(-1px);
+}
+
+.toggleButton.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  box-shadow: 0 4px 15px -3px rgba(59, 130, 246, 0.4), 0 2px 8px -2px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+}
+
+.paymentMethods {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.paymentMethod {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f9fafb;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.paymentMethod span:first-child {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.paymentMethod span:last-child {
+  color: #1f2937;
+  font-weight: 600;
 }
 
 .dailyChart {
   display: flex;
+  gap: 8px;
   align-items: end;
-  gap: 4px;
   height: 200px;
   padding: 20px 0;
   overflow-x: auto;
 }
 
 .dailyBar {
-  flex: 1;
-  min-width: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
+  min-width: 40px;
 }
 
 .dailyLabel {
-  font-size: 10px;
+  font-size: 12px;
   color: #6b7280;
   text-align: center;
 }
@@ -204,61 +231,195 @@
   position: absolute;
   bottom: 0;
   left: 0;
-  right: 0;
-  background: linear-gradient(to top, #10b981, #059669);
+  width: 100%;
+  background: #3b82f6;
   border-radius: 4px;
   transition: height 0.3s ease;
 }
 
 .dailyValue {
-  font-size: 8px;
-  color: #374151;
+  font-size: 11px;
+  color: #6b7280;
   text-align: center;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+/* 꺾은선 그래프 스타일 */
+.lineChartContainer {
+  width: 100%;
+  height: 250px;
+  padding: 20px 0;
+  overflow-x: auto;
+}
+
+.lineChart {
+  width: 100%;
+  height: 100%;
+  min-width: 800px;
+}
+
+/* Chart.js 차트 컨테이너 */
+.chartContainer {
+  width: 100%;
+  height: 500px;
+  padding: 25px 0;
+  position: relative;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.15), 0 4px 10px -2px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.chartCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 25px;
+}
+
+/* 주간별 Chart.js 차트 컨테이너 */
+.weeklyChartContainer {
+  width: 100%;
+  height: 400px;
+  padding: 20px 0;
+  position: relative;
+  background: linear-gradient(135deg, #fefefe 0%, #f8fafc 100%);
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.weeklyChartCanvas {
+  width: 100% !important;
+  height: 100% !important;
+  padding: 20px;
+}
+
+/* 스크롤바 스타일링 */
+.lineChartContainer::-webkit-scrollbar {
+  height: 8px;
+}
+
+.lineChartContainer::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.lineChartContainer::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.lineChartContainer::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 주간별 차트 스타일 */
+.weeklyChart {
+  display: flex;
+  gap: 16px;
+  align-items: end;
+  height: 250px;
+  padding: 20px 0;
+  overflow-x: auto;
+}
+
+.weeklyBar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  min-width: 80px;
+  flex: 1;
+}
+
+.weeklyLabel {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weekNumber {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.weekRange {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.weeklyBarContainer {
+  width: 100%;
+  height: 150px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+
+.weeklyBarFill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  border-radius: 6px;
+  transition: height 0.3s ease;
+}
+
+.weeklyValue {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weeklyTotalSales {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.weeklyOrders {
+  font-size: 10px;
+  color: #6b7280;
+}
+
+.loading {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
+.error {
+  text-align: center;
+  padding: 48px;
+  color: #dc2626;
+  font-size: 16px;
+}
+
+.retryButton {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.retryButton:hover {
+  background: #2563eb;
 }
 
 .noData {
   text-align: center;
-  padding: 60px 20px;
+  padding: 48px;
   color: #6b7280;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-/* 반응형 디자인 */
-@media (max-width: 768px) {
-  .container {
-    padding: 0 16px;
-  }
-
-  .summaryCards {
-    grid-template-columns: 1fr;
-  }
-
-  .categoryCard {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
-  }
-
-  .categoryBar {
-    margin: 0;
-  }
-
-  .dailyChart {
-    flex-direction: column;
-    height: auto;
-    gap: 16px;
-  }
-
-  .dailyBar {
-    flex-direction: row;
-    align-items: center;
-    gap: 12px;
-  }
-
-  .dailyBarContainer {
-    width: 60px;
-    height: 80px;
-  }
+  font-size: 16px;
 }

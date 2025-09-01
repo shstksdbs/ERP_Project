@@ -50,6 +50,29 @@ public class OrderController {
     // 토스페이먼츠 시크릿 키 (실제로는 환경 변수로 관리해야 함)
     private static final String TOSS_SECRET_KEY = "test_sk_D4yKeq5bgrpKRd0JYbLVGX0lzW6Y";
     
+    /**
+     * 지점별 특정 날짜의 주문 조회
+     */
+    @GetMapping("/branch/{branchId}/date")
+    public ResponseEntity<List<Orders>> getOrdersByBranchAndDate(
+            @PathVariable Long branchId,
+            @RequestParam String date) {
+        
+        try {
+            // 날짜 문자열을 LocalDate로 파싱
+            java.time.LocalDate localDate = java.time.LocalDate.parse(date);
+            LocalDateTime startTime = localDate.atStartOfDay();
+            LocalDateTime endTime = localDate.atTime(23, 59, 59);
+            
+            List<Orders> orders = orderRepository.findByBranchIdAndOrderTimeBetween(
+                branchId, startTime, endTime);
+            
+            return ResponseEntity.ok(orders);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
     // 보안을 위한 시크릿 키 (환경 변수에서 가져오기)
     @Value("${security.secret.key:your_secret_key_here_change_in_production}")
     private String securitySecret;

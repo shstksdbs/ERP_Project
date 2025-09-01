@@ -44,6 +44,9 @@ public class SalesStatistics {
     @Column(name = "mobile_sales", columnDefinition = "DECIMAL(12,2) DEFAULT 0.00")
     private BigDecimal mobileSales = BigDecimal.ZERO;
     
+    @Column(name = "average_order_value", columnDefinition = "DECIMAL(10,2) DEFAULT 0.00")
+    private BigDecimal averageOrderValue = BigDecimal.ZERO;
+    
     @Column(name = "created_at")
     private LocalDateTime createdAt;
     
@@ -89,6 +92,9 @@ public class SalesStatistics {
     
     public BigDecimal getMobileSales() { return mobileSales; }
     public void setMobileSales(BigDecimal mobileSales) { this.mobileSales = mobileSales; }
+    
+    public BigDecimal getAverageOrderValue() { return averageOrderValue; }
+    public void setAverageOrderValue(BigDecimal averageOrderValue) { this.averageOrderValue = averageOrderValue; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

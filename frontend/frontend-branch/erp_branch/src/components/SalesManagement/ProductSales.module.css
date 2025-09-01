@@ -60,6 +60,15 @@
   font-size: 14px;
   background: white;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .categoryFilter:focus {
@@ -140,22 +149,24 @@
   background-color: #f9fafb;
 }
 
+/* 순위 스타일 */
 .rank {
   text-align: center;
+  vertical-align: middle;
 }
 
 .rankNumber {
-  display: inline-block;
-  width: 24px;
-  height: 24px;
-  background: #3b82f6;
-  color: white;
-  border-radius: 50%;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #5079ec;
+  color: white;
+  border-radius: 50%;
+  font-size: 14px;
   font-weight: 600;
-  font-size: 12px;
+  
 }
 
 .productName {
@@ -218,6 +229,18 @@
 .salesCount {
   font-weight: 500;
   color: #374151;
+}
+
+.retryButton:hover {
+  background: #2563eb;
+}
+
+/* 데이터 없음 */
+.noData {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  font-size: 16px;
 }
 
 /* 반응형 디자인 */

@@ -72,6 +72,13 @@ public class SalesStatisticsService {
         dailyStats.addDiscount(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
         dailyStats.updateNetSales();
         
+        // 평균주문금액 자동 계산
+        if (dailyStats.getTotalOrders() > 0) {
+            BigDecimal averageOrderValue = dailyStats.getTotalSales()
+                    .divide(BigDecimal.valueOf(dailyStats.getTotalOrders()), 2, BigDecimal.ROUND_HALF_UP);
+            dailyStats.setAverageOrderValue(averageOrderValue);
+        }
+        
         // 결제 방법별 매출 업데이트
         updatePaymentMethodSales(dailyStats, order);
         
@@ -190,10 +197,17 @@ public class SalesStatisticsService {
     }
     
     /**
-     * 시간대별 매출 분석
+     * 시간대별 매출 분석 (전체 지점)
      */
     public List<SalesStatistics> getHourlySalesAnalysis(LocalDate startDate, LocalDate endDate) {
         return salesStatisticsRepository.findHourlyAnalysisByDateRange(startDate, endDate);
+    }
+    
+    /**
+     * 지점별 시간대별 매출 분석
+     */
+    public List<SalesStatistics> getHourlySalesByBranch(Long branchId, LocalDate startDate, LocalDate endDate) {
+        return salesStatisticsRepository.findHourlyAnalysisByBranchAndDateRange(branchId, startDate, endDate);
     }
     
     /**
@@ -211,9 +225,82 @@ public class SalesStatisticsService {
     }
     
     /**
+     * 메뉴별 인기 순위 (매출 기준) - 메뉴 이름 포함
+     */
+    public List<Object[]> getTopSellingMenusBySalesWithName(Long branchId, LocalDate startDate, LocalDate endDate) {
+        return menuSalesStatisticsRepository.findTopSellingMenusBySalesWithName(branchId, startDate, endDate);
+    }
+    
+    /**
+     * 메뉴별 인기 순위 (수량 기준) - 메뉴 이름 포함
+     */
+    public List<Object[]> getTopSellingMenusByQuantityWithName(Long branchId, LocalDate startDate, LocalDate endDate) {
+        return menuSalesStatisticsRepository.findTopSellingMenusByQuantityWithName(branchId, startDate, endDate);
+    }
+    
+    // 상품별 매출 통계 조회
+    public List<Object[]> getProductSalesStatistics(Long branchId, LocalDate startDate, LocalDate endDate) {
+        return menuSalesStatisticsRepository.findProductSalesStatistics(branchId, startDate, endDate);
+    }
+    
+    // 카테고리별 매출 통계 조회
+    public List<Object[]> getCategorySalesStatistics(Long branchId, LocalDate startDate, LocalDate endDate) {
+        return menuSalesStatisticsRepository.findCategorySalesStatistics(branchId, startDate, endDate);
+    }
+    
+    /**
      * 카테고리별 인기 순위 (매출 기준)
      */
     public List<CategorySalesStatistics> getTopSellingCategoriesBySales(Long branchId, LocalDate startDate, LocalDate endDate) {
         return categorySalesStatisticsRepository.findTopSellingCategoriesBySales(branchId, startDate, endDate);
+    }
+    
+    /**
+     * 지점별 월별 매출 집계
+     */
+    public List<SalesStatistics> getMonthlySalesByBranch(Long branchId, int year, int month) {
+        LocalDate startDate = LocalDate.of(year, month, 1);
+        LocalDate endDate = startDate.plusMonths(1).minusDays(1);
+        
+        List<SalesStatistics> dailyStats = salesStatisticsRepository
+                .findDailySummaryByBranchAndDateRange(branchId, startDate, endDate);
+        
+        // 월별 집계 데이터 생성
+        SalesStatistics monthlyStats = new SalesStatistics();
+        monthlyStats.setBranchId(branchId);
+        monthlyStats.setStatisticDate(startDate);
+        monthlyStats.setStatisticHour(null); // 월별 통계는 시간 정보 없음
+        
+        // 일별 데이터를 월별로 집계
+        for (SalesStatistics daily : dailyStats) {
+            monthlyStats.setTotalOrders(monthlyStats.getTotalOrders() + daily.getTotalOrders());
+            monthlyStats.setTotalSales(monthlyStats.getTotalSales().add(daily.getTotalSales()));
+            monthlyStats.setTotalDiscount(monthlyStats.getTotalDiscount().add(daily.getTotalDiscount()));
+            monthlyStats.setCashSales(monthlyStats.getCashSales().add(daily.getCashSales()));
+            monthlyStats.setCardSales(monthlyStats.getCardSales().add(daily.getCardSales()));
+            monthlyStats.setMobileSales(monthlyStats.getMobileSales().add(daily.getMobileSales()));
+        }
+        
+        // netSales는 totalSales - totalDiscount로 계산
+        monthlyStats.setNetSales(monthlyStats.getTotalSales().subtract(monthlyStats.getTotalDiscount()));
+        
+        return List.of(monthlyStats);
+    }
+    
+    /**
+     * 디버깅: 특정 지점의 특정 날짜 통계 데이터 조회
+     */
+    public SalesStatistics getDailyStatisticsForDebug(Long branchId, LocalDate date) {
+        return salesStatisticsRepository
+                .findByBranchIdAndStatisticDateAndStatisticHourIsNull(branchId, date)
+                .orElse(null);
+    }
+    
+    /**
+     * 디버깅: 특정 지점의 특정 날짜 시간별 통계 데이터 조회
+     */
+    public List<SalesStatistics> getHourlyStatisticsForDebug(Long branchId, LocalDate date) {
+        return salesStatisticsRepository
+                .findByBranchIdAndStatisticDateAndStatisticHourIsNotNullOrderByStatisticHour(branchId, date);
     }
 }

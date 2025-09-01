@@ -2,75 +2,104 @@ import React, { useState, useEffect } from 'react';
 import styles from './ProductSales.module.css';
 import chartLinearIcon from '../../assets/chartLinear_icon.png';
 import searchIcon from '../../assets/search_icon.png';
+import { salesStatisticsService } from '../../services/salesStatisticsService';
 
 export default function ProductSales({ branchId }) {
   const [products, setProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [dateRange, setDateRange] = useState({ 
+    start: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0], 
+    end: new Date().toISOString().split('T')[0] 
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [categories, setCategories] = useState([]);
 
-  // 샘플 데이터
+  // 실제 데이터 조회
   useEffect(() => {
-    const sampleProducts = [
-      {
-        id: 1,
-        name: '아메리카노',
-        category: '음료',
-        totalSales: 4500000,
-        quantity: 1000,
-        averagePrice: 4500,
-        revenue: 4500000,
-        salesCount: 1000,
-        profitMargin: 66.7
-      },
-      {
-        id: 2,
-        name: '카페라떼',
-        category: '음료',
-        totalSales: 4400000,
-        quantity: 800,
-        averagePrice: 5500,
-        revenue: 4400000,
-        salesCount: 800,
-        profitMargin: 67.3
-      },
-      {
-        id: 3,
-        name: '카푸치노',
-        category: '음료',
-        totalSales: 3960000,
-        quantity: 720,
-        averagePrice: 5500,
-        revenue: 3960000,
-        salesCount: 720,
-        profitMargin: 67.3
-      },
-      {
-        id: 4,
-        name: '샌드위치',
-        category: '식품',
-        totalSales: 3600000,
-        quantity: 450,
-        averagePrice: 8000,
-        revenue: 3600000,
-        salesCount: 450,
-        profitMargin: 62.5
-      },
-      {
-        id: 5,
-        name: '티라떼',
-        category: '음료',
-        totalSales: 3000000,
-        quantity: 600,
-        averagePrice: 5000,
-        revenue: 3000000,
-        salesCount: 600,
-        profitMargin: 65.0
-      }
-    ];
+    if (branchId && dateRange.start && dateRange.end) {
+      fetchProductSalesData();
+    }
+  }, [branchId, dateRange.start, dateRange.end]);
 
-    setProducts(sampleProducts);
-  }, []);
+  const fetchProductSalesData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // 상품별 매출 통계 조회
+      const productStats = await salesStatisticsService.getProductSalesStatistics(
+        branchId, 
+        dateRange.start, 
+        dateRange.end
+      );
+      
+      // 카테고리별 매출 통계 조회
+      const categoryStats = await salesStatisticsService.getCategorySalesStatistics(
+        branchId, 
+        dateRange.start, 
+        dateRange.end
+      );
+      
+      // 상품별 매출 데이터 처리
+      const processedProducts = productStats.map(stat => {
+        const [menuStats, menuName, menuCategory, menuPrice] = stat;
+        
+        // 수익률 계산 (순매출 / 총매출 * 100)
+        const totalSales = Number(menuStats.totalSales || 0);
+        const netSales = Number(menuStats.netSales || 0);
+        const profitMargin = totalSales > 0 ? Math.round((netSales / totalSales) * 100) : 0;
+        
+        return {
+          id: menuStats.menuId,
+          name: menuName || `메뉴 ID: ${menuStats.menuId}`,
+          category: menuCategory || '미분류',
+          totalSales: totalSales,
+          quantity: menuStats.quantitySold || 0,
+          averagePrice: Number(menuPrice || 0),
+          revenue: netSales,
+          salesCount: menuStats.quantitySold || 0,
+          profitMargin: profitMargin
+        };
+      });
+      
+      // 중복된 상품 데이터를 하나로 합치기
+      const mergedProducts = processedProducts.reduce((acc, product) => {
+        const existingProduct = acc.find(p => p.id === product.id);
+        
+        if (existingProduct) {
+          // 기존 상품이 있으면 데이터 누적
+          existingProduct.quantity += product.quantity;
+          existingProduct.totalSales += product.totalSales;
+          existingProduct.revenue += product.revenue;
+          existingProduct.salesCount += product.salesCount;
+          
+          // 평균가격은 기존 가격 유지 (동일한 상품이므로)
+          // 수익률은 누적된 데이터로 재계산
+          existingProduct.profitMargin = existingProduct.totalSales > 0 
+            ? Math.round((existingProduct.revenue / existingProduct.totalSales) * 100) 
+            : 0;
+        } else {
+          // 새로운 상품이면 추가
+          acc.push({ ...product });
+        }
+        
+        return acc;
+      }, []);
+      
+      // 카테고리 목록 추출
+      const uniqueCategories = [...new Set(mergedProducts.map(p => p.category))];
+      setCategories(uniqueCategories);
+      
+      setProducts(mergedProducts);
+    } catch (err) {
+      console.error('상품별 매출 데이터 조회 오류:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -118,9 +147,9 @@ export default function ProductSales({ branchId }) {
             className={styles.categoryFilter}
           >
             <option value="all">전체 카테고리</option>
-            <option value="음료">음료</option>
-            <option value="식품">식품</option>
-            <option value="디저트">디저트</option>
+            {categories.map(category => (
+              <option key={category} value={category}>{category}</option>
+            ))}
           </select>
           <div className={styles.dateRange}>
             <input
@@ -144,7 +173,18 @@ export default function ProductSales({ branchId }) {
         </div>
       </div>
 
-      <div className={styles.content}>
+      {loading ? (
+        <div className={styles.loading}>
+          <p>상품별 매출 데이터를 불러오는 중...</p>
+        </div>
+      ) : error ? (
+        <div className={styles.error}>
+          <p>오류가 발생했습니다: {error}</p>
+          <button onClick={fetchProductSalesData} className={styles.retryButton}>
+            다시 시도
+          </button>
+        </div>
+      ) : (
         <div className={styles.tableContainer}>
           <table className={styles.table}>
             <thead className={styles.tableHeader}>
@@ -160,36 +200,44 @@ export default function ProductSales({ branchId }) {
               </tr>
             </thead>
             <tbody>
-              {sortedProducts.map((product, index) => (
-                <tr key={product.id} className={styles.tableRow}>
-                  <td className={styles.rank}>
-                    <span className={styles.rankNumber}>{index + 1}</span>
-                  </td>
-                  <td className={styles.productName}>{product.name}</td>
-                  <td>
-                    <span className={styles.category}>{product.category}</span>
-                  </td>
-                  <td className={styles.quantity}>{product.quantity.toLocaleString()}개</td>
-                  <td className={styles.averagePrice}>{formatCurrency(product.averagePrice)}원</td>
-                  <td className={styles.totalSales}>{formatCurrency(product.totalSales)}원</td>
-                  <td>
-                    <div className={styles.profitMargin}>
-                      <div className={styles.profitBar}>
-                        <div 
-                          className={styles.profitFill}
-                          style={{ width: `${product.profitMargin}%` }}
-                        ></div>
+              {sortedProducts.length > 0 ? (
+                sortedProducts.map((product, index) => (
+                  <tr key={product.id} className={styles.tableRow}>
+                    <td className={styles.rank}>
+                      <span className={styles.rankNumber}>{index + 1}</span>
+                    </td>
+                    <td className={styles.productName}>{product.name}</td>
+                    <td>
+                      <span className={styles.category}>{product.category}</span>
+                    </td>
+                    <td className={styles.quantity}>{product.quantity.toLocaleString()}개</td>
+                    <td className={styles.averagePrice}>{formatCurrency(product.averagePrice)}원</td>
+                    <td className={styles.totalSales}>{formatCurrency(product.totalSales)}원</td>
+                    <td>
+                      <div className={styles.profitMargin}>
+                        <div className={styles.profitBar}>
+                          <div 
+                            className={styles.profitFill}
+                            style={{ width: `${product.profitMargin}%` }}
+                          ></div>
+                        </div>
+                        <span className={styles.profitText}>{product.profitMargin}%</span>
                       </div>
-                      <span className={styles.profitText}>{product.profitMargin}%</span>
-                    </div>
+                    </td>
+                    <td className={styles.salesCount}>{product.salesCount.toLocaleString()}회</td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="8" className={styles.noData}>
+                    <p>선택한 기간의 상품별 매출 데이터가 없습니다.</p>
                   </td>
-                  <td className={styles.salesCount}>{product.salesCount.toLocaleString()}회</td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
-      </div>
+      )}
     </div>
   );
 }

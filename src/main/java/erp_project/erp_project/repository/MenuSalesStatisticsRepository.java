@@ -36,7 +36,23 @@ public interface MenuSalesStatisticsRepository extends JpaRepository<MenuSalesSt
     @Query("SELECT m FROM MenuSalesStatistics m WHERE m.branchId = :branchId AND m.statisticDate BETWEEN :startDate AND :endDate ORDER BY m.netSales DESC")
     List<MenuSalesStatistics> findTopSellingMenusBySales(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     
+    // 커스텀 쿼리: 메뉴 이름을 포함한 인기 순위 (매출 기준)
+    @Query("SELECT m, menu.name as menuName FROM MenuSalesStatistics m JOIN Menu menu ON m.menuId = menu.id WHERE m.branchId = :branchId AND m.statisticDate BETWEEN :startDate AND :endDate ORDER BY m.netSales DESC")
+    List<Object[]> findTopSellingMenusBySalesWithName(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    // 커스텀 쿼리: 메뉴 이름을 포함한 인기 순위 (수량 기준)
+    @Query("SELECT m, menu.name as menuName FROM MenuSalesStatistics m JOIN Menu menu ON m.menuId = menu.id WHERE m.branchId = :branchId AND m.statisticDate BETWEEN :startDate AND :endDate ORDER BY m.quantitySold DESC")
+    List<Object[]> findTopSellingMenusByQuantityWithName(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
     // 커스텀 쿼리: 전체 지점 메뉴별 통합 통계
     @Query("SELECT m FROM MenuSalesStatistics m WHERE m.statisticDate BETWEEN :startDate AND :endDate ORDER BY m.netSales DESC")
     List<MenuSalesStatistics> findTopSellingMenusAllBranches(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    // 상품별 매출 통계 조회 (새로 추가)
+    @Query("SELECT m, menu.name as menuName, menu.category as menuCategory, menu.price as menuPrice FROM MenuSalesStatistics m JOIN Menu menu ON m.menuId = menu.id WHERE m.branchId = :branchId AND m.statisticDate BETWEEN :startDate AND :endDate ORDER BY m.netSales DESC")
+    List<Object[]> findProductSalesStatistics(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    // 카테고리별 상품 매출 통계 조회
+    @Query("SELECT menu.category as menuCategory, SUM(m.netSales) as totalSales, SUM(m.quantitySold) as totalQuantity, COUNT(DISTINCT m.menuId) as productCount FROM MenuSalesStatistics m JOIN Menu menu ON m.menuId = menu.id WHERE m.branchId = :branchId AND m.statisticDate BETWEEN :startDate AND :endDate GROUP BY menu.category ORDER BY totalSales DESC")
+    List<Object[]> findCategorySalesStatistics(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }
