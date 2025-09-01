@@ -27,4 +27,8 @@ public interface MaterialStockRepository extends JpaRepository<MaterialStock, Lo
     // 재고 과다 항목 조회 (현재 재고가 최대 재고의 80% 이상)
     @Query("SELECT ms FROM MaterialStock ms WHERE ms.branch.id = :branchId AND ms.currentStock >= (ms.maxStock * 0.8)")
     List<MaterialStock> findExcessStockItems(@Param("branchId") Long branchId);
+    
+    // 재고 부족 시 알림 (최소 재고 기준) - InventoryService에서 사용
+    @Query("SELECT ms FROM MaterialStock ms WHERE ms.branch.id = :branchId AND ms.currentStock < ms.minStock")
+    List<MaterialStock> findByBranchIdAndCurrentStockLessThanMinStock(@Param("branchId") Long branchId);
 }

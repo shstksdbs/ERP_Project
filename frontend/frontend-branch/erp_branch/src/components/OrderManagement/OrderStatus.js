@@ -90,6 +90,34 @@ export default function OrderStatus({ branchId, loginData }) {
 
   const handleStatusChange = async (orderId, newStatus) => {
     try {
+      // 주문 완료로 변경하는 경우 재고 차감 먼저 처리
+      if (newStatus === 'completed') {
+        try {
+          // 재고 차감 API 호출
+          const inventoryResponse = await fetch(`http://localhost:8080/api/inventory/deduct-from-order/${orderId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (inventoryResponse.ok) {
+            console.log('재고 차감이 완료되었습니다.');
+            alert('주문이 완료되었고 재고가 차감되었습니다.');
+          } else {
+            const errorData = await inventoryResponse.json();
+            console.error('재고 차감 실패:', errorData);
+            alert(`재고 차감에 실패했습니다: ${errorData.error || '알 수 없는 오류'}`);
+            return; // 재고 차감 실패 시 주문 상태 변경 중단
+          }
+        } catch (inventoryError) {
+          console.error('재고 차감 API 호출 오류:', inventoryError);
+          alert('재고 차감 중 오류가 발생했습니다.');
+          return; // 재고 차감 오류 시 주문 상태 변경 중단
+        }
+      }
+
+      // 주문 상태 변경 API 호출
       const response = await fetch(`http://localhost:8080/api/orders/${orderId}/status`, {
         method: 'PUT',
         headers: {
@@ -97,7 +125,7 @@ export default function OrderStatus({ branchId, loginData }) {
         },
         body: JSON.stringify({
           status: newStatus,
-          employeeName: currentEmployeeName // 현재 로그인한 유저의 이름 추가
+          employeeName: currentEmployeeName
         }),
       });
 
@@ -118,11 +146,10 @@ export default function OrderStatus({ branchId, loginData }) {
           )
         );
 
-        // 주문이력 테이블에 자동 추가 (완료 또는 취소된 경우)
-        // 백엔드에서 자동으로 처리하므로 프론트엔드에서는 제거
-        // if (newStatus === 'completed' || newStatus === 'cancelled') {
-        //   addToOrderHistory(orderId, newStatus);
-        // }
+        // 완료가 아닌 경우에만 성공 메시지 표시 (완료는 위에서 이미 표시됨)
+        if (newStatus !== 'completed') {
+          alert(`주문 상태가 '${getStatusText(newStatus).props.children}'로 변경되었습니다.`);
+        }
       } else {
         alert('주문 상태 업데이트에 실패했습니다.');
       }

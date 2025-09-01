@@ -1,4 +1,8 @@
-INSERT INTO erp_system.recipe_ingredients(cost_per_unit, quantity, total_cost, created_at,  material_id, recipe_id, updated_at, unit, notes) VALUES 
+
+-- recipe_ingredients 테이블에 유니크 키 추가 (레시피당 같은 재료 중복 방지)
+ALTER TABLE `recipe_ingredients` ADD UNIQUE KEY `uk_recipe_material` (`recipe_id`, `material_id`);
+
+INSERT IGNORE INTO erp_system.recipe_ingredients(cost_per_unit, quantity, total_cost, created_at,  material_id, recipe_id, updated_at, unit, notes) VALUES 
 (1200.00,1.000,1200.00,'2025-08-27 16:38:48.459842',1,2,'2025-08-27 16:38:48.459842','개',''),
 (8.50,80.000,680.00,'2025-08-27 16:38:48.468847',2,2,'2025-08-27 16:38:48.468847','g',''),
 (2.50,10.000,25.00,'2025-08-27 16:38:48.477842',11,2,'2025-08-27 16:38:48.477842','ml',''),

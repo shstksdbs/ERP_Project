@@ -56,6 +56,54 @@
   align-items: center;
 }
 
+/* 년도 및 월 선택 필터 */
+.dateFilterContainer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.dateFilterItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dateFilterLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+.dateFilterSelect {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  background-color: white;
+  min-width: 80px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+.dateFilterSelect:focus {
+  outline: none;
+  border-color: var(--gray-700);
+}
+
+.dateFilterSelect:hover {
+  border-color: #9ca3af;
+}
+
 .searchBox {
   flex: 1;
 }

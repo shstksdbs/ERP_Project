@@ -45,6 +45,8 @@ export default function FranchiseSalesInquiry() {
   const [searchTerm, setSearchTerm] = useState('');
   const [franchises, setFranchises] = useState([]);
   const [salesData, setSalesData] = useState([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
 
   // 샘플 가맹점 데이터
   useEffect(() => {
@@ -367,28 +369,36 @@ export default function FranchiseSalesInquiry() {
             />
           </div>
         </div>
-        <div className={styles.filterBox}>
-          <select
-            className={styles.filterSelect}
-            value={selectedPeriod}
-            onChange={(e) => setSelectedPeriod(e.target.value)}
-          >
-            <option value="month">월별</option>
-            <option value="quarter">분기별</option>
-            <option value="year">연도별</option>
-          </select>
+
+        {/* 년도 및 월 선택 */}
+        <div className={styles.dateFilterContainer}>
+          <div className={styles.dateFilterItem}>
+            <select
+              id="yearSelect"
+              className={styles.dateFilterSelect}
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+            >
+              {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(year => (
+                <option key={year} value={year}>{year}년</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className={styles.dateFilterItem}>
+            <select
+              id="monthSelect"
+              className={styles.dateFilterSelect}
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+            >
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                <option key={month} value={month}>{month}월</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className={styles.filterBox}>
-          <select
-            className={styles.filterSelect}
-            value={selectedFranchise}
-            onChange={(e) => setSelectedFranchise(e.target.value)}
-          >
-            <option value="all">전체 가맹점</option>
-            <option value="franchise">가맹점</option>
-            <option value="direct">직영점</option>
-          </select>
-        </div>
+        
         <button className={styles.exportButton} onClick={handleExportData}>
           <img src={downloadIcon} alt="내보내기" className={styles.buttonIcon} />
           데이터 내보내기
