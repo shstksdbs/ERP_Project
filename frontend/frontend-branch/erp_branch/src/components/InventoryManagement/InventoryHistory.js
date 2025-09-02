@@ -226,13 +226,13 @@ export default function InventoryHistory({ branchId }) {
               onChange={handleSearch}
               className={styles['search-input']}
             />
-            <button type="submit" className={styles['search-button']}>
+            {/* <button type="submit" className={styles['search-button']}>
               검색
-            </button>
+            </button> */}
           </div>
         </form>
-        <div className={styles['filter-box']}>
-          <select
+        {/* <div className={styles['filter-box']}>
+          {<select
             value={selectedType}
             onChange={handleTypeFilter}
             className={styles['filter-select']}
@@ -241,8 +241,8 @@ export default function InventoryHistory({ branchId }) {
             <option value="in">입고</option>
             <option value="out">출고</option>
             <option value="adjustment">조정</option>
-          </select>
-        </div>
+          </select> 
+        </div> */}
         <div className={styles['date-range']}>
           <input
             type="date"

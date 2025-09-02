@@ -51,6 +51,22 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
     }
   };
 
+  // 알림 클릭 처리 (알림센터로 이동)
+  const handleNotificationClick = (notification) => {
+    console.log('알림 클릭:', notification);
+    
+    // 알림센터 탭으로 이동
+    setActiveTab(['notifications']);
+    
+    // 알림 패널 닫기
+    setShowAlerts(false);
+    
+    // 읽지 않은 알림이면 읽음 처리
+    if (!notification.isRead) {
+      handleMarkAsRead(notification.id);
+    }
+  };
+
   // 알림 읽음 처리
   const handleMarkAsRead = async (notificationId) => {
     try {
@@ -327,6 +343,8 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
                           <div 
                             key={notification.id} 
                             className={`${styles.alertItem} ${!notification.isRead ? styles.unread : ''}`}
+                            onClick={() => handleNotificationClick(notification)}
+                            style={{ cursor: 'pointer' }}
                           >
                             <div className={styles.alertHeader}>
                               <div className={styles.alertTypeContainer}>
@@ -353,7 +371,10 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
                             </div>
                             {!notification.isRead && (
                               <button 
-                                onClick={() => handleMarkAsRead(notification.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation(); // 이벤트 전파 방지
+                                  handleMarkAsRead(notification.id);
+                                }}
                                 className={styles.markReadButton}
                               >
                                 읽음
@@ -365,7 +386,10 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
                         {unreadCount > 5 && (
                           <div className={styles.alertsMore}>
                             <button 
-                              onClick={() => setActiveTab(['notifications'])}
+                              onClick={() => {
+                                setActiveTab(['notifications']);
+                                setShowAlerts(false); // 알림 패널 닫기
+                              }}
                               className={styles.viewAllButton}
                             >
                               모든 알림 보기 ({unreadCount}개)

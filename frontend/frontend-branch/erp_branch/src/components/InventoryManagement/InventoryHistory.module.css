@@ -27,14 +27,12 @@
   flex-wrap: wrap;
 }
 
-.search-box {
-  flex: 1;
-}
 
 .search-input-container {
   position: relative;
   display: flex;
   align-items: center;
+  width: 250px;
 }
 
 .search-icon {
@@ -46,7 +44,7 @@
 }
 
 .search-input {
-  width: 25%;
+  width: 100%;
   padding: 10px 12px 10px 40px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -85,6 +83,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-left: auto;
 }
 
 .refresh-button:hover {

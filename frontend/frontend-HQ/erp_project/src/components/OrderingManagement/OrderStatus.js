@@ -167,55 +167,60 @@ export default function OrderStatus() {
       setLoading(true);
       setError(null);
 
+      console.log('발주 상태 업데이트 시작:', { orderId, action, processedBy, notes });
+
       let endpoint = '';
       let requestBody = {};
 
       // 처리자 정보를 포함한 요청 본문 생성
       const processInfo = {
-        processedBy: processedBy || 'Unknown'
+        processedBy: processedBy || 'Unknown',
+        processedAt: new Date().toISOString()
       };
       
       console.log('처리자 정보:', processInfo);
+      console.log('액션 타입:', typeof action, '액션 값:', action);
 
       switch (action) {
         case 'APPROVED':
-          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/status`;
+          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/status`;
           requestBody = {
             status: 'APPROVED',
             ...processInfo
           };
           break;
         case 'CANCELLED':
-          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/cancel?reason=본사에서 취소 처리`;
+          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/cancel`;
           requestBody = processInfo;
           break;
         case 'IN_TRANSIT':
-          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/status`;
+          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/status`;
           requestBody = {
             status: 'IN_TRANSIT',
             ...processInfo
           };
           break;
         case 'DELIVERED':
-          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/status`;
+          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/status`;
           requestBody = {
             status: 'DELIVERED',
             ...processInfo
           };
           break;
         default:
-          throw new Error('지원하지 않는 액션입니다.');
+          console.error('지원하지 않는 액션:', action, '타입:', typeof action);
+          throw new Error(`지원하지 않는 액션입니다: ${action}`);
       }
 
       console.log('발주 상태 업데이트 요청:', {
         endpoint: endpoint,
-        method: 'PUT',
+        method: 'PATCH',
         requestBody: requestBody,
         action: action
       });
 
       const response = await fetch(endpoint, {
-        method: 'PUT',
+        method: action === 'CANCELLED' ? 'PATCH' : 'PATCH',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -904,19 +909,6 @@ export default function OrderStatus() {
                       </td>
                       <td>
                         <div className={styles['action-buttons']}>
-                          {(order.status === 'PENDING') && (
-                            <>
-                              <button
-                                className={`btn btn-small btn-primary ${styles['btn-small']}`}
-                                onClick={() => {
-                                  setSelectedOrder(order);
-                                  setShowProcessOrderModal(true);
-                                }}
-                              >
-                                처리
-                              </button>
-                            </>
-                          )}
                           <button
                             className={`btn btn-small btn-primary ${styles['btn-small']}`}
                             onClick={() => {
@@ -1115,7 +1107,7 @@ export default function OrderStatus() {
 
 // 발주 처리 모달 컴포넌트
 function ProcessOrderModal({ order, onProcess, onClose }) {
-  const [action, setAction] = useState('approved');
+  const [action, setAction] = useState('APPROVED');
   const [processedBy, setProcessedBy] = useState('김본사');
   const [notes, setNotes] = useState('');
 
