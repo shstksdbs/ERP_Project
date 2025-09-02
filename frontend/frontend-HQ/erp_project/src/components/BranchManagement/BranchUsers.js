@@ -18,7 +18,8 @@ export default function BranchUsers() {
     username: '',
     name: '',
     email: '',
-    role: 'staff',
+    password: '',
+    role: 'STAFF',
     status: 'active',
     branchId: null
   });
@@ -165,8 +166,8 @@ export default function BranchUsers() {
           username: user.username || '사용자명 없음',
           name: user.realName || '이름 없음',
           email: user.email || '',
-          role: user.role ? user.role.toLowerCase() : 'staff',
-          status: user.status || 'active',
+          role: user.role || 'STAFF',
+          status: user.isActive ? 'active' : 'inactive',
           lastLogin: user.lastLogin ? new Date(user.lastLogin).toLocaleString('ko-KR') : '-',
           branchId: user.branchId
         };
@@ -208,8 +209,9 @@ export default function BranchUsers() {
       // 실제 사용자 추가 API 호출
       const userData = {
         username: newUser.username,
-        name: newUser.name,
+        realName: newUser.name,
         email: newUser.email,
+        password: newUser.password,
         role: newUser.role,
         status: newUser.status,
         branchId: parseInt(modalSelectedBranch) // 모달에서 선택된 지점 ID 사용
@@ -244,7 +246,8 @@ export default function BranchUsers() {
          username: '',
          name: '',
          email: '',
-         role: 'staff',
+         password: '',
+         role: 'STAFF',
          status: 'active',
          branchId: null
        });
@@ -377,6 +380,7 @@ export default function BranchUsers() {
       username: user.username,
       name: user.name,
       email: user.email,
+      password: '', // 수정 시에는 빈 패스워드로 시작
       role: user.role,
       status: user.status,
       branchId: user.branchId
@@ -389,6 +393,21 @@ export default function BranchUsers() {
     e.preventDefault();
     
     try {
+      // 수정할 데이터 구성 (패스워드는 입력된 경우에만 포함)
+      const updateData = {
+        username: editingUser.username,
+        realName: editingUser.name,
+        email: editingUser.email,
+        role: editingUser.role,
+        status: editingUser.status,
+        branchId: editingUser.branchId
+      };
+
+      // 패스워드가 입력된 경우에만 포함
+      if (editingUser.password && editingUser.password.trim() !== '') {
+        updateData.password = editingUser.password;
+      }
+
       // 실제 사용자 수정 API 호출
       const response = await fetch(`http://localhost:8080/api/users/${editingUser.id}`, {
         method: 'PUT',
@@ -396,14 +415,7 @@ export default function BranchUsers() {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({
-          username: editingUser.username,
-          name: editingUser.name,
-          email: editingUser.email,
-          role: editingUser.role,
-          status: editingUser.status,
-          branchId: editingUser.branchId
-        }),
+        body: JSON.stringify(updateData),
         mode: 'cors'
       });
 
@@ -428,6 +440,8 @@ export default function BranchUsers() {
       // 성공 메시지
       alert('사용자 정보가 성공적으로 수정되었습니다.');
       
+      console.log('사용자 수정 완료:', editingUser);
+      
     } catch (error) {
       console.error('사용자 수정 실패:', error);
       alert('사용자 수정에 실패했습니다: ' + error.message);
@@ -436,13 +450,10 @@ export default function BranchUsers() {
 
   const getRoleName = (role) => {
     switch (role) {
-      case 'manager':
       case 'MANAGER':
         return '매니저';
-      case 'staff':
       case 'STAFF':
         return '직원';
-      case 'admin':
       case 'ADMIN':
         return '관리자';
       default:
@@ -660,52 +671,66 @@ export default function BranchUsers() {
                   />
                 </div>
                 <div className={styles['form-group']}>
+                  <label>패스워드 *</label>
+                  <input
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    required
+                    placeholder="패스워드를 입력하세요"
+                    minLength="6"
+                  />
+                </div>
+              </div>
+
+              <div className={styles['form-row']}>
+                <div className={styles['form-group']}>
                   <label>권한</label>
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
                   >
-                    <option value="staff">직원</option>
-                    <option value="manager">매니저</option>
-                    <option value="admin">관리자</option>
+                    <option value="STAFF">직원</option>
+                    <option value="MANAGER">매니저</option>
+                    <option value="ADMIN">관리자</option>
+                  </select>
+                </div>
+                <div className={styles['form-group']}>
+                  <label>상태 *</label>
+                  <select
+                    value={newUser.status}
+                    onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
+                    required
+                  >
+                    <option value="active">활성</option>
+                    <option value="inactive">비활성</option>
                   </select>
                 </div>
               </div>
 
               <div className={styles['form-row']}>
-                                 <div className={styles['form-group']}>
-                   <label>지점 *</label>
-                   <select
-                     value={modalSelectedBranch || ''}
-                     onChange={(e) => setModalSelectedBranch(e.target.value)}
-                     disabled={branches.length === 0}
-                     required
-                   >
-                    <option value="">지점 선택</option>
-                    {branches.map(branch => (
-                      <option key={branch.id} value={branch.id}>
-                        {branch.branchName} ({branch.branchCode})
-                        {branch.status !== 'active' && ` - ${getBranchStatusName(branch.status)}`}
-                      </option>
-                    ))}
-                  </select>
-                  {branches.length === 0 && (
-                    <div className={styles['form-help-text']}>
-                      등록된 지점이 없습니다.
-                    </div>
-                  )}
-                </div>
-                                 <div className={styles['form-group']}>
-                   <label>상태 *</label>
-                   <select
-                     value={newUser.status}
-                     onChange={(e) => setNewUser({ ...newUser, status: e.target.value })}
-                     required
-                   >
-                    <option value="active">활성</option>
-                    <option value="inactive">비활성</option>
-                  </select>
-                </div>
+                <div className={styles['form-group']}>
+                  <label>지점 *</label>
+                  <select
+                    value={modalSelectedBranch || ''}
+                    onChange={(e) => setModalSelectedBranch(e.target.value)}
+                    disabled={branches.length === 0}
+                    required
+                  >
+                   <option value="">지점 선택</option>
+                   {branches.map(branch => (
+                     <option key={branch.id} value={branch.id}>
+                       {branch.branchName} ({branch.branchCode})
+                       {branch.status !== 'active' && ` - ${getBranchStatusName(branch.status)}`}
+                     </option>
+                   ))}
+                 </select>
+                 {branches.length === 0 && (
+                   <div className={styles['form-help-text']}>
+                     등록된 지점이 없습니다.
+                   </div>
+                 )}
+               </div>
               </div>
 
 
@@ -774,14 +799,40 @@ export default function BranchUsers() {
                    />
                  </div>
                  <div className={styles['form-group']}>
+                   <label>새 패스워드</label>
+                   <input
+                     type="password"
+                     value={editingUser.password}
+                     onChange={(e) => setEditingUser({ ...editingUser, password: e.target.value })}
+                     placeholder="새 패스워드를 입력하세요 (선택사항)"
+                     minLength="6"
+                   />
+                   <div className={styles['form-help-text']}>
+                     패스워드를 변경하려면 입력하세요. 비워두면 기존 패스워드가 유지됩니다.
+                   </div>
+                 </div>
+               </div>
+
+               <div className={styles['form-row']}>
+                 <div className={styles['form-group']}>
                    <label>권한</label>
                    <select
                      value={editingUser.role}
                      onChange={(e) => setEditingUser({ ...editingUser, role: e.target.value })}
                    >
-                     <option value="staff">직원</option>
-                     <option value="manager">매니저</option>
-                     <option value="admin">관리자</option>
+                     <option value="STAFF">직원</option>
+                     <option value="MANAGER">매니저</option>
+                     <option value="ADMIN">관리자</option>
+                   </select>
+                 </div>
+                 <div className={styles['form-group']}>
+                   <label>상태</label>
+                   <select
+                     value={editingUser.status}
+                     onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value })}
+                   >
+                     <option value="active">활성</option>
+                     <option value="inactive">비활성</option>
                    </select>
                  </div>
                </div>
@@ -801,17 +852,6 @@ export default function BranchUsers() {
                          {branch.status !== 'active' && ` - ${getBranchStatusName(branch.status)}`}
                        </option>
                      ))}
-                   </select>
-                   
-                 </div>
-                 <div className={styles['form-group']}>
-                   <label>상태</label>
-                   <select
-                     value={editingUser.status}
-                     onChange={(e) => setEditingUser({ ...editingUser, status: e.target.value })}
-                   >
-                     <option value="active">활성</option>
-                     <option value="inactive">비활성</option>
                    </select>
                  </div>
                </div>

@@ -52,7 +52,7 @@ export default function Header({ activeTab, setActiveTab, onLogout }) {
         {/* 사용자 정보 영역 */}
         <div className={styles['header-user']}>
           <div className={styles['header-icon-container']}>
-            <img src={noticeIcon} alt="공지사항" className={styles['header-icon']} />
+            {/* <img src={noticeIcon} alt="공지사항" className={styles['header-icon']} /> */}
             <img src={bellIcon} alt="알림" className={styles['header-icon']} />
           </div>
           <div className={styles['user-info']}>

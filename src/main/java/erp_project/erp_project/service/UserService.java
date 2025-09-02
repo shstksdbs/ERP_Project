@@ -112,8 +112,14 @@ public class UserService {
         if (request.containsKey("branchId")) {
             user.setBranchId(Long.valueOf(request.get("branchId").toString()));
         }
-        if (request.containsKey("isActive")) {
-            user.setIsActive((Boolean) request.get("isActive"));
+        if (request.containsKey("status")) {
+            String status = (String) request.get("status");
+            user.setIsActive("active".equals(status));
+        }
+        if (request.containsKey("password") && request.get("password") != null && !((String) request.get("password")).trim().isEmpty()) {
+            String password = (String) request.get("password");
+            // 패스워드 암호화 (실제 구현에서는 BCrypt 등을 사용해야 함)
+            user.setPassword(password);
         }
         
         usersRepository.save(user);
