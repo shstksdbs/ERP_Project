@@ -49,11 +49,11 @@ public class MaterialStockService {
                 .collect(Collectors.toList());
     }
 
-    // 지점별 재고 알림 생성
-    public List<InventoryAlertDTO> generateInventoryAlerts(Long branchId) {
+    // 지점별 현재 재고 상태 알림 생성 (재고 알림 페이지용)
+    public List<InventoryAlertDTO> generateCurrentStockAlerts(Long branchId) {
         List<MaterialStock> materialStocks = materialStockRepository.findByBranchId(branchId);
         List<InventoryAlertDTO> alerts = materialStocks.stream()
-                .map(this::generateAlertFromStock)
+                .map(this::generateAlertFromCurrentStock)
                 .filter(alert -> alert != null) // null이 아닌 알림만 필터링
                 .collect(Collectors.toList());
         
@@ -63,8 +63,8 @@ public class MaterialStockService {
                 .collect(Collectors.toList());
     }
 
-    // 개별 재고로부터 알림 생성
-    private InventoryAlertDTO generateAlertFromStock(MaterialStock stock) {
+    // 개별 재고로부터 현재 상태 알림 생성 (재고 알림 페이지용)
+    private InventoryAlertDTO generateAlertFromCurrentStock(MaterialStock stock) {
         if (stock.getMaterial() == null) {
             return null;
         }
@@ -122,7 +122,7 @@ public class MaterialStockService {
                     .build();
         }
         
-        return null; // 알림이 필요하지 않은 경우
+        return null; // 정상 상태는 알림 생성하지 않음
     }
 
     // Entity를 DTO로 변환
@@ -172,11 +172,25 @@ public class MaterialStockService {
         MaterialStock existingStock = materialStockRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("재고 정보를 찾을 수 없습니다."));
         
+        // 재고 상태 변경 시 알림은 InventoryService에서 재고 차감 시에만 전송
+        // MaterialStockService에서는 이전 상태를 저장하지 않음
+        
         existingStock.setCurrentStock(materialStock.getCurrentStock());
         existingStock.setMinStock(materialStock.getMinStock());
         existingStock.setMaxStock(materialStock.getMaxStock());
         existingStock.setReservedStock(materialStock.getReservedStock());
+        existingStock.setLastUpdated(LocalDateTime.now());
         
-        return materialStockRepository.save(existingStock);
+        MaterialStock updatedStock = materialStockRepository.save(existingStock);
+        
+        // 재고 상태 변경 시 알림은 InventoryService에서 재고 차감 시에만 전송
+        // MaterialStockService에서는 상태 변경 알림을 전송하지 않음
+        
+        return updatedStock;
     }
+    
+    // 재고 상태 변경 시 알림은 InventoryService에서 재고 차감 시에만 전송
+    // MaterialStockService에서는 알림 관련 메서드들을 제거
+    
+    // 상태 텍스트 변환 메서드는 InventoryService에서만 사용
 }

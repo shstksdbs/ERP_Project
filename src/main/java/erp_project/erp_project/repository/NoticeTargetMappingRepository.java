@@ -28,4 +28,8 @@ public interface NoticeTargetMappingRepository extends JpaRepository<NoticeTarge
     
     // 대상 그룹 ID로 매핑 삭제
     void deleteByTargetGroupId(Long targetGroupId);
+    
+    // 공지사항 ID로 대상 그룹 ID 목록 조회
+    @Query("SELECT ntm.targetGroupId FROM NoticeTargetMapping ntm WHERE ntm.noticeId = :noticeId")
+    List<Long> findTargetGroupIdsByNoticeId(@Param("noticeId") Long noticeId);
 }

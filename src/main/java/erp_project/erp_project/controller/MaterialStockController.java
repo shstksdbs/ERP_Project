@@ -40,10 +40,11 @@ public class MaterialStockController {
         return ResponseEntity.ok(materialStocks);
     }
 
-    // 지점별 재고 알림 조회
+    // 지점별 재고 알림 조회 (현재 재고 상태 알림)
     @GetMapping("/branch/{branchId}/alerts")
     public ResponseEntity<List<InventoryAlertDTO>> getInventoryAlertsByBranch(@PathVariable Long branchId) {
-        List<InventoryAlertDTO> alerts = materialStockService.generateInventoryAlerts(branchId);
+        // 현재 재고 상태에 대한 알림 생성 (재고 알림 페이지용)
+        List<InventoryAlertDTO> alerts = materialStockService.generateCurrentStockAlerts(branchId);
         return ResponseEntity.ok(alerts);
     }
 

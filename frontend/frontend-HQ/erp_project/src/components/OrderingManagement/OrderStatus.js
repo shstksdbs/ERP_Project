@@ -170,34 +170,34 @@ export default function OrderStatus() {
       let endpoint = '';
       let requestBody = {};
 
-      // 처리자 정보와 처리 시간을 포함한 요청 본문 생성
-      const currentTime = new Date().toISOString();
+      // 처리자 정보를 포함한 요청 본문 생성
       const processInfo = {
-        processedBy: processedBy || 'Unknown',
-        processedAt: currentTime
+        processedBy: processedBy || 'Unknown'
       };
+      
+      console.log('처리자 정보:', processInfo);
 
       switch (action) {
         case 'APPROVED':
-          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/status`;
+          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/status`;
           requestBody = {
             status: 'APPROVED',
             ...processInfo
           };
           break;
         case 'CANCELLED':
-          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/cancel`;
+          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/cancel?reason=본사에서 취소 처리`;
           requestBody = processInfo;
           break;
         case 'IN_TRANSIT':
-          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/status`;
+          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/status`;
           requestBody = {
             status: 'IN_TRANSIT',
             ...processInfo
           };
           break;
         case 'DELIVERED':
-          endpoint = `${API_BASE_URL}/supply-requests/${orderId}/status`;
+          endpoint = `${API_BASE_URL}/supply-requests/management/${orderId}/status`;
           requestBody = {
             status: 'DELIVERED',
             ...processInfo
@@ -207,8 +207,15 @@ export default function OrderStatus() {
           throw new Error('지원하지 않는 액션입니다.');
       }
 
+      console.log('발주 상태 업데이트 요청:', {
+        endpoint: endpoint,
+        method: 'PUT',
+        requestBody: requestBody,
+        action: action
+      });
+
       const response = await fetch(endpoint, {
-        method: 'PATCH',
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },

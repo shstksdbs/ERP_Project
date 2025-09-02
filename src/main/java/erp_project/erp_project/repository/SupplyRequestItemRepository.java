@@ -22,6 +22,12 @@ public interface SupplyRequestItemRepository extends JpaRepository<SupplyRequest
     List<SupplyRequestItem> findBySupplyRequestId(Long supplyRequestId);
     
     /**
+     * 특정 발주 요청의 모든 아이템 조회 (Material과 함께)
+     */
+    @Query("SELECT sri FROM SupplyRequestItem sri JOIN FETCH sri.material WHERE sri.supplyRequestId = :supplyRequestId")
+    List<SupplyRequestItem> findBySupplyRequestIdWithMaterial(@Param("supplyRequestId") Long supplyRequestId);
+    
+    /**
      * 특정 원재료의 발주 요청 상품 목록 조회
      */
     List<SupplyRequestItem> findByMaterialId(Long materialId);

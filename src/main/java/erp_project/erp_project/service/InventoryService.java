@@ -2,6 +2,8 @@ package erp_project.erp_project.service;
 
 import erp_project.erp_project.entity.*;
 import erp_project.erp_project.repository.*;
+import erp_project.erp_project.dto.NotificationDTO;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +25,9 @@ public class InventoryService {
     
     @Autowired
     private RecipeRepository recipeRepository;
+    
+    @Autowired
+    private WebSocketNotificationService webSocketNotificationService;
     
     @Autowired
     private RecipeIngredientRepository recipeIngredientRepository;
@@ -99,11 +104,30 @@ public class InventoryService {
                 );
             }
             
+            // 재고 변경 전 상태 저장
+            BigDecimal previousStock = stock.getCurrentStock();
+            String previousStatus = determineStockStatus(stock);
+            
             // 현재 재고에서 차감
             stock.setCurrentStock(stock.getCurrentStock().subtract(quantity));
+            stock.setLastUpdated(LocalDateTime.now());
             
             // 재고 업데이트
-            materialStockRepository.save(stock);
+            MaterialStock updatedStock = materialStockRepository.save(stock);
+            
+            // 재고 차감 시 부족 상태가 된 경우에만 웹소켓 알림 전송
+            String newStatus = determineStockStatus(updatedStock);
+            System.out.println("재고 차감 완료 - 상태 확인 중");
+            System.out.println("재고 차감 정보 - 이전: " + previousStock + ", 현재: " + updatedStock.getCurrentStock() + ", 차감량: " + quantity);
+            System.out.println("재고 상태 - 이전: " + previousStatus + ", 현재: " + newStatus);
+            
+            // 부족 상태가 된 경우에만 알림 전송
+            if ("low".equals(newStatus)) {
+                System.out.println("재고가 부족 상태가 되어 알림 전송");
+                sendStockStatusChangeNotification(updatedStock, previousStock, previousStatus, newStatus, quantity);
+            } else {
+                System.out.println("재고 상태가 정상이므로 알림 전송하지 않음");
+            }
         } else {
             throw new RuntimeException(
                 String.format("재고 정보를 찾을 수 없습니다: Material ID: %d, Branch ID: %d", 
@@ -257,5 +281,91 @@ public class InventoryService {
         }
         
         return result;
+    }
+    
+    // 재고 상태 판단 (부족, 정상, 과다)
+    private String determineStockStatus(MaterialStock stock) {
+        BigDecimal currentStock = stock.getCurrentStock();
+        BigDecimal minStock = stock.getMinStock();
+        BigDecimal maxStock = stock.getMaxStock();
+        
+        if (currentStock.compareTo(minStock) <= 0) {
+            return "low"; // 부족
+        } else if (currentStock.compareTo(maxStock.multiply(BigDecimal.valueOf(0.8))) >= 0) {
+            return "excess"; // 과다
+        } else {
+            return "normal"; // 정상
+        }
+    }
+    
+    // 재고 상태 변경 시 웹소켓 알림 전송
+    private void sendStockStatusChangeNotification(MaterialStock stock, BigDecimal previousStock, 
+                                                  String previousStatus, String newStatus, BigDecimal deductedQuantity) {
+        try {
+            System.out.println("알림 생성 시작 - 지점 ID: " + stock.getBranch().getId());
+            
+            NotificationDTO notification = NotificationDTO.builder()
+                    .id(System.currentTimeMillis()) // 임시 ID
+                    .type(NotificationDTO.TYPE_INVENTORY)
+                    .category(determineNotificationCategory(newStatus))
+                    .title("재고 부족 알림")
+                    .message(generateStockDeductionMessage(stock, previousStock, deductedQuantity, newStatus))
+                    .targetType(NotificationDTO.TARGET_TYPE_MATERIAL)
+                    .targetId(stock.getId())
+                    .targetName(stock.getMaterial().getName())
+                    .targetDetail(String.format("{\"currentStock\":%s,\"previousStock\":%s,\"deductedQuantity\":%s,\"minStock\":%s,\"maxStock\":%s,\"unit\":\"%s\",\"previousStatus\":\"%s\",\"newStatus\":\"%s\"}", 
+                            stock.getCurrentStock(), previousStock, deductedQuantity, stock.getMinStock(), stock.getMaxStock(), 
+                            stock.getMaterial().getUnit(), previousStatus, newStatus))
+                    .timestamp(LocalDateTime.now())
+                    .isRead(false)
+                    .branchId(stock.getBranch().getId())
+                    .userId(null)
+                    .userName("시스템")
+                    .build();
+            
+            System.out.println("알림 생성 완료 - 제목: " + notification.getTitle() + ", 메시지: " + notification.getMessage());
+            
+            // 해당 지점에 웹소켓 알림 전송
+            webSocketNotificationService.sendNotificationToBranch(stock.getBranch().getId(), notification);
+            System.out.println("웹소켓 알림 전송 완료 - 지점 ID: " + stock.getBranch().getId());
+            
+        } catch (Exception e) {
+            // 알림 전송 실패는 로그만 남기고 재고 업데이트는 계속 진행
+            System.err.println("재고 차감 알림 전송 실패: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    // 재고 상태에 따른 알림 카테고리 결정
+    private String determineNotificationCategory(String status) {
+        switch (status) {
+            case "low":
+                return NotificationDTO.CATEGORY_CRITICAL;
+            case "excess":
+                return NotificationDTO.CATEGORY_WARNING;
+            default:
+                return NotificationDTO.CATEGORY_INFO;
+        }
+    }
+    
+    // 재고 차감 메시지 생성
+    private String generateStockDeductionMessage(MaterialStock stock, BigDecimal previousStock, 
+                                               BigDecimal deductedQuantity, String newStatus) {
+        return String.format("%s 재고가 부족합니다! (현재: %s, 최소 필요: %s, 차감량: %s)", 
+                stock.getMaterial().getName(), stock.getCurrentStock(), stock.getMinStock(), deductedQuantity);
+    }
+    
+    // 상태 텍스트 변환
+    private String getStatusText(String status) {
+        switch (status) {
+            case "low":
+                return "부족";
+            case "excess":
+                return "과다";
+            case "normal":
+                return "정상";
+            default:
+                return status;
+        }
     }
 }

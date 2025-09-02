@@ -2,6 +2,7 @@ package erp_project.erp_project.service;
 
 import erp_project.erp_project.entity.*;
 import erp_project.erp_project.repository.*;
+import erp_project.erp_project.dto.NotificationDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,6 +30,7 @@ public class NoticeService {
     private final FileStorageService fileStorageService;
     private final TargetGroupCalculationService calculationService;
     private final BranchesRepository branchesRepository;
+    private final WebSocketNotificationService webSocketNotificationService;
     
     /**
      * 공지사항 생성
@@ -46,6 +48,11 @@ public class NoticeService {
                     .build();
                 mappingRepository.save(mapping);
             }
+        }
+        
+        // 공지사항 발행 시 웹소켓 알림 전송
+        if (savedNotice.getStatus() == Notice.NoticeStatus.published) {
+            sendNoticeNotificationToTargetBranches(savedNotice, targetGroupIds);
         }
         
         log.info("공지사항 생성 완료: ID={}, 제목={}", savedNotice.getId(), savedNotice.getTitle());
@@ -82,6 +89,11 @@ public class NoticeService {
                     .build();
                 mappingRepository.save(mapping);
             }
+        }
+        
+        // 공지사항이 published 상태로 변경된 경우 웹소켓 알림 전송
+        if (updatedNotice.getStatus() == Notice.NoticeStatus.published) {
+            sendNoticeNotificationToTargetBranches(updatedNotice, targetGroupIds);
         }
         
         log.info("공지사항 수정 완료: ID={}, 제목={}", updatedNotice.getId(), updatedNotice.getTitle());
@@ -263,6 +275,11 @@ public class NoticeService {
         for (Notice notice : scheduledNotices) {
             notice.setStatus(Notice.NoticeStatus.published);
             noticeRepository.save(notice);
+            
+            // 예약 발행된 공지사항에 대해 웹소켓 알림 전송
+            List<Long> targetGroupIds = mappingRepository.findTargetGroupIdsByNoticeId(notice.getId());
+            sendNoticeNotificationToTargetBranches(notice, targetGroupIds);
+            
             log.info("예약 발행 완료: ID={}, 제목={}", notice.getId(), notice.getTitle());
         }
     }
@@ -389,5 +406,98 @@ public class NoticeService {
             return "";
         }
         return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
+    }
+    
+    /**
+     * 공지사항 알림을 대상 지점들에게 웹소켓으로 전송
+     */
+    private void sendNoticeNotificationToTargetBranches(Notice notice, List<Long> targetGroupIds) {
+        try {
+            if (targetGroupIds == null || targetGroupIds.isEmpty()) {
+                log.info("대상 그룹이 없어 알림을 전송하지 않습니다. 공지사항 ID: {}", notice.getId());
+                return;
+            }
+            
+            // 대상 그룹에서 지점 목록 추출
+            List<Long> targetBranchIds = getTargetBranchIdsFromGroups(targetGroupIds);
+            
+            if (targetBranchIds.isEmpty()) {
+                log.info("대상 지점이 없어 알림을 전송하지 않습니다. 공지사항 ID: {}", notice.getId());
+                return;
+            }
+            
+            // 각 대상 지점에 알림 전송
+            for (Long branchId : targetBranchIds) {
+                NotificationDTO notification = NotificationDTO.builder()
+                    .type(NotificationDTO.TYPE_SYSTEM)
+                    .category(notice.getIsImportant() ? NotificationDTO.CATEGORY_CRITICAL : NotificationDTO.CATEGORY_INFO)
+                    .title("새로운 공지사항이 등록되었습니다")
+                    .message(String.format("[%s] %s", notice.getCategory().getDisplayName(), notice.getTitle()))
+                    .targetType(NotificationDTO.TARGET_TYPE_SYSTEM)
+                    .targetId(notice.getId())
+                    .targetName(notice.getTitle())
+                    .targetDetail(String.format("{\"noticeId\":%d,\"category\":\"%s\",\"priority\":\"%s\",\"isImportant\":%s}", 
+                        notice.getId(), notice.getCategory(), notice.getPriority(), notice.getIsImportant()))
+                    .timestamp(LocalDateTime.now())
+                    .isRead(false)
+                    .branchId(branchId)
+                    .userId(notice.getAuthorId())
+                    .userName("본사 관리자")
+                    .build();
+                
+                webSocketNotificationService.sendNotificationToBranch(branchId, notification);
+            }
+            
+            log.info("공지사항 알림 전송 완료: 공지사항 ID={}, 대상 지점 수={}", notice.getId(), targetBranchIds.size());
+            
+        } catch (Exception e) {
+            log.error("공지사항 알림 전송 실패: 공지사항 ID={}, 오류={}", notice.getId(), e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 대상 그룹에서 지점 ID 목록 추출
+     */
+    private List<Long> getTargetBranchIdsFromGroups(List<Long> targetGroupIds) {
+        List<Long> branchIds = new java.util.ArrayList<>();
+        
+        for (Long groupId : targetGroupIds) {
+            Optional<NoticeTargetGroup> groupOpt = targetGroupRepository.findById(groupId);
+            if (groupOpt.isPresent()) {
+                NoticeTargetGroup group = groupOpt.get();
+                
+                // 그룹의 대상 지점 정보 파싱
+                String targetBranches = group.getTargetBranches();
+                if (targetBranches != null && !targetBranches.isEmpty() && !targetBranches.equals("[]")) {
+                    try {
+                        // JSON 배열 파싱 (간단한 파싱)
+                        String[] branchNames = targetBranches.replace("[", "").replace("]", "").replace("\"", "").split(",");
+                        for (String branchName : branchNames) {
+                            branchName = branchName.trim();
+                            if (!branchName.isEmpty()) {
+                                // 지점명으로 지점 ID 조회
+                                Optional<Branches> branch = branchesRepository.findByBranchNameAndStatus(
+                                    branchName, Branches.BranchStatus.active);
+                                if (branch.isPresent()) {
+                                    branchIds.add(branch.get().getId());
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("대상 그룹의 지점 정보 파싱 실패: groupId={}, targetBranches={}", groupId, targetBranches);
+                    }
+                } else {
+                    // 전체 지점 대상인 경우 모든 활성 지점 조회
+                    List<Branches> allBranches = branchesRepository.findByStatusAndBranchTypeNot(
+                        Branches.BranchStatus.active, Branches.BranchType.headquarters);
+                    for (Branches branch : allBranches) {
+                        branchIds.add(branch.getId());
+                    }
+                }
+            }
+        }
+        
+        // 중복 제거
+        return branchIds.stream().distinct().collect(java.util.stream.Collectors.toList());
     }
 }

@@ -4,6 +4,7 @@ import erp_project.erp_project.dto.SupplyRequestDto;
 import erp_project.erp_project.dto.SupplyRequestItemDto;
 import erp_project.erp_project.dto.SupplyRequestCreateDto;
 import erp_project.erp_project.dto.SupplyRequestUpdateDto;
+import erp_project.erp_project.dto.NotificationDTO;
 import erp_project.erp_project.entity.*;
 import erp_project.erp_project.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class SupplyRequestManagementService {
     private final BranchesRepository branchesRepository;
     private final MaterialRepository materialRepository;
     private final UsersRepository usersRepository;
+    private final WebSocketNotificationService webSocketNotificationService;
     
     /**
      * 모든 발주 요청 조회 (본사용)
@@ -120,16 +122,30 @@ public class SupplyRequestManagementService {
      * 발주 요청 상태 업데이트 (본사 승인/거부)
      */
     public SupplyRequestDto updateSupplyRequestStatus(Long id, SupplyRequestUpdateDto updateDto) {
+        System.out.println("발주 상태 업데이트 시작 - ID: " + id + ", 요청 상태: " + updateDto.getStatus());
+        
         SupplyRequest request = supplyRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("발주 요청을 찾을 수 없습니다: " + id));
         
+        System.out.println("기존 발주 상태: " + request.getStatus());
+        
         // 상태 업데이트
         if (updateDto.getStatus() != null) {
+            System.out.println("상태 변경: " + request.getStatus() + " -> " + updateDto.getStatus());
             request.setStatus(updateDto.getStatus());
+        } else {
+            System.out.println("상태가 null이므로 변경하지 않음");
         }
         
         if (updateDto.getNotes() != null) {
             request.setNotes(updateDto.getNotes());
+        }
+        
+        // 처리자 정보 업데이트
+        if (updateDto.getProcessedBy() != null) {
+            request.setProcessedBy(updateDto.getProcessedBy());
+            // 처리 시간을 현재 시간으로 자동 설정
+            request.setProcessedAt(LocalDateTime.now());
         }
         
         // 아이템 상태 업데이트
@@ -159,6 +175,11 @@ public class SupplyRequestManagementService {
         }
         
         SupplyRequest savedRequest = supplyRequestRepository.save(request);
+        
+        // 발주 상태 변경 시 웹소켓 알림 전송
+        System.out.println("발주 상태 업데이트 완료 - ID: " + savedRequest.getId() + ", 상태: " + savedRequest.getStatus() + ", 지점 ID: " + savedRequest.getRequestingBranchId());
+        sendSupplyRequestStatusChangeNotification(savedRequest, updateDto.getStatus());
+        
         return convertToDto(savedRequest);
     }
     
@@ -173,6 +194,10 @@ public class SupplyRequestManagementService {
         request.setNotes(reason);
         
         SupplyRequest savedRequest = supplyRequestRepository.save(request);
+        
+        // 발주 취소 시 웹소켓 알림 전송
+        sendSupplyRequestStatusChangeNotification(savedRequest, SupplyRequest.SupplyRequestStatus.CANCELLED);
+        
         return convertToDto(savedRequest);
     }
     
@@ -180,7 +205,7 @@ public class SupplyRequestManagementService {
      * Entity를 DTO로 변환
      */
     private SupplyRequestDto convertToDto(SupplyRequest request) {
-        List<SupplyRequestItem> items = supplyRequestItemRepository.findBySupplyRequestId(request.getId());
+        List<SupplyRequestItem> items = supplyRequestItemRepository.findBySupplyRequestIdWithMaterial(request.getId());
         
         List<SupplyRequestItemDto> itemDtos = items.stream()
                 .map(this::convertItemToDto)
@@ -230,5 +255,96 @@ public class SupplyRequestManagementService {
                 .createdAt(item.getCreatedAt())
                 .updatedAt(item.getUpdatedAt())
                 .build();
+    }
+    
+    /**
+     * 발주 상태 변경 시 웹소켓 알림 전송
+     */
+    private void sendSupplyRequestStatusChangeNotification(SupplyRequest request, SupplyRequest.SupplyRequestStatus newStatus) {
+        try {
+            System.out.println("발주 상태 변경 알림 생성 시작 - 발주 ID: " + request.getId() + ", 지점 ID: " + request.getRequestingBranchId());
+            
+            // newStatus가 null인 경우 request의 현재 상태 사용
+            if (newStatus == null) {
+                newStatus = request.getStatus();
+                System.out.println("newStatus가 null이므로 request 상태 사용: " + newStatus);
+            }
+            
+            String statusText = getSupplyRequestStatusText(newStatus);
+            String category = getSupplyRequestNotificationCategory(newStatus);
+            
+            NotificationDTO notification = NotificationDTO.builder()
+                    .id(System.currentTimeMillis()) // 임시 ID
+                    .type(NotificationDTO.TYPE_ORDER)
+                    .category(category)
+                    .title("발주 상태 변경")
+                    .message(generateSupplyRequestStatusMessage(request, statusText))
+                    .targetType(NotificationDTO.TARGET_TYPE_ORDER)
+                    .targetId(request.getId())
+                    .targetName("발주 요청 #" + request.getId())
+                    .targetDetail(String.format("{\"supplyRequestId\":%d,\"status\":\"%s\",\"requestingBranchId\":%d,\"totalCost\":%s,\"notes\":\"%s\"}", 
+                            request.getId(), newStatus, request.getRequestingBranchId(), request.getTotalCost(), request.getNotes()))
+                    .timestamp(LocalDateTime.now())
+                    .isRead(false)
+                    .branchId(request.getRequestingBranchId())
+                    .userId(null)
+                    .userName("본사")
+                    .build();
+            
+            System.out.println("발주 알림 생성 완료 - 제목: " + notification.getTitle() + ", 메시지: " + notification.getMessage());
+            
+            // 해당 지점에 웹소켓 알림 전송
+            webSocketNotificationService.sendNotificationToBranch(request.getRequestingBranchId(), notification);
+            System.out.println("발주 웹소켓 알림 전송 완료 - 지점 ID: " + request.getRequestingBranchId());
+            
+        } catch (Exception e) {
+            System.err.println("발주 상태 변경 알림 전송 실패: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
+    /**
+     * 발주 상태에 따른 알림 카테고리 결정
+     */
+    private String getSupplyRequestNotificationCategory(SupplyRequest.SupplyRequestStatus status) {
+        switch (status) {
+            case APPROVED:
+                return NotificationDTO.CATEGORY_SUCCESS;
+            case CANCELLED:
+                return NotificationDTO.CATEGORY_WARNING;
+            case IN_TRANSIT:
+            case DELIVERED:
+                return NotificationDTO.CATEGORY_INFO;
+            default:
+                return NotificationDTO.CATEGORY_INFO;
+        }
+    }
+    
+    /**
+     * 발주 상태 텍스트 변환
+     */
+    private String getSupplyRequestStatusText(SupplyRequest.SupplyRequestStatus status) {
+        switch (status) {
+            case PENDING:
+                return "승인 대기";
+            case APPROVED:
+                return "승인됨";
+            case IN_TRANSIT:
+                return "배송 중";
+            case CANCELLED:
+                return "취소됨";
+            case DELIVERED:
+                return "배송 완료";
+            default:
+                return status.toString();
+        }
+    }
+    
+    /**
+     * 발주 상태 변경 메시지 생성
+     */
+    private String generateSupplyRequestStatusMessage(SupplyRequest request, String statusText) {
+        return String.format("발주 요청 #%d이 %s 상태로 변경되었습니다. (총 금액: %s원)", 
+                request.getId(), statusText, request.getTotalCost());
     }
 }

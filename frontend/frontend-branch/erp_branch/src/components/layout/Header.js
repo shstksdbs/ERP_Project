@@ -4,12 +4,14 @@ import logo from '../../assets/logo.png';
 import userIcon from '../../assets/user_icon.png';
 import noticeIcon from '../../assets/notice_icon.png';
 import bellIcon from '../../assets/bell_icon.png';
+import webSocketService from '../../services/websocketService';
 
 export default function Header({ activeTab, setActiveTab, onLogout, loginData }) {
   const [showAlerts, setShowAlerts] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [websocketConnected, setWebsocketConnected] = useState(false);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8080';
 
@@ -36,6 +38,8 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
       }
 
       const data = await response.json();
+      console.log('알림 목록 새로고침 완료 - 받은 데이터:', data);
+      console.log('읽지 않은 알림 개수:', data.filter(n => !n.isRead).length);
       setNotifications(Array.isArray(data) ? data : []);
       
     } catch (error) {
@@ -50,16 +54,19 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
   // 알림 읽음 처리
   const handleMarkAsRead = async (notificationId) => {
     try {
+      console.log('알림 읽음 처리 시작 - 알림 ID:', notificationId);
       const response = await fetch(`${API_BASE_URL}/api/notifications/${notificationId}/read`, {
         method: 'PUT'
       });
       
+      console.log('알림 읽음 처리 응답:', response.status, response.statusText);
+      
       if (response.ok) {
-        setNotifications(prevNotifications => 
-          prevNotifications.map(notification => 
-            notification.id === notificationId ? { ...notification, isRead: true } : notification
-          )
-        );
+        console.log('알림 읽음 처리 성공 - 알림 ID:', notificationId);
+        // 읽음 처리 후 알림 목록 새로고침
+        await fetchNotifications();
+      } else {
+        console.error('알림 읽음 처리 실패 - 응답 상태:', response.status);
       }
     } catch (error) {
       console.error('알림 읽음 처리 중 오류 발생:', error);
@@ -71,14 +78,19 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
     if (!loginData?.branchId) return;
     
     try {
+      console.log('모든 알림 읽음 처리 시작 - 지점 ID:', loginData.branchId);
       const response = await fetch(`${API_BASE_URL}/api/notifications/branch/${loginData.branchId}/read-all`, {
         method: 'PUT'
       });
       
+      console.log('모든 알림 읽음 처리 응답:', response.status, response.statusText);
+      
       if (response.ok) {
-        setNotifications(prevNotifications => 
-          prevNotifications.map(notification => ({ ...notification, isRead: true }))
-        );
+        console.log('모든 알림 읽음 처리 성공 - 지점 ID:', loginData.branchId);
+        // 모든 알림 읽음 처리 후 알림 목록 새로고침
+        await fetchNotifications();
+      } else {
+        console.error('모든 알림 읽음 처리 실패 - 응답 상태:', response.status);
       }
     } catch (error) {
       console.error('모든 알림 읽음 처리 중 오류 발생:', error);
@@ -91,7 +103,7 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
       case 'inventory':
         return '📦';
       case 'order':
-        return '📋';
+        return '🚚'; // 발주 알림용 트럭 아이콘
       case 'employee':
         return '👤';
       case 'system':
@@ -155,6 +167,77 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
     return `${month}-${day} ${hours}:${minutes}`;
   };
 
+  // 웹소켓 연결 및 실시간 알림 수신
+  useEffect(() => {
+    if (loginData?.branchId) {
+      // 웹소켓 연결
+      webSocketService.connect(
+        loginData.branchId,
+        (frame) => {
+          console.log('웹소켓 연결 성공:', frame);
+          console.log('연결된 지점 ID:', loginData.branchId);
+          setWebsocketConnected(true);
+          
+          // 지점별 알림 구독
+          webSocketService.subscribeToBranchNotifications(
+            loginData.branchId,
+            (notification) => {
+              console.log('실시간 알림 수신:', notification);
+              console.log('알림 상세 정보:', {
+                id: notification.id,
+                title: notification.title,
+                message: notification.message,
+                type: notification.type,
+                category: notification.category
+              });
+              
+              // 새 알림을 기존 알림 목록 앞에 추가 (중복 방지)
+              setNotifications(prevNotifications => {
+                // 같은 ID의 알림이 이미 있는지 확인
+                const existingIndex = prevNotifications.findIndex(n => n.id === notification.id);
+                if (existingIndex !== -1) {
+                  // 이미 있는 알림이면 업데이트
+                  const updated = [...prevNotifications];
+                  updated[existingIndex] = notification;
+                  console.log('기존 알림 업데이트:', notification.id);
+                  return updated;
+                } else {
+                  // 새로운 알림이면 맨 앞에 추가
+                  console.log('새 알림 추가:', notification.id);
+                  return [notification, ...prevNotifications];
+                }
+              });
+            }
+          );
+        },
+        (error) => {
+          console.error('웹소켓 연결 실패:', error);
+          setWebsocketConnected(false);
+        }
+      );
+    }
+
+    // 컴포넌트 언마운트 시 웹소켓 연결 해제
+    return () => {
+      webSocketService.disconnect();
+      setWebsocketConnected(false);
+    };
+  }, [loginData?.branchId]);
+
+  // 웹소켓 연결 상태 주기적 확인
+  useEffect(() => {
+    const checkConnection = () => {
+      const isConnected = webSocketService.isConnected();
+      if (isConnected !== websocketConnected) {
+        setWebsocketConnected(isConnected);
+        console.log('웹소켓 연결 상태 변경:', isConnected);
+      }
+    };
+
+    const interval = setInterval(checkConnection, 5000); // 5초마다 확인
+    return () => clearInterval(interval);
+  }, [websocketConnected]);
+
   // 알림 패널 외부 클릭 시 닫기
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -185,9 +268,7 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
 
         {/* 사용자 정보 영역 */}
         <div className={styles['header-user']}>
-          <div className={styles['header-icon-container']}>
-            <img src={noticeIcon} alt="공지사항" className={styles['header-icon']} />
-            
+          <div className={styles['header-icon-container']}>            
             {/* 알림 아이콘 및 드롭다운 */}
             <div className={styles.alertsDropdown}>
               <div className={styles.alertsIconContainer} onClick={toggleAlerts}>
@@ -195,6 +276,10 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
                 {unreadCount > 0 && (
                   <span className={styles.alertBadge}>{unreadCount}</span>
                 )}
+                {/* 웹소켓 연결 상태 표시 */}
+                <div className={`${styles.websocketStatus} ${websocketConnected ? styles.connected : styles.disconnected}`}>
+                  <span className={styles.statusDot}></span>
+                </div>
               </div>
               
               {/* 알림 드롭다운 패널 */}
@@ -228,13 +313,17 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
                           다시 시도
                         </button>
                       </div>
-                    ) : notifications.length === 0 ? (
+                    ) : unreadCount === 0 ? (
                       <div className={styles.alertsEmpty}>
                         <p>새로운 알림이 없습니다.</p>
+                        <p className={styles.alertsEmptySubtext}>재고 차감이나 발주 상태 변경 시 알림이 표시됩니다.</p>
                       </div>
                     ) : (
                       <div className={styles.alertsList}>
-                        {notifications.slice(0, 5).map((notification) => (
+                        {notifications
+                          .filter(notification => !notification.isRead) // 읽지 않은 알림만 필터링
+                          .slice(0, 5) // 최대 5개까지만 표시
+                          .map((notification) => (
                           <div 
                             key={notification.id} 
                             className={`${styles.alertItem} ${!notification.isRead ? styles.unread : ''}`}
@@ -273,13 +362,13 @@ export default function Header({ activeTab, setActiveTab, onLogout, loginData })
                           </div>
                         ))}
                         
-                        {notifications.length > 5 && (
+                        {unreadCount > 5 && (
                           <div className={styles.alertsMore}>
                             <button 
                               onClick={() => setActiveTab(['notifications'])}
                               className={styles.viewAllButton}
                             >
-                              모든 알림 보기 ({notifications.length}개)
+                              모든 알림 보기 ({unreadCount}개)
                             </button>
                           </div>
                         )}

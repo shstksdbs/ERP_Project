@@ -229,6 +229,35 @@
   border: 2px solid #fafafa;
 }
 
+/* 웹소켓 연결 상태 표시 */
+.websocketStatus {
+  position: absolute;
+  bottom: -2px;
+  left: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fafafa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.websocketStatus.connected {
+  background: #10b981;
+}
+
+.websocketStatus.disconnected {
+  background: #ef4444;
+}
+
+.statusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: white;
+}
+
 .alertsPanel {
   position: absolute;
   top: 100%;

@@ -19,6 +19,43 @@
   gap: 16px;
   align-items: center;
   margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.statusInfo {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.connectionStatus {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.connectionStatus.connected {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.connectionStatus.disconnected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.newNotificationCount {
+  font-size: 12px;
+  font-weight: 500;
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid #fecaca;
 }
 
 .unreadCount {
@@ -75,6 +112,15 @@
   background: white;
   color: #374151;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .filterSelect:focus {
@@ -86,6 +132,7 @@
 .checkbox {
   margin: 0;
   cursor: pointer;
+  margin-right: 8px;
 }
 
 .content {
@@ -193,6 +240,27 @@
 /* 알림 목록 */
 .notificationsList {
   padding: 0;
+  /* 스크롤바 스타일링 */
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.notificationsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.notificationsList::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.notificationsList::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.notificationsList::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .notificationItem {
@@ -318,6 +386,38 @@
 
 .markReadButton:hover {
   background: #059669;
+}
+
+/* 무한스크롤 관련 스타일 */
+.loadingMoreContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  color: #6b7280;
+  border-top: 1px solid #f3f4f6;
+}
+
+.loadingMoreContainer .loadingSpinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #f3f4f6;
+  border-top: 2px solid #3b82f6;
+  margin-bottom: 8px;
+}
+
+.noMoreDataContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  border-top: 1px solid #f3f4f6;
+  background: #f9fafb;
 }
 
 /* 반응형 디자인 */

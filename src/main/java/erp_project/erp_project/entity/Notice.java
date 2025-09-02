@@ -100,20 +100,67 @@ public class Notice {
         important,      // 중요공지
         event,          // 이벤트
         maintenance,    // 점검공지
-        update          // 업데이트
+        update;         // 업데이트
+        
+        public String getDisplayName() {
+            switch (this) {
+                case general:
+                    return "일반공지";
+                case important:
+                    return "중요공지";
+                case event:
+                    return "이벤트";
+                case maintenance:
+                    return "점검공지";
+                case update:
+                    return "업데이트";
+                default:
+                    return this.name();
+            }
+        }
     }
     
     public enum NoticePriority {
         low,            // 낮음
         normal,         // 보통
         high,           // 높음
-        urgent          // 긴급
+        urgent;         // 긴급
+        
+        public String getDisplayName() {
+            switch (this) {
+                case low:
+                    return "낮음";
+                case normal:
+                    return "보통";
+                case high:
+                    return "높음";
+                case urgent:
+                    return "긴급";
+                default:
+                    return this.name();
+            }
+        }
     }
     
     public enum NoticeStatus {
         draft,          // 임시저장
         published,      // 발행
         scheduled,      // 예약발행
-        archived        // 보관
+        archived;       // 보관
+        
+        public String getDisplayName() {
+            switch (this) {
+                case draft:
+                    return "임시저장";
+                case published:
+                    return "발행";
+                case scheduled:
+                    return "예약발행";
+                case archived:
+                    return "보관";
+                default:
+                    return this.name();
+            }
+        }
     }
 }

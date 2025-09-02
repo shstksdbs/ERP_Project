@@ -3,13 +3,17 @@ package erp_project.erp_project.controller;
 import erp_project.erp_project.dto.SupplyRequestDto;
 import erp_project.erp_project.dto.SupplyRequestCreateDto;
 import erp_project.erp_project.dto.SupplyRequestUpdateDto;
+import erp_project.erp_project.dto.NotificationDTO;
 import erp_project.erp_project.service.SupplyRequestManagementService;
+import erp_project.erp_project.service.WebSocketNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/supply-requests/management")
@@ -19,6 +23,7 @@ import java.util.List;
 public class SupplyRequestManagementController {
     
     private final SupplyRequestManagementService supplyRequestManagementService;
+    private final WebSocketNotificationService webSocketNotificationService;
     
     /**
      * 모든 발주 요청 조회 (본사용)
@@ -91,6 +96,7 @@ public class SupplyRequestManagementController {
             @PathVariable Long id,
             @RequestBody SupplyRequestUpdateDto updateDto) {
         try {
+            log.info("발주 요청 상태 업데이트 요청: id={}, updateDto={}", id, updateDto);
             updateDto.setId(id);
             SupplyRequestDto updatedRequest = supplyRequestManagementService.updateSupplyRequestStatus(id, updateDto);
             log.info("발주 요청 상태 업데이트 완료: id={}, status={}", id, updatedRequest.getStatus());
@@ -101,6 +107,41 @@ public class SupplyRequestManagementController {
         } catch (Exception e) {
             log.error("발주 요청 상태 업데이트 중 오류 발생: id={}", id, e);
             return ResponseEntity.internalServerError().build();
+        }
+    }
+    
+    /**
+     * 발주 알림 테스트 (개발용)
+     */
+    @PostMapping("/test-notification/{branchId}")
+    public ResponseEntity<Map<String, String>> testSupplyNotification(@PathVariable Long branchId) {
+        try {
+            // 테스트용 발주 알림 생성
+            NotificationDTO testNotification = NotificationDTO.builder()
+                    .id(System.currentTimeMillis())
+                    .type(NotificationDTO.TYPE_ORDER)
+                    .category(NotificationDTO.CATEGORY_SUCCESS)
+                    .title("발주 테스트 알림")
+                    .message("발주 요청 #999가 승인됨 상태로 변경되었습니다. (총 금액: 100,000원)")
+                    .targetType(NotificationDTO.TARGET_TYPE_ORDER)
+                    .targetId(999L)
+                    .targetName("발주 요청 #999")
+                    .targetDetail("{\"supplyRequestId\":999,\"status\":\"APPROVED\",\"requestingBranchId\":" + branchId + ",\"totalAmount\":100000}")
+                    .timestamp(LocalDateTime.now())
+                    .isRead(false)
+                    .branchId(branchId)
+                    .userId(null)
+                    .userName("본사")
+                    .build();
+            
+            // 웹소켓 알림 전송
+            webSocketNotificationService.sendNotificationToBranch(branchId, testNotification);
+            
+            return ResponseEntity.ok(Map.of("message", "테스트 알림이 전송되었습니다. 지점 ID: " + branchId));
+        } catch (Exception e) {
+            log.error("테스트 알림 전송 실패: branchId={}", branchId, e);
+            return ResponseEntity.internalServerError()
+                    .body(Map.of("error", "테스트 알림 전송 실패: " + e.getMessage()));
         }
     }
     

@@ -15,6 +15,8 @@ import java.time.LocalDateTime;
 public class NotificationDTO {
     
     private Long id;
+    private String recipientType; // "HEADQUARTERS" 또는 "BRANCH"
+    private Long recipientId; // 본사인 경우 null, 가맹점인 경우 branch_id
     private String type; // inventory, order, employee, system 등
     private String category; // critical, warning, info, success
     private String title;
@@ -24,8 +26,10 @@ public class NotificationDTO {
     private String targetName; // 대상 이름
     private String targetDetail; // 추가 상세 정보 (JSON 형태)
     private LocalDateTime timestamp;
+    @com.fasterxml.jackson.annotation.JsonProperty("isRead")
     private boolean isRead;
-    private Long branchId; // 지점 ID (전체 알림의 경우 null)
+    private LocalDateTime readAt; // 읽은 시간
+    private Long branchId; // 지점 ID (호환성을 위해 유지)
     private Long userId; // 생성자 ID
     private String userName; // 생성자 이름
     

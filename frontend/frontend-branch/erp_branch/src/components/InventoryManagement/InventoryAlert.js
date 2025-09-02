@@ -34,7 +34,7 @@ export default function InventoryAlert({ branchId }) {
       console.log('받은 재고 알림 데이터:', data);
       
       if (!Array.isArray(data) || data.length === 0) {
-        console.warn('재고 알림 데이터가 비어있습니다.');
+        console.log('현재 재고 상태에 문제가 있는 항목이 없습니다.');
         setAlerts([]);
         return;
       }
@@ -59,59 +59,15 @@ export default function InventoryAlert({ branchId }) {
     } catch (error) {
       console.error('재고 알림 데이터 조회 중 오류 발생:', error);
       setError(error.message);
-      // 오류 발생 시 샘플 데이터로 대체
-      setSampleAlerts();
+      // 오류 발생 시 빈 배열로 설정 (샘플 데이터 사용 안함)
+      setAlerts([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 샘플 알림 데이터 (API 오류 시 사용)
-  const setSampleAlerts = () => {
-    const sampleAlerts = [
-      {
-        id: 1,
-        type: 'critical',
-        message: '카페라떼 재고가 최소 재고량 이하입니다.',
-        itemName: '카페라떼',
-        currentStock: 15,
-        minStock: 20,
-        maxStock: 80,
-        unit: '개',
-        category: '음료',
-        timestamp: '2024-01-15 14:30',
-        isRead: false
-      },
-      {
-        id: 2,
-        type: 'critical',
-        message: '샌드위치 재고가 위험 수준입니다.',
-        itemName: '샌드위치',
-        currentStock: 8,
-        minStock: 10,
-        maxStock: 50,
-        unit: '개',
-        category: '식품',
-        timestamp: '2024-01-15 14:25',
-        isRead: false
-      },
-      {
-        id: 3,
-        type: 'warning',
-        message: '우유 재고가 부족합니다.',
-        itemName: '우유',
-        currentStock: 18,
-        minStock: 15,
-        maxStock: 60,
-        unit: 'L',
-        category: '원재료',
-        timestamp: '2024-01-15 14:20',
-        isRead: true
-      }
-    ];
-
-    setAlerts(sampleAlerts);
-  };
+  // 샘플 알림 데이터 함수는 제거됨
+  // 현재 재고 상태 알림은 생성하지 않음
 
   // 날짜 포맷팅
   const formatDateTime = (dateTimeString) => {
@@ -233,7 +189,7 @@ export default function InventoryAlert({ branchId }) {
         {alerts.length === 0 ? (
           <div className={styles.emptyState}>
             <img src={bellIcon} alt="알림" className={styles.emptyIcon} />
-            <p>새로운 재고 알림이 없습니다.</p>
+            <p>현재 재고 상태에 문제가 있는 항목이 없습니다.</p>
           </div>
         ) : (
           <div className={styles.alertsList}>
