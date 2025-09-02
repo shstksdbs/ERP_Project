@@ -136,7 +136,7 @@ function AppContent() {
       case 'notice-list':
         return <NoticeList {...commonProps} />;
       case 'notice-detail':
-        return <NoticeDetail {...commonProps} />;
+        return <NoticeDetail {...commonProps} loginData={loginData} />;
       case 'settings-basic':
         return <SettingsBasic {...commonProps} />;
       case 'settings-log':

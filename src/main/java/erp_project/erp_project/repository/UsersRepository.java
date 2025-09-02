@@ -38,4 +38,27 @@ public interface UsersRepository extends JpaRepository<Users, Long> {
     
     // 이메일로 사용자 찾기
     Optional<Users> findByEmail(String email);
+    
+    // 실명으로 사용자 찾기
+    Optional<Users> findByRealName(String realName);
+    
+    // 직급별 사용자 수 조회
+    @Query("SELECT COUNT(u) FROM Users u WHERE u.role = :role AND u.isActive = true")
+    int countByRole(@Param("role") erp_project.erp_project.entity.Users.UserRole role);
+    
+    // 지점명별 사용자 수 조회
+    @Query("SELECT COUNT(u) FROM Users u JOIN Branches b ON u.branchId = b.id WHERE b.branchName = :branchName AND u.isActive = true")
+    int countByBranchName(@Param("branchName") String branchName);
+    
+    // 직급별 사용자 목록 조회
+    @Query("SELECT u FROM Users u WHERE u.role IN :roles AND u.isActive = true")
+    List<Users> findByRoleIn(@Param("roles") List<erp_project.erp_project.entity.Users.UserRole> roles);
+    
+    // 지점명별 사용자 목록 조회
+    @Query("SELECT u FROM Users u JOIN Branches b ON u.branchId = b.id WHERE b.branchName IN :branchNames AND u.isActive = true")
+    List<Users> findByBranchNameIn(@Param("branchNames") List<String> branchNames);
+    
+    // 특정 지점의 특정 직급 사용자 수 조회
+    @Query("SELECT COUNT(u) FROM Users u JOIN Branches b ON u.branchId = b.id WHERE b.branchName = :branchName AND u.role = :role AND u.isActive = true")
+    int countByBranchNameAndRole(@Param("branchName") String branchName, @Param("role") erp_project.erp_project.entity.Users.UserRole role);
 }

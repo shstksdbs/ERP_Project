@@ -1,19 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './NoticeRegister.module.css';
+import { noticeService } from '../../services/noticeService';
+import { noticeTargetService } from '../../services/noticeTargetService';
 
-export default function NoticeRegister() {
+export default function NoticeRegister({ setActiveTab }) {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    category: '',
+    category: 'general',
     priority: 'normal',
     status: 'draft',
-    startDate: '',
-    endDate: '',
     isImportant: false,
     isPublic: true,
-    targetGroup: ''
+    targetGroupIds: []
   });
+
+  const [targetGroups, setTargetGroups] = useState([]);
+  const [attachments, setAttachments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // 대상 그룹 목록 로드
+  useEffect(() => {
+    loadTargetGroups();
+  }, []);
+
+  const loadTargetGroups = async () => {
+    try {
+      const groups = await noticeTargetService.getTargetGroups();
+      setTargetGroups(groups);
+    } catch (error) {
+      console.error('대상 그룹 로드 실패:', error);
+    }
+  };
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -23,10 +43,99 @@ export default function NoticeRegister() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleTargetGroupSelectChange = (e) => {
+    const { value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      targetGroupIds: value ? [parseInt(value)] : []
+    }));
+  };
+
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    setAttachments(prev => [...prev, ...files]);
+  };
+
+  const removeAttachment = (index) => {
+    setAttachments(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('공지 등록 데이터:', formData);
-    // API 호출 로직 추가
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      // 공지사항 생성
+      const noticeData = {
+        ...formData,
+        // authorId는 백엔드에서 자동으로 설정됨
+        targetGroupIds: formData.targetGroupIds
+      };
+
+      const createdNotice = await noticeService.createNotice(noticeData);
+
+      // 파일 업로드
+      if (attachments.length > 0) {
+        for (const file of attachments) {
+          await noticeService.uploadFile(createdNotice.id, file);
+        }
+      }
+
+      setSuccess('공지사항이 성공적으로 등록되었습니다.');
+      
+      // 폼 초기화
+      setFormData({
+        title: '',
+        content: '',
+        category: 'general',
+        priority: 'normal',
+        status: 'draft',
+        isImportant: false,
+        isPublic: true,
+        targetGroupIds: []
+      });
+      setAttachments([]);
+
+      // 바로 공지사항 목록 탭으로 이동
+      if (setActiveTab) {
+        setActiveTab(['notice', 'notice-list']);
+      }
+
+    } catch (error) {
+      setError(error.message || '공지사항 등록에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveDraft = async () => {
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const noticeData = {
+        ...formData,
+        status: 'draft',
+        // authorId는 백엔드에서 자동으로 설정됨
+        targetGroupIds: formData.targetGroupIds
+      };
+
+      await noticeService.createNotice(noticeData);
+      setSuccess('임시저장이 완료되었습니다.');
+
+      // 바로 공지사항 목록 탭으로 이동
+      if (setActiveTab) {
+        setActiveTab(['notice', 'notice-list']);
+      }
+
+    } catch (error) {
+      setError(error.message || '임시저장에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,6 +143,18 @@ export default function NoticeRegister() {
       <div className={styles['notice-register-header']}>
         <h1>공지 등록</h1>
       </div>
+
+      {/* 성공/오류 메시지 */}
+      {success && (
+        <div className={styles['success-message']}>
+          {success}
+        </div>
+      )}
+      {error && (
+        <div className={styles['error-message']}>
+          {error}
+        </div>
+      )}
 
       <div className={styles['register-form-container']}>
         <form onSubmit={handleSubmit} className={styles['register-form']}>
@@ -60,12 +181,11 @@ export default function NoticeRegister() {
                   value={formData.category}
                   onChange={handleInputChange}
                 >
-                  <option value="">카테고리를 선택하세요</option>
-                  <option value="general">일반공지</option>
-                  <option value="important">중요공지</option>
-                  <option value="event">이벤트</option>
-                  <option value="maintenance">점검공지</option>
-                  <option value="update">업데이트</option>
+                  {noticeService.getCategoryOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -79,10 +199,11 @@ export default function NoticeRegister() {
                   value={formData.priority}
                   onChange={handleInputChange}
                 >
-                  <option value="low">낮음</option>
-                  <option value="normal">보통</option>
-                  <option value="high">높음</option>
-                  <option value="urgent">긴급</option>
+                  {noticeService.getPriorityOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className={styles['form-group']}>
@@ -93,9 +214,11 @@ export default function NoticeRegister() {
                   value={formData.status}
                   onChange={handleInputChange}
                 >
-                  <option value="draft">임시저장</option>
-                  <option value="published">발행</option>
-                  <option value="scheduled">예약발행</option>
+                  {noticeService.getStatusOptions().map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -106,17 +229,20 @@ export default function NoticeRegister() {
                 <select
                   id="targetGroup"
                   name="targetGroup"
-                  value={formData.targetGroup}
-                  onChange={handleInputChange}
+                  value={formData.targetGroupIds.length > 0 ? formData.targetGroupIds[0] : ''}
+                  onChange={handleTargetGroupSelectChange}
                   required
                 >
                   <option value="">대상 그룹을 선택하세요</option>
-                  <option value="all">전체 직원</option>
-                  <option value="manager">매니저급 이상</option>
-                  <option value="new">신규 입사자</option>
-                  <option value="seoul">서울 지역 지점</option>
-                  <option value="owner">점주 대상</option>
+                  {targetGroups.map(group => (
+                    <option key={group.id} value={group.id}>
+                      {group.name} ({group.memberCount}명)
+                    </option>
+                  ))}
                 </select>
+                <small className={styles['help-text']}>
+                  대상 그룹을 선택하지 않으면 전체 직원이 대상입니다.
+                </small>
               </div>
             </div>
           </div>
@@ -140,31 +266,49 @@ export default function NoticeRegister() {
           </div>
 
           <div className={styles['form-section']}>
-            <h2>발행 설정</h2>
+            <h2>첨부 파일</h2>
             <div className={styles['form-row']}>
               <div className={styles['form-group']}>
-                <label htmlFor="startDate">발행 시작일</label>
+                <label htmlFor="attachments">파일 첨부</label>
                 <input
-                  type="datetime-local"
-                  id="startDate"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInputChange}
+                  type="file"
+                  id="attachments"
+                  multiple
+                  onChange={handleFileChange}
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
                 />
-              </div>
-              <div className={styles['form-group']}>
-                <label htmlFor="endDate">발행 종료일</label>
-                <input
-                  type="datetime-local"
-                  id="endDate"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleInputChange}
-                />
+                <small className={styles['help-text']}>
+                  PDF, Word, Excel, PowerPoint, 이미지 파일만 업로드 가능합니다.
+                </small>
               </div>
             </div>
 
-            <div className={styles['form-row']}>
+            {/* 첨부파일 목록 */}
+            {attachments.length > 0 && (
+              <div className={styles['attachments-list']}>
+                <h4>첨부된 파일</h4>
+                {attachments.map((file, index) => (
+                  <div key={index} className={styles['attachment-item']}>
+                    <span className={styles['file-name']}>{file.name}</span>
+                    <span className={styles['file-size']}>
+                      ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className={styles['remove-file-btn']}
+                    >
+                      삭제
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className={styles['form-section']}>
+            <h2>발행 설정</h2>
+            <div className={styles['form-row2']}>
               <div className={styles['checkbox-group']}>
                 <label className={styles['checkbox-label']}>
                   <input
@@ -191,14 +335,23 @@ export default function NoticeRegister() {
           </div>
 
           <div className={styles['form-actions']}>
-            <button type="button" className="btn btn-secondary">
+            <button type="button" className="btn btn-secondary" disabled={loading}>
               취소
             </button>
-            <button type="button" className="btn btn-primary">
-              임시저장
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              onClick={handleSaveDraft}
+              disabled={loading}
+            >
+              {loading ? '저장 중...' : '임시저장'}
             </button>
-            <button type="submit" className="btn btn-primary">
-              공지 등록
+            <button 
+              type="submit" 
+              className="btn btn-primary"
+              disabled={loading}
+            >
+              {loading ? '등록 중...' : '공지 등록'}
             </button>
           </div>
         </form>

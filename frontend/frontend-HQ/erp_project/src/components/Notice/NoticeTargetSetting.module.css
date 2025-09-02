@@ -90,6 +90,15 @@
   font-size: 14px;
   background-color: white;
   cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
 }
 
 .target-table-container {
@@ -120,52 +129,62 @@
 /* 각 컬럼 너비 고정 */
 .target-table th:nth-child(1),
 .target-table td:nth-child(1) {
-  width: 5%; /* 번호 */
+  width: 5%;
+  /* 번호 */
 }
 
 .target-table th:nth-child(2),
 .target-table td:nth-child(2) {
-  width: 10%; /* 대상 그룹명 */
+  width: 10%;
+  /* 대상 그룹명 */
 }
 
 .target-table th:nth-child(3),
 .target-table td:nth-child(3) {
-  width: 8%; /* 유형 */
+  width: 8%;
+  /* 유형 */
 }
 
 .target-table th:nth-child(4),
 .target-table td:nth-child(4) {
-  width: 20%; /* 설명 */
+  width: 10%;
+  /* 설명 */
 }
 
 .target-table th:nth-child(5),
 .target-table td:nth-child(5) {
-  width: 10%; /* 대상 지점 */
+  width: 10%;
+  /* 대상 지점 */
 }
 
 .target-table th:nth-child(6),
 .target-table td:nth-child(6) {
-  width: 10%; /* 대상 직원 */
+  width: 5%;
+  /* 대상 직원 */
 }
 
 .target-table th:nth-child(7),
 .target-table td:nth-child(7) {
-  width: 8%; /* 인원수 */
+  width: 8%;
+  /* 인원수 */
 }
 
 .target-table th:nth-child(8),
 .target-table td:nth-child(8) {
-  width: 5%; /* 상태 */
+  width: 5%;
+  /* 상태 */
 }
 
 .target-table th:nth-child(9),
 .target-table td:nth-child(9) {
-  width: 10%; /* 등록일 */
+  width: 10%;
+  /* 등록일 */
 }
 
 .target-table th:nth-child(10),
 .target-table td:nth-child(10) {
-  width: 10%; /* 관리 */
+  width: 10%;
+  /* 관리 */
 }
 
 .target-table td {
@@ -232,7 +251,7 @@
   transition: all 0.2s;
 }
 
-.view-btn {
+/* .view-btn {
   background-color: #3b82f6;
   color: white;
 }
@@ -249,7 +268,7 @@
 
 .edit-btn:hover {
   background-color: #d97706;
-}
+} */
 
 .edit-btn img {
   width: 12px;
@@ -356,6 +375,19 @@
   transition: border-color 0.2s;
 }
 
+.model .form-group select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 40px;
+  /* 기본 브라우저 화살표 완전 제거 */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
 .modal .form-group input:focus,
 .modal .form-group select:focus,
 .modal .form-group textarea:focus {
@@ -442,51 +474,119 @@
   .target-setting {
     padding: 16px;
   }
-  
+
   .target-setting-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
-  
+
   .filter-section {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .search-box {
     max-width: none;
   }
-  
+
   .filter-options {
     justify-content: space-between;
   }
-  
+
   .target-table {
     font-size: 12px;
   }
-  
+
   .target-table th,
   .target-table td {
     padding: 8px 12px;
   }
-  
+
   .action-buttons {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .modal {
     width: 95%;
     margin: 16px;
   }
-  
+
   .modal .form-row {
     grid-template-columns: 1fr;
   }
-  
+
   .detail-row {
     flex-direction: column;
     gap: 4px;
   }
-} 
+}
+
+/* 체크박스 그룹 스타일 */
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 12px;
+  background-color: #f9fafb;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.checkbox-item:hover {
+  background-color: #e5e7eb;
+}
+
+.checkbox-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkbox-item label {
+  cursor: pointer;
+  font-size: 14px;
+  color: #374151;
+  margin: 0;
+}
+
+.help-text {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* 전체 옵션 스타일 */
+.all-option {
+  background-color: #f0f9ff !important;
+  border: 2px solid #0ea5e9 !important;
+  border-radius: 6px !important;
+  font-weight: 500 !important;
+  margin-bottom: 8px !important;
+}
+
+.all-option:hover {
+  background-color: #e0f2fe !important;
+}
+
+.all-option input[type="checkbox"] {
+  width: 18px !important;
+  height: 18px !important;
+  accent-color: #0ea5e9 !important;
+}

@@ -431,7 +431,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
             {/* 공지사항 하위 메뉴 */}
             {(activeTabs.includes('notice') || activeTabs.some(tab => isNoticeSubmenu(tab))) && (
               <ul className={styles['submenu-ul']}>
-                <li>
+                {/* <li>
                   <button
                     className={`btn ${styles['submenu-button']} ${activeTabs.includes('notice-list') ? 'btn-selected' : 'btn-secondary'}`}
                     onClick={() => handleSubmenuClick('notice-list')}
@@ -439,14 +439,14 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     <img src={pencilIcon} alt="공지사항 목록" className={styles['sidebar-icon']} />
                     공지사항 목록
                   </button>
-                </li>
+                </li> */}
                 <li>
                   <button
                     className={`btn ${styles['submenu-button']} ${activeTabs.includes('notice-detail') ? 'btn-selected' : 'btn-secondary'}`}
                     onClick={() => handleSubmenuClick('notice-detail')}
                   >
-                    <img src={sendIcon} alt="공지사항 상세" className={styles['sidebar-icon']} />
-                    공지사항 상세
+                    <img src={sendIcon} alt="공지사항" className={styles['sidebar-icon']} />
+                    공지사항 목록
                   </button>
                 </li>
               </ul>

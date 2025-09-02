@@ -110,9 +110,9 @@ function App() {
       case 'sales-analysis':
         return <ProductSalesAnalysis />;
       case 'notice-register':
-        return <NoticeRegister />;
+        return <NoticeRegister setActiveTab={setActiveTab} />;
       case 'notice-list':
-        return <NoticeList />;
+        return <NoticeList setActiveTab={setActiveTab} />;
       case 'notice-target-setting':
         return <NoticeTargetSetting />;
       case 'settings-log':
