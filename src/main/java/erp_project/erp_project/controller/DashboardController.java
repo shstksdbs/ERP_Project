@@ -152,4 +152,55 @@ public class DashboardController {
             return ResponseEntity.internalServerError().body(Map.of("error", "인기 상품 데이터 조회 중 오류가 발생했습니다."));
         }
     }
+    
+    /**
+     * 본사용 주간 매출 추이 조회 (전지점 합계, 오늘 제외)
+     * GET /api/dashboard/hq-weekly-sales-trend
+     */
+    @GetMapping("/hq-weekly-sales-trend")
+    public ResponseEntity<Map<String, Object>> getHqWeeklySalesTrend() {
+        log.info("본사용 주간 매출 추이 조회 요청");
+        
+        try {
+            Map<String, Object> trend = dashboardService.getHqWeeklySalesTrend();
+            return ResponseEntity.ok(trend);
+        } catch (Exception e) {
+            log.error("본사용 주간 매출 추이 조회 실패: error={}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "본사 매출 추이 데이터 조회 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 본사용 인기 상품 조회 (전지점 합계, 오늘 제외)
+     * GET /api/dashboard/hq-top-products
+     */
+    @GetMapping("/hq-top-products")
+    public ResponseEntity<Map<String, Object>> getHqTopProducts() {
+        log.info("본사용 인기 상품 조회 요청");
+        
+        try {
+            Map<String, Object> topProducts = dashboardService.getHqTopProducts();
+            return ResponseEntity.ok(topProducts);
+        } catch (Exception e) {
+            log.error("본사용 인기 상품 조회 실패: error={}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "본사 인기 상품 데이터 조회 중 오류가 발생했습니다."));
+        }
+    }
+    
+    /**
+     * 본사 대시보드 KPI 조회 (전지점 집계)
+     * GET /api/dashboard/hq-kpis
+     */
+    @GetMapping("/hq-kpis")
+    public ResponseEntity<Map<String, Object>> getHqKpis() {
+        log.info("본사 대시보드 KPI 조회 요청");
+        
+        try {
+            Map<String, Object> hqKpis = dashboardService.getHqKpis();
+            return ResponseEntity.ok(hqKpis);
+        } catch (Exception e) {
+            log.error("본사 대시보드 KPI 조회 실패: error={}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "본사 대시보드 데이터 조회 중 오류가 발생했습니다."));
+        }
+    }
 }

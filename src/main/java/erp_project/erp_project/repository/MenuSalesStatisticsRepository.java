@@ -122,4 +122,16 @@ public interface MenuSalesStatisticsRepository extends JpaRepository<MenuSalesSt
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+    
+    // 전지점 기준 인기 상품 조회 (매출 기준, 상위 5개)
+    @Query("SELECT m.menuId, menu.name, SUM(m.quantitySold), SUM(m.netSales) " +
+           "FROM MenuSalesStatistics m " +
+           "JOIN Menu menu ON m.menuId = menu.id " +
+           "WHERE m.statisticDate BETWEEN :startDate AND :endDate " +
+           "GROUP BY m.menuId, menu.name " +
+           "ORDER BY SUM(m.netSales) DESC")
+    List<Object[]> findTopSellingMenusByAllBranches(
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
 }

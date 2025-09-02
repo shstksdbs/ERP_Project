@@ -303,39 +303,39 @@ export default function Dashboard({ branchId, loginData }) {
 
   const kpis = [
     { 
-      label: '오늘 매출', 
+      label: '매출', 
       value: kpiData.todaySales.value, 
       delta: '오늘', 
       icon: dollorIcon, 
-      color: '#10b981' 
+      color: '#1f2937' 
     },
     { 
-      label: '오늘 주문 수', 
+      label: '주문 수', 
       value: kpiData.todayOrders.value, 
       delta: '오늘', 
       icon: packageInIcon, 
-      color: '#3b82f6' 
+      color: '#1f2937' 
     },
     { 
       label: '발주 대기', 
       value: kpiData.pendingSupplyRequests.value, 
       delta: '승인 필요', 
       icon: truckIcon, 
-      color: '#f59e0b' 
+      color: '#1f2937' 
     },
     { 
       label: '재고 부족', 
       value: kpiData.lowStockItems.value, 
       delta: '발주 필요', 
       icon: bellIcon, 
-      color: '#ef4444' 
+      color: '#1f2937' 
     },
     { 
       label: '읽지 않은 알림', 
       value: kpiData.unreadNotifications.value, 
       delta: '새 알림', 
       icon: bellIcon, 
-      color: '#8b5cf6' 
+      color: '#1f2937' 
     },
   ];
 

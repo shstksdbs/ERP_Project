@@ -53,4 +53,9 @@ public interface SupplyRequestRepository extends JpaRepository<SupplyRequest, Lo
      * 특정 지점의 특정 상태 발주 요청 수 조회
      */
     long countByRequestingBranchIdAndStatus(Long branchId, SupplyRequest.SupplyRequestStatus status);
+    
+    /**
+     * 전지점 발주 대기 수 조회
+     */
+    long countByStatus(SupplyRequest.SupplyRequestStatus status);
 }

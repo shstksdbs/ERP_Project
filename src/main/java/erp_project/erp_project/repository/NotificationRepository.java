@@ -63,4 +63,8 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("DELETE FROM Notification n WHERE n.recipientType = :recipientType AND n.recipientId IS NULL AND n.timestamp < :cutoffDate")
     void deleteOldNotificationsForHeadquarters(@Param("recipientType") String recipientType, @Param("cutoffDate") LocalDateTime cutoffDate);
+    
+    // 전지점 읽지 않은 알림 개수 조회
+    @Query("SELECT COUNT(n) FROM Notification n WHERE n.isRead = false")
+    Long countUnreadNotificationsByAllBranches();
 }

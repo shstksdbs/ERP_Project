@@ -45,4 +45,18 @@ public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics
     // 커스텀 쿼리: 지점별 시간대별 매출 분석
     @Query("SELECT s FROM SalesStatistics s WHERE s.branchId = :branchId AND s.statisticDate BETWEEN :startDate AND :endDate AND s.statisticHour IS NOT NULL ORDER BY s.statisticHour")
     List<SalesStatistics> findHourlyAnalysisByBranchAndDateRange(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    // 전지점 오늘 총매출 조회
+    @Query("SELECT COALESCE(SUM(s.netSales), 0) FROM SalesStatistics s WHERE s.statisticDate = :today AND s.statisticHour IS NULL")
+    java.math.BigDecimal findTodayTotalSalesByAllBranches(@Param("today") LocalDate today);
+    
+    // 전지점 주간 매출 추이 조회 (일별 합계)
+    @Query("SELECT s.statisticDate, COALESCE(SUM(s.netSales), 0) FROM SalesStatistics s " +
+           "WHERE s.statisticDate BETWEEN :startDate AND :endDate AND s.statisticHour IS NULL " +
+           "GROUP BY s.statisticDate ORDER BY s.statisticDate ASC")
+    List<Object[]> findWeeklySalesTrendByAllBranches(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    // 전지점 오늘 총 주문 수 조회 (statistic_hour이 null인 레코드 개수)
+    @Query("SELECT COUNT(s) FROM SalesStatistics s WHERE s.statisticDate = :today AND s.statisticHour IS NULL")
+    Long findTodayTotalOrdersByAllBranches(@Param("today") LocalDate today);
 }

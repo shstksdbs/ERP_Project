@@ -51,4 +51,25 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
         LocalDateTime startTime, 
         LocalDateTime endTime
     );
+    
+    // 전지점 오늘 총 주문 수 조회
+    @Query("SELECT COUNT(o) FROM Orders o WHERE o.orderTime BETWEEN :startTime AND :endTime")
+    Long countTodayOrdersByAllBranches(
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
+    
+    // 현재 운영하고 있는 지점 수 조회 (오늘 주문이 있는 지점)
+    @Query("SELECT COUNT(DISTINCT o.branchId) FROM Orders o WHERE o.orderTime BETWEEN :startTime AND :endTime")
+    Long countActiveBranches(
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
+    
+    // 최근 7일간 주문이 있는 활성 지점 수 조회
+    @Query("SELECT COUNT(DISTINCT o.branchId) FROM Orders o WHERE o.orderTime BETWEEN :startTime AND :endTime")
+    Long countActiveBranchesInPeriod(
+        @Param("startTime") LocalDateTime startTime,
+        @Param("endTime") LocalDateTime endTime
+    );
 }
