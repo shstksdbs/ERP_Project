@@ -31,4 +31,8 @@ public interface MaterialStockRepository extends JpaRepository<MaterialStock, Lo
     // 재고 부족 시 알림 (최소 재고 기준) - InventoryService에서 사용
     @Query("SELECT ms FROM MaterialStock ms WHERE ms.branch.id = :branchId AND ms.currentStock < ms.minStock")
     List<MaterialStock> findByBranchIdAndCurrentStockLessThanMinStock(@Param("branchId") Long branchId);
+    
+    // 특정 지점의 재고 부족 항목 수 조회 (현재 재고가 최소 재고 이하)
+    @Query("SELECT COUNT(ms) FROM MaterialStock ms WHERE ms.branch.id = :branchId AND ms.currentStock <= ms.minStock")
+    long countByBranchIdAndCurrentStockLessThanEqualMinStock(@Param("branchId") Long branchId);
 }

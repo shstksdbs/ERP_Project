@@ -48,4 +48,9 @@ public interface SupplyRequestRepository extends JpaRepository<SupplyRequest, Lo
      * 특정 우선순위의 발주 요청 목록 조회
      */
     List<SupplyRequest> findByPriority(SupplyRequest.SupplyRequestPriority priority);
+    
+    /**
+     * 특정 지점의 특정 상태 발주 요청 수 조회
+     */
+    long countByRequestingBranchIdAndStatus(Long branchId, SupplyRequest.SupplyRequestStatus status);
 }

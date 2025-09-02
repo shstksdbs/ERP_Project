@@ -39,4 +39,10 @@ public interface NoticeReadStatusRepository extends JpaRepository<NoticeReadStat
     @Query("SELECT COUNT(nrs) FROM NoticeReadStatus nrs " +
            "WHERE nrs.noticeId = :noticeId")
     Long countTotalByNoticeId(@Param("noticeId") Long noticeId);
+    
+    // 특정 지점의 읽지 않은 공지사항 수 조회
+    @Query("SELECT COUNT(nrs) FROM NoticeReadStatus nrs " +
+           "JOIN nrs.user u " +
+           "WHERE u.branchId = :branchId AND nrs.isRead = false")
+    long countByBranchIdAndIsReadFalse(@Param("branchId") Long branchId);
 }

@@ -43,4 +43,12 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
     
     // 주문 번호로 주문 찾기
     Orders findByOrderNumber(String orderNumber);
+    
+    // 특정 지점의 특정 상태 주문 수 조회 (시간 범위 포함)
+    long countByBranchIdAndOrderStatusAndOrderTimeBetween(
+        Long branchId, 
+        Orders.OrderStatus orderStatus, 
+        LocalDateTime startTime, 
+        LocalDateTime endTime
+    );
 }
