@@ -459,7 +459,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               알림 관리
             </button>
           </li>
-          <li>
+          {/* <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('settings')}>
               <img src={settingIcon} alt="설정" className={styles['sidebar-icon']} />
               설정
@@ -470,7 +470,6 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 style={{ marginLeft: 'auto' }}
               />
             </button>
-            {/* 설정 하위 메뉴 */}
             {(activeTabs.includes('settings') || activeTabs.some(tab => isSettingsSubmenu(tab))) && (
               <ul className={styles['submenu-ul']}>
                 <li>
@@ -493,7 +492,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 </li>
               </ul>
             )}
-          </li>
+          </li> */}
         </ul>
       </nav>
     </aside>

@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -75,7 +75,7 @@ public class SalesStatisticsService {
         // 평균주문금액 자동 계산
         if (dailyStats.getTotalOrders() > 0) {
             BigDecimal averageOrderValue = dailyStats.getTotalSales()
-                    .divide(BigDecimal.valueOf(dailyStats.getTotalOrders()), 2, BigDecimal.ROUND_HALF_UP);
+                    .divide(BigDecimal.valueOf(dailyStats.getTotalOrders()), 2, java.math.RoundingMode.HALF_UP);
             dailyStats.setAverageOrderValue(averageOrderValue);
         }
         
@@ -137,7 +137,7 @@ public class SalesStatisticsService {
             if (order.getDiscountAmount() != null && order.getTotalAmount().compareTo(BigDecimal.ZERO) > 0) {
                 itemDiscount = order.getDiscountAmount()
                         .multiply(item.getTotalPrice())
-                        .divide(order.getTotalAmount(), 2, BigDecimal.ROUND_HALF_UP);
+                        .divide(order.getTotalAmount(), 2, java.math.RoundingMode.HALF_UP);
             }
             
             menuStats.addQuantity(item.getQuantity());
@@ -153,16 +153,9 @@ public class SalesStatisticsService {
      * 카테고리별 매출 통계 업데이트
      */
     private void updateCategorySalesStatistics(Orders order) {
-        LocalDate orderDate = order.getCreatedAt().toLocalDate();
-        List<OrderItems> orderItems = orderItemRepository.findByOrderId(order.getOrderId());
-        
-        for (OrderItems item : orderItems) {
-            // 메뉴의 카테고리 ID 조회 (Menu 엔티티에서 가져와야 함)
-            // 여기서는 간단히 처리하거나 MenuService를 주입받아 사용
-            // Long categoryId = getMenuCategoryId(item.getMenuId());
-            
-            // 임시로 건너뛰고, 실제 구현 시에는 카테고리 정보를 포함하여 처리
-        }
+        // TODO: 카테고리별 매출 통계 업데이트 구현
+        // 현재는 메뉴별 통계만 업데이트하고 있음
+        // 카테고리별 통계는 별도로 구현 필요
     }
     
     /**

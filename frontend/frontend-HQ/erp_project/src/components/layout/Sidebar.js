@@ -389,7 +389,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     가맹점 매출 조회
                   </button>
                 </li>
-                <li>
+                {/* <li>
                   <button
                     className={`btn ${styles['submenu-button']} ${activeTabs.includes('branch-comparison') ? 'btn-selected' : 'btn-secondary'}`}
                     onClick={() => handleSubmenuClick('branch-comparison')}
@@ -397,7 +397,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                     <img src={chartPieIcon} alt="지점별 비교 분석" className={styles['sidebar-icon']} />
                     지점별 비교 분석
                   </button>
-                </li>
+                </li> */}
                 <li>
                   <button
                     className={`btn ${styles['submenu-button']} ${activeTabs.includes('sales-analysis') ? 'btn-selected' : 'btn-secondary'}`}
@@ -455,7 +455,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
               </ul>
             )}
           </li>
-          <li>
+          {/* <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('settings')}>
               <img src={settingIcon} alt="공지사항 등록" className={styles['sidebar-icon']} />
               설정
@@ -466,7 +466,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 style={{ marginLeft: 'auto' }}
               />
             </button>
-            {/* 설정 하위 메뉴 */}
+            
             {(activeTabs.includes('settings') || activeTabs.some(tab => isSettingsSubmenu(tab))) && (
               <ul className={styles['submenu-ul']}>
                 <li>
@@ -498,7 +498,7 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 </li>
               </ul>
             )}
-          </li>
+          </li> */}
         </ul>
       </nav>
     </aside>

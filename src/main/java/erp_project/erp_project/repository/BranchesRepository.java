@@ -18,6 +18,9 @@ public interface BranchesRepository extends JpaRepository<Branches, Long> {
     
     List<Branches> findByBranchType(Branches.BranchType branchType);
     
+    // 본사를 제외한 활성 지점 조회
+    List<Branches> findByStatusAndBranchTypeNot(Branches.BranchStatus status, Branches.BranchType branchType);
+    
     @Query("SELECT b FROM Branches b WHERE b.branchCode IN :branchCodes")
     List<Branches> findByBranchCodes(@Param("branchCodes") List<String> branchCodes);
     

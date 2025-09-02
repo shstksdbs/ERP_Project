@@ -12,7 +12,7 @@ import chartPieIcon from '../../assets/chartPie_icon.png';
 import chartLinearIcon from '../../assets/chartLinear_icon.png';
 
 // Chart.js 컴포넌트들
-import { Line, Bar, Doughnut, Pie } from 'react-chartjs-2';
+import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -22,8 +22,7 @@ import {
   Title,
   Tooltip,
   Legend,
-  BarElement,
-  ArcElement
+  BarElement
 } from 'chart.js';
 
 ChartJS.register(
@@ -34,8 +33,7 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  BarElement,
-  ArcElement
+  BarElement
 );
 
 export default function FranchiseSalesInquiry() {
@@ -47,136 +45,124 @@ export default function FranchiseSalesInquiry() {
   const [salesData, setSalesData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [salesOverview, setSalesOverview] = useState(null);
+  const [dailyTrendData, setDailyTrendData] = useState(null);
 
-  // 샘플 가맹점 데이터
-  useEffect(() => {
-    const sampleFranchises = [
-      { id: 1, name: '강남점', code: 'GN001', region: '서울', status: 'active', manager: '김강남', type: '직영점' },
-      { id: 2, name: '홍대점', code: 'HD001', region: '서울', status: 'active', manager: '이홍대', type: '가맹점' },
-      { id: 3, name: '부산점', code: 'BS001', region: '부산', status: 'active', manager: '박부산', type: '가맹점' },
-      { id: 4, name: '대구점', code: 'DG001', region: '대구', status: 'active', manager: '최대구', type: '직영점' },
-      { id: 5, name: '인천점', code: 'IC001', region: '인천', status: 'active', manager: '정인천', type: '가맹점' },
-      { id: 6, name: '광주점', code: 'GJ001', region: '광주', status: 'active', manager: '한광주', type: '가맹점' },
-      { id: 7, name: '대전점', code: 'DJ001', region: '대전', status: 'active', manager: '윤대전', type: '직영점' },
-      { id: 8, name: '울산점', code: 'US001', region: '울산', status: 'active', manager: '임울산', type: '가맹점' }
-    ];
+  // API 호출 함수
+  const fetchSalesOverview = async (year, month) => {
+    setLoading(true);
+    setError(null);
 
-    const sampleSalesData = [
-      {
-        franchiseId: 1,
-        franchiseName: '강남점',
-        franchiseCode: 'GN001',
-        type: '직영점',
-        monthlySales: 85000000,
-        monthlyGrowth: 12.5,
-        customerCount: 12500,
-        avgOrderValue: 6800,
-        topProducts: ['아메리카노', '카페라떼', '샌드위치'],
-        salesByMonth: [72000000, 78000000, 82000000, 85000000, 88000000, 92000000],
-        salesByCategory: {
-          '음료': 45000000,
-          '식품': 28000000,
-          '디저트': 12000000
-        },
-        salesByTime: {
-          '오전(6-12시)': 25000000,
-          '오후(12-18시)': 35000000,
-          '저녁(18-24시)': 25000000
-        }
-      },
-      {
-        franchiseId: 2,
-        franchiseName: '홍대점',
-        franchiseCode: 'HD001',
-        type: '가맹점',
-        monthlySales: 72000000,
-        monthlyGrowth: 8.3,
-        customerCount: 9800,
-        avgOrderValue: 6200,
-        topProducts: ['카페라떼', '티라미수', '샐러드'],
-        salesByMonth: [65000000, 68000000, 70000000, 72000000, 75000000, 78000000],
-        salesByCategory: {
-          '음료': 38000000,
-          '식품': 22000000,
-          '디저트': 12000000
-        },
-        salesByTime: {
-          '오전(6-12시)': 20000000,
-          '오후(12-18시)': 30000000,
-          '저녁(18-24시)': 22000000
-        }
-      },
-      {
-        franchiseId: 3,
-        franchiseName: '부산점',
-        franchiseCode: 'BS001',
-        type: '가맹점',
-        monthlySales: 65000000,
-        monthlyGrowth: 15.2,
-        customerCount: 8900,
-        avgOrderValue: 5800,
-        topProducts: ['카푸치노', '치즈케이크', '감자튀김'],
-        salesByMonth: [55000000, 58000000, 61000000, 65000000, 68000000, 72000000],
-        salesByCategory: {
-          '음료': 35000000,
-          '식품': 20000000,
-          '디저트': 10000000
-        },
-        salesByTime: {
-          '오전(6-12시)': 18000000,
-          '오후(12-18시)': 28000000,
-          '저녁(18-24시)': 19000000
-        }
-      },
-      {
-        franchiseId: 4,
-        franchiseName: '대구점',
-        franchiseCode: 'DG001',
-        type: '직영점',
-        monthlySales: 58000000,
-        monthlyGrowth: 6.8,
-        customerCount: 7600,
-        avgOrderValue: 5400,
-        topProducts: ['아메리카노', '샌드위치', '샐러드'],
-        salesByMonth: [52000000, 54000000, 56000000, 58000000, 60000000, 62000000],
-        salesByCategory: {
-          '음료': 32000000,
-          '식품': 18000000,
-          '디저트': 8000000
-        },
-        salesByTime: {
-          '오전(6-12시)': 16000000,
-          '오후(12-18시)': 25000000,
-          '저녁(18-24시)': 17000000
-        }
-      },
-      {
-        franchiseId: 5,
-        franchiseName: '인천점',
-        franchiseCode: 'IC001',
-        type: '가맹점',
-        monthlySales: 52000000,
-        monthlyGrowth: 9.7,
-        customerCount: 6800,
-        avgOrderValue: 5100,
-        topProducts: ['카페라떼', '티라미수', '샌드위치'],
-        salesByMonth: [46000000, 48000000, 50000000, 52000000, 54000000, 56000000],
-        salesByCategory: {
-          '음료': 28000000,
-          '식품': 16000000,
-          '디저트': 8000000
-        },
-        salesByTime: {
-          '오전(6-12시)': 14000000,
-          '오후(12-18시)': 22000000,
-          '저녁(18-24시)': 16000000
-        }
+    try {
+      const response = await fetch(`http://localhost:8080/api/sales/overview?year=${year}&month=${month}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    ];
 
-    setFranchises(sampleFranchises);
-    setSalesData(sampleSalesData);
-  }, []);
+      const data = await response.json();
+      setSalesOverview(data);
+
+      // 가맹점 데이터 변환
+      const franchiseList = data.franchises.map(franchise => ({
+        id: franchise.branchId,
+        name: franchise.branchName,
+        code: franchise.branchCode,
+        region: '서울', // 기본값, 실제로는 API에서 받아와야 함
+        status: 'active',
+        manager: franchise.managerName,
+        type: franchise.branchType === 'franchise' ? '가맹점' : '직영점'
+      }));
+
+      // 매출 데이터 변환
+      const salesList = data.franchises.map(franchise => ({
+        franchiseId: franchise.branchId,
+        franchiseName: franchise.branchName,
+        franchiseCode: franchise.branchCode,
+        type: franchise.branchType === 'franchise' ? '가맹점' : '직영점',
+        monthlySales: franchise.monthlySales,
+        totalOrders: franchise.totalOrders,
+        customerCount: franchise.totalOrders, // 임시로 주문수와 동일하게 설정
+        avgOrderValue: franchise.avgOrderValue,
+        topProducts: franchise.topProducts.map(product => product.name),
+        salesByMonth: [72000000, 78000000, 82000000, 85000000, 88000000, 92000000], // 임시 데이터
+        salesByCategory: franchise.salesByCategory,
+        salesByTime: convertTimeSales(franchise.salesByTime)
+      }));
+
+      setFranchises(franchiseList);
+      setSalesData(salesList);
+
+    } catch (err) {
+      console.error('매출 데이터 조회 실패:', err);
+      setError('매출 데이터를 불러오는데 실패했습니다.');
+
+      // 에러 시 빈 데이터로 초기화
+      setFranchises([]);
+      setSalesData([]);
+      setSalesOverview(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 시간대별 매출 데이터 변환 함수
+  const convertTimeSales = (timeSales) => {
+    console.log('원본 시간대별 데이터:', timeSales);
+    
+    const converted = {
+      '오전(6-12시)': 0,
+      '오후(12-18시)': 0,
+      '저녁(18-24시)': 0
+    };
+
+    Object.keys(timeSales).forEach(hour => {
+      const hourNum = parseInt(hour);
+      const value = parseFloat(timeSales[hour]) || 0;
+      
+      console.log(`시간 ${hour}시 (${hourNum}): ${value}원`);
+      
+      if (hourNum >= 6 && hourNum < 12) {
+        converted['오전(6-12시)'] += value;
+        console.log(`오전(6-12시)에 추가: ${value}원, 총합: ${converted['오전(6-12시)']}원`);
+      } else if (hourNum >= 12 && hourNum < 18) {
+        converted['오후(12-18시)'] += value;
+        console.log(`오후(12-18시)에 추가: ${value}원, 총합: ${converted['오후(12-18시)']}원`);
+      } else if (hourNum >= 18 && hourNum <= 24) {
+        converted['저녁(18-24시)'] += value;
+        console.log(`저녁(18-24시)에 추가: ${value}원, 총합: ${converted['저녁(18-24시)']}원`);
+      }
+    });
+
+    console.log('변환된 시간대별 데이터:', converted);
+    return converted;
+  };
+
+  // 일별 매출 추이 데이터 조회 함수
+  const fetchDailyTrendData = async (year, month) => {
+    try {
+      const response = await fetch(`http://localhost:8080/api/sales/trend?year=${year}&month=${month}`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setDailyTrendData(data);
+
+    } catch (err) {
+      console.error('일별 매출 추이 데이터 조회 실패:', err);
+      setDailyTrendData(null);
+    }
+  };
+
+  // 초기 데이터 로드 및 연월 변경 시 데이터 재조회
+  useEffect(() => {
+    fetchSalesOverview(selectedYear, selectedMonth);
+    fetchDailyTrendData(selectedYear, selectedMonth);
+  }, [selectedYear, selectedMonth]);
 
   const handleExportData = () => {
     // 데이터 내보내기 기능
@@ -195,110 +181,237 @@ export default function FranchiseSalesInquiry() {
     return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
   };
 
-  // 매출 추이 차트 데이터
-  const getSalesTrendData = () => {
-    const labels = ['1월', '2월', '3월', '4월', '5월', '6월'];
-    const datasets = salesData.map((franchise, index) => ({
-      label: franchise.franchiseName,
-      data: franchise.salesByMonth,
-      borderColor: `hsl(${index * 60}, 70%, 50%)`,
-      backgroundColor: `hsla(${index * 60}, 70%, 50%, 0.1)`,
-      tension: 0.4,
-      fill: false
-    }));
+  // 일별 매출 추이 차트 데이터 (막대그래프용)
+  const getDailySalesTrendData = () => {
+    if (!dailyTrendData || !dailyTrendData.dates || !dailyTrendData.branches) {
+      return { labels: [], datasets: [] };
+    }
+
+    // 날짜를 더 읽기 쉽게 변환 (예: "12/01", "12/02")
+    const labels = dailyTrendData.dates.map(date => {
+      const dateObj = new Date(date);
+      return `${(dateObj.getMonth() + 1).toString().padStart(2, '0')}/${dateObj.getDate().toString().padStart(2, '0')}`;
+    });
+
+    // 막대그래프용 색상 팔레트
+    const colors = [
+      { background: 'rgba(59, 130, 246, 0.8)', border: '#3B82F6' }, // Blue
+      { background: 'rgba(16, 185, 129, 0.8)', border: '#10B981' }, // Emerald
+      { background: 'rgba(245, 158, 11, 0.8)', border: '#F59E0B' }, // Amber
+      { background: 'rgba(239, 68, 68, 0.8)', border: '#EF4444' }, // Red
+      { background: 'rgba(139, 92, 246, 0.8)', border: '#8B5CF6' }, // Violet
+      { background: 'rgba(6, 182, 212, 0.8)', border: '#06B6D4' }, // Cyan
+      { background: 'rgba(132, 204, 22, 0.8)', border: '#84CC16' }, // Lime
+      { background: 'rgba(249, 115, 22, 0.8)', border: '#F97316' }, // Orange
+    ];
+
+    const datasets = dailyTrendData.branches.map((branch, index) => {
+      const colorIndex = index % colors.length;
+      return {
+        label: branch.branchName,
+        data: branch.dailySales,
+        backgroundColor: colors[colorIndex].background,
+        borderColor: colors[colorIndex].border,
+        borderWidth: 1,
+        borderRadius: 4,
+        borderSkipped: false,
+        hoverBackgroundColor: colors[colorIndex].border,
+        hoverBorderColor: colors[colorIndex].border,
+        hoverBorderWidth: 2
+      };
+    });
 
     return { labels, datasets };
   };
 
   // 카테고리별 매출 차트 데이터
   const getCategorySalesData = () => {
-    const categories = ['음료', '식품', '디저트'];
-    const datasets = salesData.map((franchise, index) => ({
-      label: franchise.franchiseName,
-      data: categories.map(category => franchise.salesByCategory[category] || 0),
-      backgroundColor: `hsl(${index * 60}, 70%, 50%)`,
-      borderColor: `hsl(${index * 60}, 70%, 50%)`,
-      borderWidth: 1
-    }));
+    if (!salesData || salesData.length === 0) {
+      return { labels: [], datasets: [] };
+    }
 
+    // 모든 지점의 카테고리 데이터에서 고유한 카테고리명 추출
+    const allCategories = new Set();
+    salesData.forEach(franchise => {
+      if (franchise.salesByCategory) {
+        Object.keys(franchise.salesByCategory).forEach(category => {
+          allCategories.add(category);
+        });
+      }
+    });
+
+    const categories = Array.from(allCategories).sort();
+    
+    // 개선된 색상 팔레트
+    const colorPalette = [
+      { background: 'rgba(59, 130, 246, 0.8)', border: '#3B82F6', hover: 'rgba(59, 130, 246, 0.9)' },
+      { background: 'rgba(16, 185, 129, 0.8)', border: '#10B981', hover: 'rgba(16, 185, 129, 0.9)' },
+      { background: 'rgba(245, 158, 11, 0.8)', border: '#F59E0B', hover: 'rgba(245, 158, 11, 0.9)' },
+      { background: 'rgba(239, 68, 68, 0.8)', border: '#EF4444', hover: 'rgba(239, 68, 68, 0.9)' },
+      { background: 'rgba(139, 92, 246, 0.8)', border: '#8B5CF6', hover: 'rgba(139, 92, 246, 0.9)' },
+      { background: 'rgba(6, 182, 212, 0.8)', border: '#06B6D4', hover: 'rgba(6, 182, 212, 0.9)' },
+      { background: 'rgba(132, 204, 22, 0.8)', border: '#84CC16', hover: 'rgba(132, 204, 22, 0.9)' },
+      { background: 'rgba(249, 115, 22, 0.8)', border: '#F97316', hover: 'rgba(249, 115, 22, 0.9)' }
+    ];
+    
+    const datasets = salesData.map((franchise, index) => {
+      const colorIndex = index % colorPalette.length;
+      const categoryData = categories.map(category => {
+        const value = franchise.salesByCategory && franchise.salesByCategory[category] 
+          ? parseFloat(franchise.salesByCategory[category]) 
+          : 0;
+        return value;
+      });
+
+      return {
+      label: franchise.franchiseName,
+        data: categoryData,
+        backgroundColor: colorPalette[colorIndex].background,
+        borderColor: colorPalette[colorIndex].border,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
+        hoverBackgroundColor: colorPalette[colorIndex].hover,
+        hoverBorderColor: colorPalette[colorIndex].border,
+        hoverBorderWidth: 3
+      };
+    });
+
+    console.log('카테고리별 매출 차트 데이터:', { labels: categories, datasets });
     return { labels: categories, datasets };
   };
 
   // 시간대별 매출 차트 데이터
   const getTimeSalesData = () => {
-    const timeSlots = ['오전(6-12시)', '오후(12-18시)', '저녁(18-24시)'];
-    const datasets = salesData.map((franchise, index) => ({
-      label: franchise.franchiseName,
-      data: timeSlots.map(time => franchise.salesByTime[time] || 0),
-      backgroundColor: `hsl(${index * 60}, 70%, 50%)`,
-      borderColor: `hsl(${index * 60}, 70%, 50%)`,
-      borderWidth: 1
-    }));
+    if (!salesData || salesData.length === 0) {
+      return { labels: [], datasets: [] };
+    }
 
+    const timeSlots = ['오전(6-12시)', '오후(12-18시)', '저녁(18-24시)'];
+    
+    // 시간대별 색상 팔레트 (시간대에 맞는 색상)
+    const timeColorPalette = [
+      { background: 'rgba(59, 130, 246, 0.8)', border: '#3B82F6', hover: 'rgba(59, 130, 246, 0.9)' }, // 파란색 - 오전
+      { background: 'rgba(16, 185, 129, 0.8)', border: '#10B981', hover: 'rgba(16, 185, 129, 0.9)' }, // 초록색 - 오후
+      { background: 'rgba(139, 92, 246, 0.8)', border: '#8B5CF6', hover: 'rgba(139, 92, 246, 0.9)' }, // 보라색 - 저녁
+      { background: 'rgba(245, 158, 11, 0.8)', border: '#F59E0B', hover: 'rgba(245, 158, 11, 0.9)' }, // 주황색
+      { background: 'rgba(239, 68, 68, 0.8)', border: '#EF4444', hover: 'rgba(239, 68, 68, 0.9)' }, // 빨간색
+      { background: 'rgba(6, 182, 212, 0.8)', border: '#06B6D4', hover: 'rgba(6, 182, 212, 0.9)' }, // 청록색
+      { background: 'rgba(132, 204, 22, 0.8)', border: '#84CC16', hover: 'rgba(132, 204, 22, 0.9)' }, // 라임색
+      { background: 'rgba(249, 115, 22, 0.8)', border: '#F97316', hover: 'rgba(249, 115, 22, 0.9)' }  // 오렌지색
+    ];
+    
+    const datasets = salesData.map((franchise, index) => {
+      const colorIndex = index % timeColorPalette.length;
+      const timeData = timeSlots.map(time => {
+        const value = franchise.salesByTime && franchise.salesByTime[time] 
+          ? parseFloat(franchise.salesByTime[time]) 
+          : 0;
+        return value;
+      });
+
+      return {
+      label: franchise.franchiseName,
+        data: timeData,
+        backgroundColor: timeColorPalette[colorIndex].background,
+        borderColor: timeColorPalette[colorIndex].border,
+        borderWidth: 2,
+        borderRadius: 6,
+        borderSkipped: false,
+        hoverBackgroundColor: timeColorPalette[colorIndex].hover,
+        hoverBorderColor: timeColorPalette[colorIndex].border,
+        hoverBorderWidth: 3
+      };
+    });
+
+    console.log('시간대별 매출 차트 데이터:', { labels: timeSlots, datasets });
     return { labels: timeSlots, datasets };
   };
 
-  // 가맹점 타입별 매출 분포
-  const getTypeDistributionData = () => {
-    const typeData = {};
-    salesData.forEach(franchise => {
-      if (!typeData[franchise.type]) {
-        typeData[franchise.type] = 0;
-      }
-      typeData[franchise.type] += franchise.monthlySales;
-    });
 
-    return {
-      labels: Object.keys(typeData),
-      datasets: [{
-        data: Object.values(typeData),
-        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-        borderColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
-        borderWidth: 2
-      }]
-    };
-  };
 
-  // 차트 옵션들
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: '가맹점별 매출 추이'
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          callback: function (value) {
-            return formatCurrency(value) + '원';
-          }
-        }
-      }
-    }
-  };
-
+  // 막대그래프 옵션들
   const barChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
     plugins: {
       legend: {
         position: 'top',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'rect',
+          padding: 20,
+          font: {
+            size: 12,
+            weight: '500'
+          }
+        }
       },
       title: {
         display: true,
-        text: '카테고리별 매출'
+        text: '지점별 일별 매출 추이',
+        font: {
+          size: 16,
+          weight: 'bold'
+        },
+        color: '#374151',
+        padding: {
+          top: 10,
+          bottom: 20
+        }
       },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          title: function (context) {
+            return `📅 ${context[0].label}`;
+          },
+          label: function (context) {
+            return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}원`;
+          }
+        }
+      }
     },
     scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11
+          },
+          maxTicksLimit: 10
+        }
+      },
       y: {
         beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
+        },
         ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11
+          },
           callback: function (value) {
+            if (value >= 1000000) {
+              return (value / 1000000).toFixed(1) + 'M원';
+            } else if (value >= 1000) {
+              return (value / 1000).toFixed(0) + 'K원';
+            }
             return formatCurrency(value) + '원';
           }
         }
@@ -306,16 +419,152 @@ export default function FranchiseSalesInquiry() {
     }
   };
 
-  const pieChartOptions = {
+  const categoryBarChartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
     plugins: {
       legend: {
-        position: 'bottom',
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'rect',
+          padding: 20,
+          font: {
+            size: 12,
+            weight: '500'
+          }
+        }
       },
-      title: {
-        display: true,
-        text: '가맹점 타입별 매출 분포'
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          title: function(context) {
+            return `📊 ${context[0].label}`;
+          },
+          label: function(context) {
+            return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}원`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11
+          }
+        }
       },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11
+          },
+          callback: function (value) {
+            if (value >= 1000000) {
+              return (value / 1000000).toFixed(1) + 'M원';
+            } else if (value >= 1000) {
+              return (value / 1000).toFixed(0) + 'K원';
+            }
+            return formatCurrency(value) + '원';
+          }
+        }
+      }
+    }
+  };
+
+  // 시간대별 매출 차트 옵션
+  const timeBarChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      intersect: false,
+      mode: 'index'
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          usePointStyle: true,
+          pointStyle: 'rect',
+          padding: 20,
+          font: {
+            size: 12,
+            weight: '500'
+          }
+        }
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#ffffff',
+        bodyColor: '#ffffff',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        cornerRadius: 8,
+        displayColors: true,
+        callbacks: {
+          title: function(context) {
+            return `🕐 ${context[0].label}`;
+          },
+          label: function(context) {
+            return `${context.dataset.label}: ${formatCurrency(context.parsed.y)}원`;
+          }
+        }
+      }
+    },
+    scales: {
+      x: {
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11
+          }
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
+        },
+        ticks: {
+          color: '#6b7280',
+          font: {
+            size: 11
+          },
+          callback: function (value) {
+            if (value >= 1000000) {
+              return (value / 1000000).toFixed(1) + 'M원';
+            } else if (value >= 1000) {
+              return (value / 1000).toFixed(0) + 'K원';
+            }
+            return formatCurrency(value) + '원';
+          }
+        }
+      }
     }
   };
 
@@ -347,12 +596,12 @@ export default function FranchiseSalesInquiry() {
         >
           매출 분석
         </button>
-        <button
+        {/* <button
           className={`${styles.tabButton} ${activeTab === 'franchise-details' ? styles.active : ''}`}
           onClick={() => setActiveTab('franchise-details')}
         >
           가맹점 상세
-        </button>
+        </button> */}
       </div>
 
       {/* 검색 및 필터 */}
@@ -408,7 +657,33 @@ export default function FranchiseSalesInquiry() {
       {/* 매출 개요 탭 */}
       {activeTab === 'sales-overview' && (
         <div className={styles.salesOverview}>
+          {/* 로딩 상태 */}
+          {loading && (
+            <div className={styles.loadingContainer}>
+              <div className={styles.loadingSpinner}></div>
+              <p className={styles.loadingText}>데이터를 불러오는 중...</p>
+            </div>
+          )}
+
+          {/* 에러 상태 */}
+          {error && (
+            <div className={styles.errorContainer}>
+              <div className={styles.errorIcon}>⚠️</div>
+              <p className={styles.errorText}>{error}</p>
+              <button
+                onClick={() => {
+                  fetchSalesOverview(selectedYear, selectedMonth);
+                  fetchDailyTrendData(selectedYear, selectedMonth);
+                }}
+                className={styles.retryButton}
+              >
+                다시 시도
+              </button>
+            </div>
+          )}
+
           {/* 요약 카드 */}
+          {!loading && !error && salesOverview && (
           <div className={styles.summaryCards}>
             <div className={styles.summaryCard}>
               <div className={styles.summaryIcon}>
@@ -417,29 +692,18 @@ export default function FranchiseSalesInquiry() {
               <div className={styles.summaryContent}>
                 <h3>총 매출</h3>
                 <div className={styles.summaryNumber}>
-                  {formatCurrency(salesData.reduce((sum, franchise) => sum + franchise.monthlySales, 0))}원
+                    {formatCurrency(salesOverview.summary.totalSales)}원
                 </div>
               </div>
             </div>
             <div className={styles.summaryCard}>
               <div className={styles.summaryIcon}>
-                <img src={trendingUpIcon} alt="평균 성장률" />
+                <img src={userIcon} alt="총 주문수" />
               </div>
               <div className={styles.summaryContent}>
-                <h3>평균 성장률</h3>
+                <h3>총 주문수</h3>
                 <div className={styles.summaryNumber}>
-                  {formatPercentage(salesData.reduce((sum, franchise) => sum + franchise.monthlyGrowth, 0) / salesData.length)}
-                </div>
-              </div>
-            </div>
-            <div className={styles.summaryCard}>
-              <div className={styles.summaryIcon}>
-                <img src={userIcon} alt="총 고객수" />
-              </div>
-              <div className={styles.summaryContent}>
-                <h3>총 고객수</h3>
-                <div className={styles.summaryNumber}>
-                  {formatCurrency(salesData.reduce((sum, franchise) => sum + franchise.customerCount, 0))}명
+                    {formatCurrency(salesOverview.summary.totalCustomers)}명
                 </div>
               </div>
             </div>
@@ -450,36 +714,42 @@ export default function FranchiseSalesInquiry() {
               <div className={styles.summaryContent}>
                 <h3>가맹점 수</h3>
                 <div className={styles.summaryNumber}>
-                  {salesData.length}개
+                    {salesOverview.summary.franchiseCount}개
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* 차트 영역 */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
-            <div className={styles.chartContainer}>
-              <div className={styles.chartHeader}>
-                <h2>가맹점별 매출 추이</h2>
-                <p>각 가맹점의 월별 매출 추이를 확인할 수 있습니다.</p>
+          {!loading && !error && salesOverview && (
+            <div style={{ marginBottom: '32px' }}>
+              <div className={`${styles.chartContainer} ${styles.chartContainerEnhanced}`}>
+                <div className={`${styles.chartHeader} ${styles.chartHeaderEnhanced}`}>
+                  <h2 className={styles.chartTitle}>지점별 일별 매출 추이</h2>
+                  <p className={styles.chartDescription}>각 지점의 일별 매출 추이를 확인할 수 있습니다.</p>
               </div>
-              <div style={{ height: '300px' }}>
-                <Line data={getSalesTrendData()} options={lineChartOptions} />
+                <div className={styles.chartContent}>
+                  {dailyTrendData && dailyTrendData.branches && dailyTrendData.branches.length > 0 ? (
+                    <Bar data={getDailySalesTrendData()} options={barChartOptions} />
+                  ) : (
+                    <div className={styles.emptyDataContainer}>
+                      <div className={styles.emptyDataIcon}>📊</div>
+                      <p className={styles.emptyDataTitle}>
+                        해당 기간의 매출 데이터가 없습니다
+                      </p>
+                      <p className={styles.emptyDataSubtitle}>
+                        다른 기간을 선택해보세요
+                      </p>
+              </div>
+                  )}
+              </div>
               </div>
             </div>
-
-            <div className={styles.chartContainer}>
-              <div className={styles.chartHeader}>
-                <h2>가맹점 타입별 매출 분포</h2>
-                <p>직영점과 가맹점의 매출 분포를 확인할 수 있습니다.</p>
-              </div>
-              <div style={{ height: '300px' }}>
-                <Pie data={getTypeDistributionData()} options={pieChartOptions} />
-              </div>
-            </div>
-          </div>
+          )}
 
           {/* 가맹점 목록 */}
+          {!loading && !error && salesOverview && (
           <div className={styles.franchiseList}>
             <h2>가맹점 목록</h2>
             <div className={styles.franchiseContainer}>
@@ -491,8 +761,7 @@ export default function FranchiseSalesInquiry() {
                       <th>가맹점코드</th>
                       <th>지점장</th>
                       <th>월 매출</th>
-                      <th>성장률</th>
-                      <th>고객수</th>
+                        <th>총 주문수</th>
                       <th>평균 주문금액</th>
                       <th>인기 상품</th>
                     </tr>
@@ -514,18 +783,9 @@ export default function FranchiseSalesInquiry() {
                               <span className={styles.franchiseCode}>{franchise.code}</span>
                             </div>
                           </td>
-
                           <td>{franchise.manager}</td>
                           <td>{formatCurrency(salesInfo.monthlySales)}원</td>
-                          <td>
-                            <span
-                              className={styles.growthRate}
-                              style={{ color: getGrowthColor(salesInfo.monthlyGrowth) }}
-                            >
-                              {formatPercentage(salesInfo.monthlyGrowth)}
-                            </span>
-                          </td>
-                          <td>{formatCurrency(salesInfo.customerCount)}명</td>
+                          <td>{formatCurrency(salesInfo.totalOrders)}건</td>
                           <td>{formatCurrency(salesInfo.avgOrderValue)}원</td>
                           <td>
                             <div className={styles.topProductsList}>
@@ -542,6 +802,7 @@ export default function FranchiseSalesInquiry() {
               </div>
             </div>
           </div>
+          )}
         </div>
       )}
 
@@ -553,14 +814,39 @@ export default function FranchiseSalesInquiry() {
             <p>카테고리별, 시간대별 매출 분석을 확인할 수 있습니다.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '32px' }}>
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <p>데이터를 불러오는 중...</p>
+            </div>
+          )}
+
+          {error && (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && salesOverview && (
+            <div className={styles.chartGrid}>
             <div className={styles.chartContainer}>
               <div className={styles.chartHeader}>
                 <h2>카테고리별 매출</h2>
-                <p>음료, 식품, 디저트별 매출을 비교합니다.</p>
+                <p>각 카테고리별 매출을 비교합니다.</p>
               </div>
-              <div style={{ height: '300px' }}>
-                <Bar data={getCategorySalesData()} options={barChartOptions} />
+                <div className={styles.chartHeight}>
+                  {salesData && salesData.length > 0 ? (
+                    <Bar data={getCategorySalesData()} options={categoryBarChartOptions} />
+                  ) : (
+                    <div className={styles.emptyDataContainer}>
+                      <div className={styles.emptyDataIcon}>📊</div>
+                      <p className={styles.emptyDataTitle}>
+                        카테고리별 매출 데이터가 없습니다
+                      </p>
+                      <p className={styles.emptyDataSubtitle}>
+                        다른 기간을 선택해보세요
+                      </p>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -569,11 +855,24 @@ export default function FranchiseSalesInquiry() {
                 <h2>시간대별 매출</h2>
                 <p>오전, 오후, 저녁 시간대별 매출을 비교합니다.</p>
               </div>
-              <div style={{ height: '300px' }}>
-                <Bar data={getTimeSalesData()} options={barChartOptions} />
+                <div className={styles.chartHeight}>
+                  {salesData && salesData.length > 0 ? (
+                    <Bar data={getTimeSalesData()} options={timeBarChartOptions} />
+                  ) : (
+                    <div className={styles.emptyDataContainer}>
+                      <div className={styles.emptyDataIcon}>📊</div>
+                      <p className={styles.emptyDataTitle}>
+                        시간대별 매출 데이터가 없습니다
+                      </p>
+                      <p className={styles.emptyDataSubtitle}>
+                        다른 기간을 선택해보세요
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -585,6 +884,19 @@ export default function FranchiseSalesInquiry() {
             <p>각 지점의 상세 매출 정보를 확인할 수 있습니다.</p>
           </div>
 
+          {loading && (
+            <div style={{ textAlign: 'center', padding: '20px' }}>
+              <p>데이터를 불러오는 중...</p>
+            </div>
+          )}
+
+          {error && (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
+              <p>{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && salesOverview && (
           <div className={styles.detailsTable}>
             <div className={styles.franchiseList}>
               <table className={styles.franchisesTable}>
@@ -593,8 +905,7 @@ export default function FranchiseSalesInquiry() {
                     <th>지점명</th>
                     <th>지점 코드</th>
                     <th>월 매출</th>
-                    <th>성장률</th>
-                    <th>고객수</th>
+                    <th>총 주문수</th>
                     <th>평균 주문금액</th>
                     <th>지점장</th>
                   </tr>
@@ -611,12 +922,7 @@ export default function FranchiseSalesInquiry() {
                         </td>
                         <td><span className={styles.franchiseCode}>{franchise.franchiseCode}</span></td>
                         <td>{formatCurrency(franchise.monthlySales)}원</td>
-                        <td>
-                          <span style={{ color: getGrowthColor(franchise.monthlyGrowth) }}>
-                            {formatPercentage(franchise.monthlyGrowth)}
-                          </span>
-                        </td>
-                        <td>{formatCurrency(franchise.customerCount)}명</td>
+                        <td>{formatCurrency(franchise.totalOrders)}건</td>
                         <td>{formatCurrency(franchise.avgOrderValue)}원</td>
                         <td>{franchises.find(f => f.id === franchise.franchiseId)?.manager}</td>
                       </tr>
@@ -625,6 +931,7 @@ export default function FranchiseSalesInquiry() {
               </table>
             </div>
           </div>
+          )}
         </div>
       )}
     </div>

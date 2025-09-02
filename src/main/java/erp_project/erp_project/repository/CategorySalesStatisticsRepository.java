@@ -8,35 +8,39 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface CategorySalesStatisticsRepository extends JpaRepository<CategorySalesStatistics, Long> {
     
-    // 지점별 카테고리별 특정 날짜 통계 조회
-    Optional<CategorySalesStatistics> findByBranchIdAndCategoryIdAndStatisticDate(Long branchId, Long categoryId, LocalDate date);
+    // 특정 기간의 카테고리별 매출 통계 조회 (본사 제외)
+    @Query("SELECT c FROM CategorySalesStatistics c " +
+           "WHERE c.statisticDate BETWEEN :startDate AND :endDate " +
+           "AND c.branchId IN :branchIds")
+    List<CategorySalesStatistics> findByStatisticDateBetweenAndBranchIdIn(
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate,
+        @Param("branchIds") List<Long> branchIds
+    );
     
-    // 지점별 특정 날짜의 모든 카테고리 통계 조회
-    List<CategorySalesStatistics> findByBranchIdAndStatisticDateOrderByNetSalesDesc(Long branchId, LocalDate date);
+    // 특정 지점의 특정 기간 카테고리별 매출 통계 조회 (순매출 기준 내림차순)
+    @Query("SELECT c FROM CategorySalesStatistics c " +
+           "WHERE c.branchId = :branchId " +
+           "AND c.statisticDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY c.statisticDate DESC, c.netSales DESC")
+    List<CategorySalesStatistics> findByBranchIdAndStatisticDateBetweenOrderByStatisticDateDescNetSalesDesc(
+        @Param("branchId") Long branchId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
     
-    // 카테고리별 기간 내 통계 조회
-    List<CategorySalesStatistics> findByCategoryIdAndStatisticDateBetweenOrderByStatisticDate(Long categoryId, LocalDate startDate, LocalDate endDate);
-    
-    // 지점별 기간 내 카테고리별 통계 조회
-    List<CategorySalesStatistics> findByBranchIdAndStatisticDateBetweenOrderByStatisticDateDescNetSalesDesc(Long branchId, LocalDate startDate, LocalDate endDate);
-    
-    // 전체 지점의 특정 카테고리 기간 내 통계 조회
-    List<CategorySalesStatistics> findByCategoryIdAndStatisticDateBetweenOrderByStatisticDateDescBranchId(Long categoryId, LocalDate startDate, LocalDate endDate);
-    
-    // 커스텀 쿼리: 카테고리별 인기 순위 (수량 기준)
-    @Query("SELECT c FROM CategorySalesStatistics c WHERE c.branchId = :branchId AND c.statisticDate BETWEEN :startDate AND :endDate ORDER BY c.quantitySold DESC")
-    List<CategorySalesStatistics> findTopSellingCategoriesByQuantity(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-    
-    // 커스텀 쿼리: 카테고리별 인기 순위 (매출 기준)
-    @Query("SELECT c FROM CategorySalesStatistics c WHERE c.branchId = :branchId AND c.statisticDate BETWEEN :startDate AND :endDate ORDER BY c.netSales DESC")
-    List<CategorySalesStatistics> findTopSellingCategoriesBySales(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
-    
-    // 커스텀 쿼리: 전체 지점 카테고리별 통합 통계
-    @Query("SELECT c FROM CategorySalesStatistics c WHERE c.statisticDate BETWEEN :startDate AND :endDate ORDER BY c.netSales DESC")
-    List<CategorySalesStatistics> findTopSellingCategoriesAllBranches(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    // 특정 지점의 특정 기간 카테고리별 매출 기준 상위 카테고리 조회
+    @Query("SELECT c FROM CategorySalesStatistics c " +
+           "WHERE c.branchId = :branchId " +
+           "AND c.statisticDate BETWEEN :startDate AND :endDate " +
+           "ORDER BY c.netSales DESC")
+    List<CategorySalesStatistics> findTopSellingCategoriesBySales(
+        @Param("branchId") Long branchId,
+        @Param("startDate") LocalDate startDate,
+        @Param("endDate") LocalDate endDate
+    );
 }

@@ -41,7 +41,7 @@ public class Menu {
     private MenuCategory menuCategory;
     
     @Column(name = "base_price", precision = 10, scale = 2)
-    private BigDecimal basePrice; // 세트 메뉴용 기본 가격
+    private BigDecimal basePrice; // 원가
     
     @Column(name = "is_available", nullable = false)
     private Boolean isAvailable = true;

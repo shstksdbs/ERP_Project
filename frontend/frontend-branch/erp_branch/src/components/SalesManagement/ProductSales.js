@@ -44,55 +44,30 @@ export default function ProductSales({ branchId }) {
       
       // 상품별 매출 데이터 처리
       const processedProducts = productStats.map(stat => {
-        const [menuStats, menuName, menuCategory, menuPrice] = stat;
+        const [menuId, menuName, menuCategory, quantitySold, totalSales, netSales, menuPrice] = stat;
         
         // 수익률 계산 (순매출 / 총매출 * 100)
-        const totalSales = Number(menuStats.totalSales || 0);
-        const netSales = Number(menuStats.netSales || 0);
         const profitMargin = totalSales > 0 ? Math.round((netSales / totalSales) * 100) : 0;
         
         return {
-          id: menuStats.menuId,
-          name: menuName || `메뉴 ID: ${menuStats.menuId}`,
+          id: menuId,
+          name: menuName || `메뉴 ID: ${menuId}`,
           category: menuCategory || '미분류',
-          totalSales: totalSales,
-          quantity: menuStats.quantitySold || 0,
+          totalSales: totalSales || 0,
+          quantity: quantitySold || 0,
           averagePrice: Number(menuPrice || 0),
-          revenue: netSales,
-          salesCount: menuStats.quantitySold || 0,
+          revenue: netSales || 0,
+          salesCount: quantitySold || 0,
           profitMargin: profitMargin
         };
       });
       
-      // 중복된 상품 데이터를 하나로 합치기
-      const mergedProducts = processedProducts.reduce((acc, product) => {
-        const existingProduct = acc.find(p => p.id === product.id);
-        
-        if (existingProduct) {
-          // 기존 상품이 있으면 데이터 누적
-          existingProduct.quantity += product.quantity;
-          existingProduct.totalSales += product.totalSales;
-          existingProduct.revenue += product.revenue;
-          existingProduct.salesCount += product.salesCount;
-          
-          // 평균가격은 기존 가격 유지 (동일한 상품이므로)
-          // 수익률은 누적된 데이터로 재계산
-          existingProduct.profitMargin = existingProduct.totalSales > 0 
-            ? Math.round((existingProduct.revenue / existingProduct.totalSales) * 100) 
-            : 0;
-        } else {
-          // 새로운 상품이면 추가
-          acc.push({ ...product });
-        }
-        
-        return acc;
-      }, []);
-      
+      // 백엔드에서 이미 GROUP BY로 집계된 데이터이므로 중복 제거 불필요
       // 카테고리 목록 추출
-      const uniqueCategories = [...new Set(mergedProducts.map(p => p.category))];
+      const uniqueCategories = [...new Set(processedProducts.map(p => p.category))];
       setCategories(uniqueCategories);
       
-      setProducts(mergedProducts);
+      setProducts(processedProducts);
     } catch (err) {
       console.error('상품별 매출 데이터 조회 오류:', err);
       setError(err.message);
