@@ -2,6 +2,7 @@ package erp_project.erp_project.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonRawValue;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,6 +19,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class NoticeTargetGroup {
+    
+    private static final ObjectMapper objectMapper = new ObjectMapper();
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +39,37 @@ public class NoticeTargetGroup {
     @Column(name = "target_positions", columnDefinition = "JSON")
     @JsonRawValue
     private String targetPositions; // JSON 형태로 저장: ["MANAGER", "STAFF", ...]
+    
+    // 배열을 JSON 문자열로 변환하는 커스텀 setter
+    @com.fasterxml.jackson.annotation.JsonSetter("targetBranches")
+    public void setTargetBranches(Object targetBranches) {
+        if (targetBranches == null) {
+            this.targetBranches = "[]";
+        } else if (targetBranches instanceof String) {
+            this.targetBranches = (String) targetBranches;
+        } else {
+            try {
+                this.targetBranches = objectMapper.writeValueAsString(targetBranches);
+            } catch (Exception e) {
+                this.targetBranches = "[]";
+            }
+        }
+    }
+    
+    @com.fasterxml.jackson.annotation.JsonSetter("targetPositions")
+    public void setTargetPositions(Object targetPositions) {
+        if (targetPositions == null) {
+            this.targetPositions = "[]";
+        } else if (targetPositions instanceof String) {
+            this.targetPositions = (String) targetPositions;
+        } else {
+            try {
+                this.targetPositions = objectMapper.writeValueAsString(targetPositions);
+            } catch (Exception e) {
+                this.targetPositions = "[]";
+            }
+        }
+    }
     
     @Column(name = "member_count", nullable = false)
     private Integer memberCount;

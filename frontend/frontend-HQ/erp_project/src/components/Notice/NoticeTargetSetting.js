@@ -7,6 +7,29 @@ import usersIcon from '../../assets/users_icon.png';
 import storeIcon from '../../assets/store_icon.png';
 import { noticeTargetService } from '../../services/noticeTargetService';
 
+// 안전한 JSON 파싱 함수
+const safeJsonParse = (jsonString, defaultValue = []) => {
+  if (!jsonString || jsonString === '[]') return defaultValue;
+  
+  try {
+    // 이미 배열인 경우 그대로 반환
+    if (Array.isArray(jsonString)) {
+      return jsonString;
+    }
+    
+    // 문자열인 경우 JSON 파싱 시도
+    if (typeof jsonString === 'string') {
+      const parsed = JSON.parse(jsonString);
+      return Array.isArray(parsed) ? parsed : defaultValue;
+    }
+    
+    return defaultValue;
+  } catch (error) {
+    console.warn('JSON 파싱 실패:', jsonString, error);
+    return defaultValue;
+  }
+};
+
 export default function NoticeTargetSetting() {
   const [targetGroups, setTargetGroups] = useState([]);
   const [selectedTargetGroup, setSelectedTargetGroup] = useState(null);
@@ -104,6 +127,8 @@ export default function NoticeTargetSetting() {
     return date.toLocaleDateString('ko-KR');
   };
 
+
+
   if (loading) {
     return (
       <div className={styles['target-setting']}>
@@ -177,8 +202,14 @@ export default function NoticeTargetSetting() {
                 <td className={styles['target-description']}>
                   {group.description}
                 </td>
-                <td>{group.targetBranches && group.targetBranches !== '[]' ? JSON.parse(group.targetBranches).join(', ') : '전체 지점'}</td>
-                <td>{group.targetPositions && group.targetPositions !== '[]' ? JSON.parse(group.targetPositions).join(', ') : '전체 직급'}</td>
+                <td>{(() => {
+                  const branches = safeJsonParse(group.targetBranches);
+                  return branches.length > 0 ? branches.join(', ') : '전체 지점';
+                })()}</td>
+                <td>{(() => {
+                  const positions = safeJsonParse(group.targetPositions);
+                  return positions.length > 0 ? positions.join(', ') : '전체 직급';
+                })()}</td>
                 <td>{group.memberCount}명</td>
                 <td>
                   <span className={`${styles['status-badge']} ${getStatusClass(group.status)}`}>
@@ -268,7 +299,7 @@ function AddTargetModal({ onAdd, onClose, branches }) {
 
 
   const handleBranchSelection = (branchName, isSelected) => {
-    const currentBranches = JSON.parse(formData.targetBranches);
+    const currentBranches = safeJsonParse(formData.targetBranches);
     let newBranches;
 
     if (branchName === '전체 지점') {
@@ -298,7 +329,7 @@ function AddTargetModal({ onAdd, onClose, branches }) {
   };
 
   const handlePositionSelection = (position, isSelected) => {
-    const currentPositions = JSON.parse(formData.targetPositions);
+    const currentPositions = safeJsonParse(formData.targetPositions);
     let newPositions;
 
     if (position === '전체 직급') {
@@ -329,7 +360,36 @@ function AddTargetModal({ onAdd, onClose, branches }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAdd(formData);
+    
+    // 배열을 JSON 문자열로 변환하여 전송
+    const submitData = {
+      ...formData,
+      targetBranches: (() => {
+        if (typeof formData.targetBranches === 'string') {
+          return formData.targetBranches;
+        }
+        try {
+          return JSON.stringify(formData.targetBranches);
+        } catch (e) {
+          console.warn('targetBranches JSON 변환 실패:', formData.targetBranches);
+          return '[]';
+        }
+      })(),
+      targetPositions: (() => {
+        if (typeof formData.targetPositions === 'string') {
+          return formData.targetPositions;
+        }
+        try {
+          return JSON.stringify(formData.targetPositions);
+        } catch (e) {
+          console.warn('targetPositions JSON 변환 실패:', formData.targetPositions);
+          return '[]';
+        }
+      })()
+    };
+    
+    console.log('추가 데이터 전송:', submitData);
+    onAdd(submitData);
   };
 
   return (
@@ -357,7 +417,7 @@ function AddTargetModal({ onAdd, onClose, branches }) {
               <label className={`${styles['checkbox-item']} ${styles['all-option']}`}>
                 <input
                   type="checkbox"
-                  checked={JSON.parse(formData.targetBranches).includes('전체 지점')}
+                  checked={safeJsonParse(formData.targetBranches).includes('전체 지점')}
                   onChange={(e) => handleBranchSelection('전체 지점', e.target.checked)}
                 />
                 <strong>전체 지점</strong>
@@ -365,7 +425,7 @@ function AddTargetModal({ onAdd, onClose, branches }) {
 
               {/* 개별 지점들 */}
               {branches.map(branch => {
-                const isSelected = JSON.parse(formData.targetBranches).includes(branch.branchName);
+                const isSelected = safeJsonParse(formData.targetBranches).includes(branch.branchName);
                 return (
                   <label key={branch.id} className={styles['checkbox-item']}>
                     <input
@@ -388,7 +448,7 @@ function AddTargetModal({ onAdd, onClose, branches }) {
               <label className={`${styles['checkbox-item']} ${styles['all-option']}`}>
                 <input
                   type="checkbox"
-                  checked={JSON.parse(formData.targetPositions).includes('전체 직급')}
+                  checked={safeJsonParse(formData.targetPositions).includes('전체 직급')}
                   onChange={(e) => handlePositionSelection('전체 직급', e.target.checked)}
                 />
                 <strong>전체 직급</strong>
@@ -396,7 +456,7 @@ function AddTargetModal({ onAdd, onClose, branches }) {
 
               {/* 개별 직급들 */}
               {noticeTargetService.getPositionOptions().map(option => {
-                const isSelected = JSON.parse(formData.targetPositions).includes(option.value);
+                const isSelected = safeJsonParse(formData.targetPositions).includes(option.value);
                 return (
                   <label key={option.value} className={styles['checkbox-item']}>
                     <input
@@ -451,7 +511,7 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
 
   // 지점 선택 핸들러
   const handleBranchSelection = (branchName, isChecked) => {
-    const currentBranches = JSON.parse(formData.targetBranches);
+    const currentBranches = safeJsonParse(formData.targetBranches);
     let newBranches;
 
     if (branchName === '전체 지점') {
@@ -479,7 +539,7 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
 
   // 직급 선택 핸들러
   const handlePositionSelection = (position, isChecked) => {
-    const currentPositions = JSON.parse(formData.targetPositions);
+    const currentPositions = safeJsonParse(formData.targetPositions);
     let newPositions;
 
     if (position === '전체 직급') {
@@ -507,7 +567,37 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onUpdate({ ...targetGroup, ...formData });
+    
+    // 배열을 JSON 문자열로 변환하여 전송
+    const submitData = {
+      ...targetGroup,
+      ...formData,
+      targetBranches: (() => {
+        if (typeof formData.targetBranches === 'string') {
+          return formData.targetBranches;
+        }
+        try {
+          return JSON.stringify(formData.targetBranches);
+        } catch (e) {
+          console.warn('targetBranches JSON 변환 실패:', formData.targetBranches);
+          return '[]';
+        }
+      })(),
+      targetPositions: (() => {
+        if (typeof formData.targetPositions === 'string') {
+          return formData.targetPositions;
+        }
+        try {
+          return JSON.stringify(formData.targetPositions);
+        } catch (e) {
+          console.warn('targetPositions JSON 변환 실패:', formData.targetPositions);
+          return '[]';
+        }
+      })()
+    };
+    
+    console.log('수정 데이터 전송:', submitData);
+    onUpdate(submitData);
   };
 
   return (
@@ -536,7 +626,7 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
               <label className={`${styles['checkbox-item']} ${styles['all-option']}`}>
                 <input
                   type="checkbox"
-                  checked={JSON.parse(formData.targetBranches).includes('전체 지점')}
+                  checked={safeJsonParse(formData.targetBranches).includes('전체 지점')}
                   onChange={(e) => handleBranchSelection('전체 지점', e.target.checked)}
                 />
                 <strong>전체 지점</strong>
@@ -544,7 +634,7 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
 
               {/* 개별 지점들 */}
               {branches.map(branch => {
-                const isSelected = JSON.parse(formData.targetBranches).includes(branch.branchName);
+                const isSelected = safeJsonParse(formData.targetBranches).includes(branch.branchName);
                 return (
                   <label key={branch.id} className={styles['checkbox-item']}>
                     <input
@@ -567,7 +657,7 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
               <label className={`${styles['checkbox-item']} ${styles['all-option']}`}>
                 <input
                   type="checkbox"
-                  checked={JSON.parse(formData.targetPositions).includes('전체 직급')}
+                  checked={safeJsonParse(formData.targetPositions).includes('전체 직급')}
                   onChange={(e) => handlePositionSelection('전체 직급', e.target.checked)}
                 />
                 <strong>전체 직급</strong>
@@ -575,7 +665,7 @@ function EditTargetModal({ targetGroup, onUpdate, onClose, branches }) {
 
               {/* 개별 직급들 */}
               {noticeTargetService.getPositionOptions().map(option => {
-                const isSelected = JSON.parse(formData.targetPositions).includes(option.value);
+                const isSelected = safeJsonParse(formData.targetPositions).includes(option.value);
                 return (
                   <label key={option.value} className={styles['checkbox-item']}>
                     <input
@@ -634,11 +724,17 @@ function TargetDetailModal({ targetGroup, onClose }) {
           </div>
           <div className={styles['detail-row']}>
             <label>대상 지점:</label>
-            <span>{targetGroup.targetBranches ? JSON.parse(targetGroup.targetBranches).join(', ') : '-'}</span>
+            <span>{(() => {
+              const branches = safeJsonParse(targetGroup.targetBranches);
+              return branches.length > 0 ? branches.join(', ') : '-';
+            })()}</span>
           </div>
           <div className={styles['detail-row']}>
             <label>대상 직원:</label>
-            <span>{targetGroup.targetPositions ? JSON.parse(targetGroup.targetPositions).join(', ') : '-'}</span>
+            <span>{(() => {
+              const positions = safeJsonParse(targetGroup.targetPositions);
+              return positions.length > 0 ? positions.join(', ') : '-';
+            })()}</span>
           </div>
           <div className={styles['detail-row']}>
             <label>인원수:</label>
