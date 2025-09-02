@@ -315,6 +315,9 @@ public class SupplyRequestController {
             savedRequest.setTotalCost(totalCost);
             SupplyRequest finalRequest = supplyRequestRepository.save(savedRequest);
             
+            // 발주 요청 생성 시 본사에 알림 전송
+            sendSupplyRequestCreatedNotification(finalRequest);
+            
             log.info("발주 요청 생성 완료: requestId={}, totalCost={}", finalRequest.getId(), totalCost);
             return ResponseEntity.status(HttpStatus.CREATED).body(finalRequest);
             
@@ -1207,6 +1210,46 @@ public class SupplyRequestController {
     }
     
     /**
+     * 발주 요청 생성 시 본사에 알림 전송
+     */
+    private void sendSupplyRequestCreatedNotification(SupplyRequest request) {
+        try {
+            log.info("발주 요청 생성 알림 생성 시작 - 발주 ID: {}, 지점 ID: {}", request.getId(), request.getRequestingBranchId());
+            
+            // 지점 정보 조회
+            Optional<Branches> branchOpt = branchesRepository.findById(request.getRequestingBranchId());
+            String branchName = branchOpt.map(Branches::getBranchName).orElse("알 수 없는 지점");
+            
+            NotificationDTO notification = NotificationDTO.builder()
+                    .id(System.currentTimeMillis()) // 임시 ID
+                    .type(NotificationDTO.TYPE_ORDER)
+                    .category(NotificationDTO.CATEGORY_INFO)
+                    .title("새로운 발주 요청")
+                    .message(generateSupplyRequestCreatedMessage(request, branchName))
+                    .targetType(NotificationDTO.TARGET_TYPE_ORDER)
+                    .targetId(request.getId())
+                    .targetName("발주 요청 #" + request.getId())
+                    .targetDetail(String.format("{\"supplyRequestId\":%d,\"status\":\"%s\",\"requestingBranchId\":%d,\"branchName\":\"%s\",\"totalCost\":%s,\"notes\":\"%s\"}", 
+                            request.getId(), request.getStatus(), request.getRequestingBranchId(), branchName, request.getTotalCost(), request.getNotes()))
+                    .timestamp(LocalDateTime.now())
+                    .isRead(false)
+                    .branchId(null) // 본사 알림이므로 null
+                    .userId(null)
+                    .userName(request.getRequesterName())
+                    .build();
+            
+            log.info("발주 요청 생성 알림 생성 완료 - 제목: {}, 메시지: {}", notification.getTitle(), notification.getMessage());
+            
+            // 본사에 웹소켓 알림 전송
+            webSocketNotificationService.sendNotificationToHeadquarters(notification);
+            log.info("발주 요청 생성 웹소켓 알림 전송 완료 - 본사");
+            
+        } catch (Exception e) {
+            log.error("발주 요청 생성 알림 전송 실패: {}", e.getMessage(), e);
+        }
+    }
+    
+    /**
      * 발주 상태 변경 시 웹소켓 알림 전송
      */
     private void sendSupplyRequestStatusChangeNotification(SupplyRequest request, SupplyRequest.SupplyRequestStatus newStatus) {
@@ -1286,6 +1329,14 @@ public class SupplyRequestController {
             default:
                 return status.toString();
         }
+    }
+    
+    /**
+     * 발주 요청 생성 메시지 생성
+     */
+    private String generateSupplyRequestCreatedMessage(SupplyRequest request, String branchName) {
+        return String.format("%s에서 새로운 발주 요청이 등록되었습니다. (발주 ID: #%d, 총 금액: %s원)", 
+                branchName, request.getId(), request.getTotalCost());
     }
     
     /**

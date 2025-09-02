@@ -28,6 +28,7 @@ import sendIcon from '../../assets/send_icon.png';
 import settingIcon from '../../assets/setting_icon.png';
 import downloadIcon from '../../assets/download_icon.png';
 import logIcon from '../../assets/log_icon.png';
+import bellIcon from '../../assets/bell_icon.png';
 
 export default function Sidebar({ activeTab, setActiveTab }) {
   // activeTab이 문자열인 경우 배열로 변환
@@ -454,6 +455,13 @@ export default function Sidebar({ activeTab, setActiveTab }) {
                 
               </ul>
             )}
+          </li>
+          {/* 통합 알림 관리 메뉴 */}
+          <li>
+            <button className={`btn ${styles['sidebar-button']} ${activeTabs.includes('notifications') ? 'btn-selected' : 'btn-secondary'}`} onClick={() => handleTabClick('notifications')}>
+              <img src={bellIcon} alt="알림 관리" className={styles['sidebar-icon']} />
+              알림 관리
+            </button>
           </li>
           {/* <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('settings')}>

@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +54,18 @@ public class NotificationService {
                 .collect(Collectors.toList());
     }
     
-    // 본사별 모든 알림 조회
+    // 본사별 모든 알림 조회 (페이징 지원)
+    public List<NotificationDTO> getAllNotificationsByHeadquarters(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+        Page<Notification> notificationPage = notificationRepository
+                .findByRecipientTypeOrderByTimestampDesc(RECIPIENT_TYPE_HEADQUARTERS, pageable);
+        
+        return notificationPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+    
+    // 본사별 모든 알림 조회 (페이징 없음 - 기존 호환성)
     public List<NotificationDTO> getAllNotificationsByHeadquarters() {
         List<Notification> dbNotifications = notificationRepository
                 .findByRecipientTypeOrderByTimestampDesc(RECIPIENT_TYPE_HEADQUARTERS);

@@ -23,6 +23,7 @@ import NoticeList from './components/Notice/NoticeList';
 import NoticeTargetSetting from './components/Notice/NoticeTargetSetting';
 import SettingsLog from './components/Settings/SettingsLog';
 import SettingsBackup from './components/Settings/SettingsBackup';
+import NotificationCenter from './components/NotificationManagement/NotificationCenter';
 import './App.css';
 
 function App() {
@@ -71,6 +72,7 @@ function App() {
       'notice-register',
       'notice-list',
       'notice-target-setting',
+      'notifications',
       'settings-log',
       'settings-backup',
     ];
@@ -115,6 +117,8 @@ function App() {
         return <NoticeList setActiveTab={setActiveTab} />;
       case 'notice-target-setting':
         return <NoticeTargetSetting />;
+      case 'notifications':
+        return <NotificationCenter />;
       case 'settings-log':
         return <SettingsLog />;
       case 'settings-backup':

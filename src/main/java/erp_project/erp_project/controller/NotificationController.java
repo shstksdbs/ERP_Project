@@ -41,12 +41,19 @@ public class NotificationController {
     }
 
     /**
-     * 본사 알림 조회
+     * 본사 알림 조회 (페이징 지원)
      */
     @GetMapping("/headquarters")
-    public ResponseEntity<List<NotificationDTO>> getNotificationsForHeadquarters() {
+    public ResponseEntity<List<NotificationDTO>> getNotificationsForHeadquarters(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
         try {
-            List<NotificationDTO> notifications = notificationService.getAllNotificationsByHeadquarters();
+            List<NotificationDTO> notifications = notificationService.getAllNotificationsByHeadquarters(page, size);
+            
+            // 응답 데이터 로그
+            log.info("본사 알림 조회 성공 - 페이지: {}, 크기: {}, 알림 개수: {}", 
+                    page, size, notifications.size());
+            
             return ResponseEntity.ok(notifications);
         } catch (Exception e) {
             log.error("본사 알림 조회 실패 - 오류: {}", e.getMessage());
