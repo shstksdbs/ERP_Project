@@ -35,7 +35,7 @@ public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics
     List<SalesStatistics> findByStatisticDateAndStatisticHourOrderByBranchId(LocalDate date, Integer hour);
     
     // 커스텀 쿼리: 지점별 일별 매출 요약
-    @Query("SELECT s FROM SalesStatistics s WHERE s.branchId = :branchId AND s.statisticDate BETWEEN :startDate AND :endDate AND s.statisticHour IS NULL ORDER BY s.statisticDate DESC")
+    @Query("SELECT s FROM SalesStatistics s WHERE s.branchId = :branchId AND s.statisticDate BETWEEN :startDate AND :endDate ORDER BY s.statisticDate ASC")
     List<SalesStatistics> findDailySummaryByBranchAndDateRange(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
     
     // 커스텀 쿼리: 시간대별 매출 분석 (전체 지점)

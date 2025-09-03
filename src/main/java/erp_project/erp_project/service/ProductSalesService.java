@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.cache.annotation.Cacheable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,6 +29,7 @@ public class ProductSalesService {
     private final CategorySalesStatisticsRepository categorySalesStatisticsRepository;
     private final BranchesRepository branchesRepository;
 
+    @Cacheable(value = "productSales", key = "'productSales:' + #year + ':' + #month")
     public ProductSalesResponseDto getProductSalesData(int year, int month) {
         log.info("상품별 매출 데이터 조회 - 년도: {}, 월: {}", year, month);
         
@@ -263,8 +265,9 @@ public class ProductSalesService {
     }
     
     /**
-     * 가맹점별 매출 분석 데이터 조회
+     * 가맹점별 매출 분석 데이터 조회 - Redis 캐싱 적용
      */
+    @Cacheable(value = "productSales", key = "'franchiseSales:' + #year + ':' + #month")
     public FranchiseSalesResponseDto getFranchiseSalesData(int year, int month) {
         log.info("가맹점별 매출 분석 데이터 조회 - 년도: {}, 월: {}", year, month);
         

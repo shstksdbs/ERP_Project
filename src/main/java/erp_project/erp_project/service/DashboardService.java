@@ -5,6 +5,8 @@ import erp_project.erp_project.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -28,8 +30,9 @@ public class DashboardService {
     private final BranchesRepository branchesRepository;
     
     /**
-     * 대시보드 KPI 데이터 조회
+     * 대시보드 KPI 데이터 조회 - Redis 캐싱 적용 (5분 TTL)
      */
+    @Cacheable(value = "dashboardKpis", key = "#branchId", unless = "#result == null")
     public Map<String, Object> getDashboardKpis(Long branchId) {
         Map<String, Object> kpis = new HashMap<>();
         
@@ -52,8 +55,9 @@ public class DashboardService {
     }
     
     /**
-     * 오늘 매출 조회
+     * 오늘 매출 조회 - Redis 캐싱 적용 (10분 TTL)
      */
+    @Cacheable(value = "todaySales", key = "#branchId + '_' + T(java.time.LocalDate).now()", unless = "#result == null")
     public Map<String, Object> getTodaySales(Long branchId) {
         try {
             LocalDate today = LocalDate.now();
@@ -169,8 +173,9 @@ public class DashboardService {
     }
     
     /**
-     * 주간 매출 추이 조회 (오늘 제외, 최근 7일)
+     * 주간 매출 추이 조회 (오늘 제외, 최근 7일) - Redis 캐싱 적용 (30분 TTL)
      */
+    @Cacheable(value = "weeklySalesTrend", key = "#branchId + '_' + T(java.time.LocalDate).now()", unless = "#result == null")
     public Map<String, Object> getWeeklySalesTrend(Long branchId) {
         try {
             log.info("주간 매출 추이 조회 시작: branchId={}", branchId);
@@ -226,8 +231,9 @@ public class DashboardService {
     }
     
     /**
-     * 인기 상품 5개 조회 (오늘 제외, 최근 7일)
+     * 인기 상품 5개 조회 (오늘 제외, 최근 7일) - Redis 캐싱 적용 (30분 TTL)
      */
+    @Cacheable(value = "topProducts", key = "#branchId + '_' + T(java.time.LocalDate).now()", unless = "#result == null")
     public Map<String, Object> getTopProducts(Long branchId) {
         try {
             log.info("인기 상품 조회 시작: branchId={}", branchId);

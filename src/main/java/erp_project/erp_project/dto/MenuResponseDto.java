@@ -18,15 +18,14 @@ public class MenuResponseDto {
     private String name;
     private String description;
     private BigDecimal price;
-    private String category; // 기존 호환성 유지
-    private Long categoryId; // 새로운 카테고리 ID
+    private String category; // 기존 호환성
+    private Long categoryId;
+    private String categoryName; // 카테고리 이름
+    private String categoryDisplayName; // 카테고리 표시 이름
     private BigDecimal basePrice;
     private Boolean isAvailable;
     private Integer displayOrder;
     private String imageUrl;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-    
-    // 카테고리 정보
-    private MenuCategoryResponseDto menuCategory;
 }

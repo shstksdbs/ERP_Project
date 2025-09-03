@@ -3,6 +3,8 @@ package erp_project.erp_project.controller;
 import erp_project.erp_project.entity.SalesStatistics;
 import erp_project.erp_project.entity.MenuSalesStatistics;
 import erp_project.erp_project.entity.CategorySalesStatistics;
+import erp_project.erp_project.dto.ProductSalesStatisticsDto;
+import erp_project.erp_project.dto.CategorySalesStatisticsDto;
 import erp_project.erp_project.service.SalesStatisticsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -93,8 +95,14 @@ public class SalesStatisticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
-        List<Object[]> topMenus = salesStatisticsService.getTopSellingMenusBySalesWithName(branchId, startDate, endDate);
-        return ResponseEntity.ok(topMenus);
+        try {
+            List<Object[]> topMenus = salesStatisticsService.getTopSellingMenusBySalesWithName(branchId, startDate, endDate);
+            return ResponseEntity.ok(topMenus != null ? topMenus : List.of());
+        } catch (Exception e) {
+            // 로그 출력 후 빈 리스트 반환
+            System.err.println("인기 메뉴 조회 오류: " + e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
     }
     
     /**
@@ -106,30 +114,45 @@ public class SalesStatisticsController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
-        List<Object[]> topMenus = salesStatisticsService.getTopSellingMenusByQuantityWithName(branchId, startDate, endDate);
-        return ResponseEntity.ok(topMenus);
+        try {
+            List<Object[]> topMenus = salesStatisticsService.getTopSellingMenusByQuantityWithName(branchId, startDate, endDate);
+            return ResponseEntity.ok(topMenus != null ? topMenus : List.of());
+        } catch (Exception e) {
+            System.err.println("인기 메뉴 조회 오류: " + e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
     }
     
     // 상품별 매출 통계 조회
     @GetMapping("/product-sales/{branchId}")
-    public ResponseEntity<List<Object[]>> getProductSalesStatistics(
+    public ResponseEntity<List<ProductSalesStatisticsDto>> getProductSalesStatistics(
             @PathVariable Long branchId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
-        List<Object[]> productStats = salesStatisticsService.getProductSalesStatistics(branchId, startDate, endDate);
-        return ResponseEntity.ok(productStats);
+        try {
+            List<ProductSalesStatisticsDto> productStats = salesStatisticsService.getProductSalesStatistics(branchId, startDate, endDate);
+            return ResponseEntity.ok(productStats != null ? productStats : List.of());
+        } catch (Exception e) {
+            System.err.println("상품별 매출 통계 조회 오류: " + e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
     }
     
     // 카테고리별 매출 통계 조회
     @GetMapping("/category-sales/{branchId}")
-    public ResponseEntity<List<Object[]>> getCategorySalesStatistics(
+    public ResponseEntity<List<CategorySalesStatisticsDto>> getCategorySalesStatistics(
             @PathVariable Long branchId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         
-        List<Object[]> categoryStats = salesStatisticsService.getCategorySalesStatistics(branchId, startDate, endDate);
-        return ResponseEntity.ok(categoryStats);
+        try {
+            List<CategorySalesStatisticsDto> categoryStats = salesStatisticsService.getCategorySalesStatistics(branchId, startDate, endDate);
+            return ResponseEntity.ok(categoryStats != null ? categoryStats : List.of());
+        } catch (Exception e) {
+            System.err.println("카테고리별 매출 통계 조회 오류: " + e.getMessage());
+            return ResponseEntity.ok(List.of());
+        }
     }
     
     /**

@@ -18,8 +18,16 @@ export default function ProductSales({ branchId }) {
 
   // 실제 데이터 조회
   useEffect(() => {
+    console.log('=== useEffect 실행 ===');
+    console.log('branchId:', branchId);
+    console.log('dateRange.start:', dateRange.start);
+    console.log('dateRange.end:', dateRange.end);
+    
     if (branchId && dateRange.start && dateRange.end) {
+      console.log('데이터 조회 조건 만족 - fetchProductSalesData 호출');
       fetchProductSalesData();
+    } else {
+      console.log('데이터 조회 조건 불만족');
     }
   }, [branchId, dateRange.start, dateRange.end]);
 
@@ -35,6 +43,24 @@ export default function ProductSales({ branchId }) {
         dateRange.end
       );
       
+      console.log('=== 상품별 매출 통계 원본 데이터 ===');
+      console.log('productStats:', productStats);
+      console.log('productStats 타입:', typeof productStats);
+      console.log('productStats 길이:', productStats?.length);
+      console.log('productStats가 배열인가?', Array.isArray(productStats));
+      
+      if (productStats && productStats.length > 0) {
+        console.log('첫 번째 데이터:', productStats[0]);
+        console.log('첫 번째 데이터 타입:', typeof productStats[0]);
+        console.log('첫 번째 데이터가 배열인가?', Array.isArray(productStats[0]));
+        
+        if (Array.isArray(productStats[0])) {
+          console.log('첫 번째 데이터 (배열):', productStats[0]);
+        } else {
+          console.log('첫 번째 데이터의 키들:', Object.keys(productStats[0]));
+        }
+      }
+      
       // 카테고리별 매출 통계 조회
       const categoryStats = await salesStatisticsService.getCategorySalesStatistics(
         branchId, 
@@ -42,9 +68,25 @@ export default function ProductSales({ branchId }) {
         dateRange.end
       );
       
-      // 상품별 매출 데이터 처리
+      // 상품별 매출 데이터 처리 (배열 또는 DTO 객체 모두 처리)
       const processedProducts = productStats.map(stat => {
-        const [menuId, menuName, menuCategory, quantitySold, totalSales, netSales, menuPrice] = stat;
+        let menuId, menuName, menuCategory, quantitySold, totalSales, netSales, menuPrice;
+        
+        if (Array.isArray(stat)) {
+          // 배열 형태인 경우
+          console.log('배열 형태 데이터 처리:', stat);
+          [menuId, menuName, menuCategory, quantitySold, totalSales, netSales, menuPrice] = stat;
+        } else {
+          // DTO 객체 형태인 경우
+          console.log('DTO 객체 형태 데이터 처리:', stat);
+          menuId = stat.menuId;
+          menuName = stat.menuName;
+          menuCategory = stat.category;
+          quantitySold = stat.totalQuantitySold;
+          totalSales = stat.totalSales;
+          netSales = stat.netSales;
+          menuPrice = stat.price;
+        }
         
         // 수익률 계산 (순매출 / 총매출 * 100)
         const profitMargin = totalSales > 0 ? Math.round((netSales / totalSales) * 100) : 0;

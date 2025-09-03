@@ -27,30 +27,27 @@ public class MenuController {
     // 모든 메뉴 조회 (카테고리 정보 포함)
     @GetMapping
     public ResponseEntity<List<MenuResponseDto>> getAllMenus() {
-        List<Menu> menus = menuService.getAllMenus();
-        List<MenuResponseDto> menuDtos = menus.stream()
-                .map(menu -> menuService.convertToResponseDto(menu))
-                .collect(java.util.stream.Collectors.toList());
-        return ResponseEntity.ok(menuDtos);
+        List<MenuResponseDto> menus = menuService.getAllMenus();
+        return ResponseEntity.ok(menus);
     }
     
     // 카테고리별 메뉴 조회 (기존 호환성 유지)
     @GetMapping("/category/{category}")
-    public ResponseEntity<List<Menu>> getMenusByCategory(@PathVariable String category) {
-        List<Menu> menus = menuService.getMenusByCategory(category);
+    public ResponseEntity<List<MenuResponseDto>> getMenusByCategory(@PathVariable String category) {
+        List<MenuResponseDto> menus = menuService.getMenusByCategory(category);
         return ResponseEntity.ok(menus);
     }
     
     // 카테고리 ID로 메뉴 조회 (새로운 방식)
     @GetMapping("/category-id/{categoryId}")
-    public ResponseEntity<List<Menu>> getMenusByCategoryId(@PathVariable Long categoryId) {
-        List<Menu> menus = menuService.getMenusByCategoryId(categoryId);
+    public ResponseEntity<List<MenuResponseDto>> getMenusByCategoryId(@PathVariable Long categoryId) {
+        List<MenuResponseDto> menus = menuService.getMenusByCategoryId(categoryId);
         return ResponseEntity.ok(menus);
     }
     
     // 특정 메뉴 조회
     @GetMapping("/{id}")
-    public ResponseEntity<Menu> getMenuById(@PathVariable Long id) {
+    public ResponseEntity<MenuResponseDto> getMenuById(@PathVariable Long id) {
         return menuService.getMenuById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

@@ -1,7 +1,6 @@
 package erp_project.erp_project.service;
 
 import erp_project.erp_project.dto.MenuResponseDto;
-import erp_project.erp_project.dto.MenuCategoryResponseDto;
 import erp_project.erp_project.dto.PriceChangeHistoryDto;
 import erp_project.erp_project.entity.Menu;
 import erp_project.erp_project.entity.MenuCategory;
@@ -24,6 +23,8 @@ import java.nio.file.Paths;
 import java.util.UUID;
 import erp_project.erp_project.entity.PriceChangeHistory;
 import erp_project.erp_project.repository.PriceChangeHistoryRepository;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 @RequiredArgsConstructor
@@ -34,24 +35,38 @@ public class MenuService {
     private final MenuCategoryRepository menuCategoryRepository;
     private final PriceChangeHistoryRepository priceChangeHistoryRepository;
     
-    // 모든 메뉴 조회 (카테고리 정보 포함)
-    public List<Menu> getAllMenus() {
-        return menuRepository.findAllWithCategoryOrderByDisplayOrder();
+    // 모든 메뉴 조회 (카테고리 정보 포함) - Redis 캐싱 적용
+    @Cacheable(value = "menus", key = "'all'")
+    public List<MenuResponseDto> getAllMenus() {
+        List<Menu> menus = menuRepository.findAllWithCategoryOrderByDisplayOrder();
+        return menus.stream()
+                .map(this::convertToDto)
+                .toList();
     }
     
-    // 카테고리별 메뉴 조회 (기존 호환성 유지)
-    public List<Menu> getMenusByCategory(String category) {
-        return menuRepository.findByCategoryAndIsAvailableTrueOrderByDisplayOrderAsc(category);
+    // 카테고리별 메뉴 조회 (기존 호환성 유지) - Redis 캐싱 적용
+    @Cacheable(value = "menus", key = "'category:' + #category")
+    public List<MenuResponseDto> getMenusByCategory(String category) {
+        List<Menu> menus = menuRepository.findByCategoryAndIsAvailableTrueOrderByDisplayOrderAsc(category);
+        return menus.stream()
+                .map(this::convertToDto)
+                .toList();
     }
     
-    // 카테고리 ID로 메뉴 조회 (새로운 방식)
-    public List<Menu> getMenusByCategoryId(Long categoryId) {
-        return menuRepository.findByCategoryIdAndIsAvailableTrueOrderByDisplayOrderAsc(categoryId);
+    // 카테고리 ID로 메뉴 조회 (새로운 방식) - Redis 캐싱 적용
+    @Cacheable(value = "menus", key = "'categoryId:' + #categoryId")
+    public List<MenuResponseDto> getMenusByCategoryId(Long categoryId) {
+        List<Menu> menus = menuRepository.findByCategoryIdAndIsAvailableTrueOrderByDisplayOrderAsc(categoryId);
+        return menus.stream()
+                .map(this::convertToDto)
+                .toList();
     }
     
-    // 특정 메뉴 조회
-    public Optional<Menu> getMenuById(Long id) {
-        return menuRepository.findById(id);
+    // 특정 메뉴 조회 - Redis 캐싱 적용
+    @Cacheable(value = "menu", key = "#id")
+    public Optional<MenuResponseDto> getMenuById(Long id) {
+        return menuRepository.findById(id)
+                .map(this::convertToDto);
     }
     
     // 메뉴명으로 검색
@@ -59,19 +74,41 @@ public class MenuService {
         return menuRepository.findByNameContainingIgnoreCaseAndIsAvailableTrue(name);
     }
     
+    // Menu 엔티티를 MenuResponseDto로 변환
+    private MenuResponseDto convertToDto(Menu menu) {
+        return MenuResponseDto.builder()
+                .id(menu.getId())
+                .name(menu.getName())
+                .description(menu.getDescription())
+                .price(menu.getPrice())
+                .category(menu.getCategory())
+                .categoryId(menu.getCategoryId())
+                .categoryName(menu.getMenuCategory() != null ? menu.getMenuCategory().getName() : null)
+                .categoryDisplayName(menu.getMenuCategory() != null ? menu.getMenuCategory().getDisplayName() : null)
+                .basePrice(menu.getBasePrice())
+                .isAvailable(menu.getIsAvailable())
+                .displayOrder(menu.getDisplayOrder())
+                .imageUrl(menu.getImageUrl())
+                .createdAt(menu.getCreatedAt())
+                .updatedAt(menu.getUpdatedAt())
+                .build();
+    }
+    
     // 가격 범위로 검색
     public List<Menu> getMenusByPriceRange(BigDecimal minPrice, BigDecimal maxPrice) {
         return menuRepository.findByPriceRange(minPrice, maxPrice);
     }
     
-    // 메뉴 추가
+    // 메뉴 추가 - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public Menu createMenu(Menu menu) {
         return menuRepository.save(menu);
     }
     
-    // 이미지 업로드를 포함한 메뉴 추가
+    // 이미지 업로드를 포함한 메뉴 추가 - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public Menu createMenuWithImage(
             String name, String code, Long categoryId, BigDecimal price, 
             BigDecimal basePrice, Integer stock, String unit, String description, 
@@ -124,6 +161,9 @@ public class MenuService {
         
         // 파일명 생성 (중복 방지)
         String originalFilename = image.getOriginalFilename();
+        if (originalFilename == null || originalFilename.isEmpty()) {
+            throw new IllegalArgumentException("파일명이 없습니다.");
+        }
         String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
         String filename = UUID.randomUUID().toString() + fileExtension;
         
@@ -135,8 +175,9 @@ public class MenuService {
         return "/uploads/menu-images/" + filename;
     }
     
-    // 메뉴 수정
+    // 메뉴 수정 - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public Menu updateMenu(Long id, Menu menuDetails) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
@@ -154,8 +195,9 @@ public class MenuService {
         return menuRepository.save(menu);
     }
 
-    // 판매가만 수정
+    // 판매가만 수정 - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public MenuResponseDto updateMenuPrice(Long id, BigDecimal newPrice, String reason, String updatedBy) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
@@ -180,8 +222,9 @@ public class MenuService {
         return convertToResponseDto(savedMenu);
     }
     
-    // 메뉴 수정 (이미지 업로드 포함)
+    // 메뉴 수정 (이미지 업로드 포함) - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public Menu updateMenuWithImage(Long id, String name, String description, BigDecimal price, 
                                    String category, BigDecimal basePrice, Boolean isAvailable, 
                                    Integer displayOrder, MultipartFile image) {
@@ -238,8 +281,9 @@ public class MenuService {
         return menuRepository.save(menu);
     }
     
-    // 메뉴 삭제 (실제 데이터베이스에서 삭제)
+    // 메뉴 삭제 (실제 데이터베이스에서 삭제) - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public void deleteMenu(Long id) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
@@ -248,8 +292,9 @@ public class MenuService {
         menuRepository.delete(menu);
     }
     
-    // 메뉴 가용성 토글
+    // 메뉴 가용성 토글 - 캐시 무효화
     @Transactional
+    @CacheEvict(value = {"menus", "menu"}, allEntries = true)
     public void toggleMenuAvailability(Long id) {
         Menu menu = menuRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("메뉴를 찾을 수 없습니다: " + id));
@@ -308,25 +353,14 @@ public class MenuService {
                 .price(menu.getPrice())
                 .category(menu.getCategory())
                 .categoryId(menu.getCategoryId())
+                .categoryName(menu.getMenuCategory() != null ? menu.getMenuCategory().getName() : null)
+                .categoryDisplayName(menu.getMenuCategory() != null ? menu.getMenuCategory().getDisplayName() : null)
                 .basePrice(menu.getBasePrice())
                 .isAvailable(menu.getIsAvailable())
                 .displayOrder(menu.getDisplayOrder())
                 .imageUrl(menu.getImageUrl())
                 .createdAt(menu.getCreatedAt())
                 .updatedAt(menu.getUpdatedAt())
-                .menuCategory(menu.getMenuCategory() != null ? 
-                    MenuCategoryResponseDto.builder()
-                        .id(menu.getMenuCategory().getId())
-                        .name(menu.getMenuCategory().getName())
-                        .displayName(menu.getMenuCategory().getDisplayName())
-                        .description(menu.getMenuCategory().getDescription())
-                        .displayOrder(menu.getMenuCategory().getDisplayOrder())
-                        .isActive(menu.getMenuCategory().getIsActive())
-                        .imageUrl(menu.getMenuCategory().getImageUrl())
-                        .parentCategoryId(menu.getMenuCategory().getParentCategoryId())
-                        .createdAt(menu.getMenuCategory().getCreatedAt())
-                        .updatedAt(menu.getMenuCategory().getUpdatedAt())
-                        .build() : null)
                 .build();
     }
     

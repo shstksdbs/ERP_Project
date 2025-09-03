@@ -96,7 +96,8 @@ public interface MenuSalesStatisticsRepository extends JpaRepository<MenuSalesSt
     );
     
     // 상품별 매출 통계 조회
-    @Query("SELECT m.menuId, menu.name, menu.category, SUM(m.quantitySold), SUM(m.totalSales), SUM(m.netSales), menu.price " +
+    @Query("SELECT m.menuId, menu.name, menu.category, menu.price, " +
+           "SUM(m.quantitySold), SUM(m.totalSales), SUM(m.discountAmount), SUM(m.netSales) " +
            "FROM MenuSalesStatistics m " +
            "JOIN Menu menu ON m.menuId = menu.id " +
            "WHERE m.branchId = :branchId " +
@@ -108,6 +109,10 @@ public interface MenuSalesStatisticsRepository extends JpaRepository<MenuSalesSt
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+    
+    // 테스트용 - 데이터 존재 여부 확인
+    @Query("SELECT COUNT(m) FROM MenuSalesStatistics m WHERE m.branchId = :branchId")
+    Long countByBranchId(@Param("branchId") Long branchId);
     
     // 카테고리별 매출 통계 조회
     @Query("SELECT menu.category, SUM(m.quantitySold), SUM(m.netSales) " +

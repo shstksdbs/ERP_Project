@@ -28,10 +28,14 @@ export default function MonthlySales({ branchId }) {
 
   // 차트 타입 변경 시 차트 다시 그리기
   useEffect(() => {
-    if (salesData && salesData.dailyData.length > 0) {
+    console.log('차트 useEffect 실행:', { chartType, salesData });
+    
+    if (salesData && salesData.dailyData && salesData.dailyData.length > 0) {
+      console.log('일별 차트 생성 시도');
       createOrUpdateChart();
     }
-    if (salesData && salesData.weeklyData.length > 0) {
+    if (salesData && salesData.weeklyData) {
+      console.log('주간별 차트 생성 시도');
       createOrUpdateWeeklyChart();
     }
   }, [chartType, salesData]);
@@ -41,27 +45,159 @@ export default function MonthlySales({ branchId }) {
     setError(null);
     
     try {
-      // 선택된 년월의 월별 매출 데이터 조회
-      const monthlySales = await salesStatisticsService.getMonthlySales(
-        branchId, 
-        selectedYear, 
-        selectedMonth
-      );
+      // 선택된 년월의 월별 매출 데이터 조회 - 에러 처리 추가
+      let monthlySales = [];
+      try {
+        console.log(`월별 매출 데이터 조회 시작: branchId=${branchId}, year=${selectedYear}, month=${selectedMonth}`);
+        monthlySales = await salesStatisticsService.getMonthlySales(
+          branchId, 
+          selectedYear, 
+          selectedMonth
+        );
+        console.log('월별 매출 데이터 조회 성공:', monthlySales);
+      } catch (monthlyError) {
+        console.warn('월별 매출 데이터 조회 실패:', monthlyError);
+        monthlySales = [];
+      }
       
       if (monthlySales && monthlySales.length > 0) {
-        const monthlyData = monthlySales[0];
+        // 실제 데이터가 있는 월별 통계만 사용
+        const monthlyData = monthlySales.find(data => 
+          data.totalSales && Number(data.totalSales) > 0
+        ) || monthlySales[0];
         
         // 해당 월의 일별 데이터도 조회 (차트용)
         const startDate = new Date(selectedYear, selectedMonth - 1, 1).toISOString().split('T')[0];
         const endDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
         
-        const dailySales = await salesStatisticsService.getDailySales(
-          branchId, 
-          startDate, 
-          endDate
-        );
+        // 일별 데이터 조회 - 에러 처리 추가
+        let dailySales = [];
+        try {
+          console.log(`일별 매출 데이터 조회 시작: branchId=${branchId}, startDate=${startDate}, endDate=${endDate}`);
+          dailySales = await salesStatisticsService.getDailySales(
+            branchId, 
+            startDate, 
+            endDate
+          );
+          console.log('일별 매출 데이터 조회 성공:', dailySales?.length || 0, '건');
+        } catch (dailyError) {
+          console.warn('일별 매출 데이터 조회 실패:', dailyError);
+          dailySales = [];
+        }
         
-        // 주간별 데이터 생성
+
+        
+        // 전체 월의 데이터를 생성 (프론트엔드에서 날짜별 집계)
+        const completeDailyData = (() => {
+          const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+          const completeData = [];
+          
+          // 백엔드에서 받은 개별 레코드들을 날짜별로 집계
+          const aggregatedData = {};
+          dailySales.forEach((item) => {
+            let dateStr = '';
+            try {
+              if (typeof item.statisticDate === 'string') {
+                // "2025,8,31" 형식을 "2025-08-31" 형식으로 변환
+                if (item.statisticDate.includes(',')) {
+                  const parts = item.statisticDate.split(',');
+                  if (parts.length === 3) {
+                    const year = parts[0].trim();
+                    const month = String(parts[1].trim()).padStart(2, '0');
+                    const day = String(parts[2].trim()).padStart(2, '0');
+                    dateStr = `${year}-${month}-${day}`;
+                  } else {
+                    dateStr = item.statisticDate;
+                  }
+                } else {
+                  dateStr = item.statisticDate;
+                }
+              } else if (item.statisticDate && typeof item.statisticDate === 'object') {
+                if (item.statisticDate.year && item.statisticDate.month && item.statisticDate.day) {
+                  dateStr = `${item.statisticDate.year}-${String(item.statisticDate.month).padStart(2, '0')}-${String(item.statisticDate.day).padStart(2, '0')}`;
+                } else {
+                  dateStr = item.statisticDate.toString();
+                }
+              } else {
+                dateStr = String(item.statisticDate || '');
+              }
+              
+              if (!aggregatedData[dateStr]) {
+                aggregatedData[dateStr] = {
+                  totalSales: 0,
+                  totalOrders: 0
+                };
+              }
+              
+              aggregatedData[dateStr].totalSales += Number(item.totalSales || 0);
+              aggregatedData[dateStr].totalOrders += Number(item.totalOrders || 0);
+            } catch (error) {
+              console.warn('날짜 처리 오류:', error, item);
+            }
+          });
+          
+          // 전체 월의 날짜에 대해 데이터 생성 (실제 데이터가 있으면 사용, 없으면 0)
+          for (let day = 1; day <= daysInMonth; day++) {
+            const dayStr = day.toString().padStart(2, '0');
+            const dateStr = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${dayStr}`;
+            
+            // aggregatedData에서 해당 날짜 찾기
+            let foundData = null;
+            
+            for (const key in aggregatedData) {
+              const data = aggregatedData[key];
+              
+              // 날짜 파싱 (다양한 형식 지원)
+              let year, month, dayFromKey;
+              
+              if (key.includes(',')) {
+                // "2025,9,1" 형식
+                const parts = key.split(',');
+                if (parts.length === 3) {
+                  year = parseInt(parts[0].trim());
+                  month = parseInt(parts[1].trim());
+                  dayFromKey = parseInt(parts[2].trim());
+                }
+              } else if (key.includes('-')) {
+                // "2025-09-01" 형식
+                const parts = key.split('-');
+                if (parts.length === 3) {
+                  year = parseInt(parts[0]);
+                  month = parseInt(parts[1]);
+                  dayFromKey = parseInt(parts[2]);
+                }
+              }
+              
+              // 해당 날짜와 일치하는지 확인
+              if (year === selectedYear && month === selectedMonth && dayFromKey === day) {
+                foundData = data;
+                break;
+              }
+            }
+            
+            if (foundData) {
+              completeData.push({
+                date: dateStr,
+                day: day,
+                sales: foundData.totalSales,
+                orders: foundData.totalOrders
+              });
+            } else {
+              completeData.push({
+                date: dateStr,
+                day: day,
+                sales: 0,
+                orders: 0
+              });
+            }
+          }
+          
+          return completeData;
+        })();
+        
+        console.log('일별 데이터 생성 완료:', completeDailyData.length, '일');
+        
+        // 주간별 데이터 생성 (completeDailyData 기반)
         const weeklyData = (() => {
           const weeks = [];
           const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
@@ -72,15 +208,13 @@ export default function MonthlySales({ branchId }) {
             let endDay = Math.min(week * 7, daysInMonth);
             
             if (startDay <= daysInMonth) {
-              const weekData = dailySales.filter(daily => {
-                const day = parseInt(daily.statisticDate.split('-')[2]);
-                return day >= startDay && day <= endDay;
-              });
+              // completeDailyData에서 해당 주간의 데이터 필터링
+              const weekData = completeDailyData.filter(day => 
+                day.day >= startDay && day.day <= endDay
+              );
               
-              const weekSales = weekData.reduce((sum, daily) => 
-                sum + (daily.totalSales ? Number(daily.totalSales) : 0), 0);
-              const weekOrders = weekData.reduce((sum, daily) => 
-                sum + (daily.totalOrders || 0), 0);
+              const weekSales = weekData.reduce((sum, day) => sum + day.sales, 0);
+              const weekOrders = weekData.reduce((sum, day) => sum + day.orders, 0);
               const weekDays = weekData.length;
               
               weeks.push({
@@ -94,43 +228,11 @@ export default function MonthlySales({ branchId }) {
               });
             }
           }
+          
           return weeks;
         })();
         
-        // 일별 데이터를 1일부터 31일까지 모든 날짜로 확장
-        const completeDailyData = (() => {
-          const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
-          const completeData = [];
-          
-          for (let day = 1; day <= daysInMonth; day++) {
-            const dayStr = day.toString().padStart(2, '0');
-            const dateStr = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${dayStr}`;
-            
-            // 해당 날짜의 실제 데이터 찾기
-            const existingData = dailySales.find(daily => 
-              daily.statisticDate === dateStr
-            );
-            
-            if (existingData) {
-              completeData.push({
-                date: dateStr,
-                day: day,
-                sales: existingData.totalSales ? Number(existingData.totalSales) : 0,
-                orders: existingData.totalOrders || 0
-              });
-            } else {
-              // 데이터가 없는 날은 0으로 설정
-              completeData.push({
-                date: dateStr,
-                day: day,
-                sales: 0,
-                orders: 0
-              });
-            }
-          }
-          
-          return completeData;
-        })();
+        console.log('주간별 데이터 생성 완료:', weeklyData.length, '주차');
         
         // 데이터 구조화
         const formattedData = {
@@ -147,9 +249,30 @@ export default function MonthlySales({ branchId }) {
           weeklyData: weeklyData
         };
         
+        // 실제 데이터가 있는 날짜 수 확인
+        const realDataCount = completeDailyData.filter(day => day.sales > 0 || day.orders > 0).length;
+        console.log('실제 데이터가 있는 날짜:', realDataCount, '일');
+        
         setSalesData(formattedData);
       } else {
-        // 데이터가 없는 경우 빈 데이터 구조 생성
+        // 데이터가 없는 경우 빈 데이터로 설정
+        console.log('실제 데이터가 없음');
+        
+        const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+        const emptyDailyData = [];
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayStr = day.toString().padStart(2, '0');
+          const dateStr = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${dayStr}`;
+          
+          emptyDailyData.push({
+            date: dateStr,
+            day: day,
+            sales: 0,
+            orders: 0
+          });
+        }
+        
         setSalesData({
           year: selectedYear,
           month: selectedMonth,
@@ -158,7 +281,7 @@ export default function MonthlySales({ branchId }) {
           averageOrderValue: 0,
           netSales: 0,
           totalDiscount: 0,
-          dailyData: [],
+          dailyData: emptyDailyData,
           weeklyData: []
         });
       }
@@ -192,7 +315,16 @@ export default function MonthlySales({ branchId }) {
 
   // Chart.js 차트 생성/업데이트 함수
   const createOrUpdateChart = () => {
-    if (!salesData || !salesData.dailyData.length || !chartRef.current) return;
+    console.log('차트 생성 시도:', {
+      salesData: salesData,
+      dailyDataLength: salesData?.dailyData?.length,
+      chartRef: chartRef.current
+    });
+    
+    if (!salesData || !salesData.dailyData.length || !chartRef.current) {
+      console.log('차트 생성 조건 미충족');
+      return;
+    }
 
     // 기존 차트가 있다면 제거
     if (chartInstance.current) {
@@ -205,6 +337,8 @@ export default function MonthlySales({ branchId }) {
     const labels = salesData.dailyData.map(day => `${day.day}일`);
     const salesValues = salesData.dailyData.map(day => day.sales);
     const ordersValues = salesData.dailyData.map(day => day.orders);
+    
+    console.log('차트 생성:', labels.length, '일 데이터');
 
     // 차트 생성
     chartInstance.current = new Chart(ctx, {
@@ -450,7 +584,16 @@ export default function MonthlySales({ branchId }) {
 
   // 주간별 차트 생성/업데이트 함수
   const createOrUpdateWeeklyChart = () => {
-    if (!salesData || !salesData.weeklyData.length || !weeklyChartRef.current) return;
+    console.log('주간별 차트 생성 시도:', {
+      salesData: salesData,
+      weeklyDataLength: salesData?.weeklyData?.length,
+      weeklyChartRef: weeklyChartRef.current
+    });
+    
+    if (!salesData || !salesData.weeklyData || !weeklyChartRef.current) {
+      console.log('주간별 차트 생성 조건 미충족');
+      return;
+    }
 
     // 기존 차트가 있다면 제거
     if (weeklyChartInstance.current) {
@@ -463,6 +606,13 @@ export default function MonthlySales({ branchId }) {
     const labels = salesData.weeklyData.map(week => `${week.startDay}일-${week.endDay}일`);
     const salesValues = salesData.weeklyData.map(week => week.totalSales);
     const ordersValues = salesData.weeklyData.map(week => week.totalOrders);
+    
+    console.log('주간별 차트 데이터:', {
+      labels: labels,
+      salesValues: salesValues,
+      ordersValues: ordersValues,
+      weeklyData: salesData.weeklyData
+    });
 
     // 주간 차트 생성
     weeklyChartInstance.current = new Chart(ctx, {
@@ -792,7 +942,7 @@ export default function MonthlySales({ branchId }) {
           )}
 
                      {/* 주간별 매출 차트 */}
-           {salesData.weeklyData.length > 0 && (
+           {salesData.weeklyData && (
              <div className={styles.section}>
                <h2 className={styles.sectionTitle}>주간별 매출 추이</h2>
                <div className={styles.weeklyChartContainer}>

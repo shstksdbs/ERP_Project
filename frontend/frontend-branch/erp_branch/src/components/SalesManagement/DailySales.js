@@ -66,12 +66,19 @@ export default function DailySales({ branchId }) {
           selectedDate
         );
         
-        // 인기 메뉴 데이터 조회 (선택된 날짜)
-        const topMenus = await salesStatisticsService.getTopSellingMenus(
-          branchId, 
-          selectedDate, 
-          selectedDate
-        );
+        // 인기 메뉴 데이터 조회 (선택된 날짜) - 에러 처리 추가
+        let topMenus = [];
+        try {
+          topMenus = await salesStatisticsService.getTopSellingMenus(
+            branchId, 
+            selectedDate, 
+            selectedDate
+          );
+        } catch (menuError) {
+          console.warn('인기 메뉴 데이터 조회 실패:', menuError);
+          // 인기 메뉴 데이터가 없어도 계속 진행
+          topMenus = [];
+        }
         
         // 시간대별 매출 데이터를 09시부터 24시까지 정리하고 합산
         const hourlyDataMap = new Map();
