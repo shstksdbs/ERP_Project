@@ -2,6 +2,7 @@ package erp_project.erp_project.controller;
 
 import erp_project.erp_project.dto.SalesOverviewRequestDto;
 import erp_project.erp_project.dto.SalesOverviewResponseDto;
+import erp_project.erp_project.dto.DailySalesTrendResponseDto;
 import erp_project.erp_project.service.SalesOverviewService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +94,7 @@ public class SalesOverviewController {
      * @return 매출 추이 데이터
      */
     @GetMapping("/trend")
-    public ResponseEntity<?> getSalesTrend(
+    public ResponseEntity<DailySalesTrendResponseDto> getSalesTrend(
             @RequestParam Integer year,
             @RequestParam Integer month,
             @RequestParam(required = false) Long branchId) {
@@ -106,7 +107,7 @@ public class SalesOverviewController {
                     .month(month)
                     .build();
             
-            var response = salesOverviewService.getDailySalesTrend(request, branchId);
+            DailySalesTrendResponseDto response = salesOverviewService.getDailySalesTrend(request, branchId);
             return ResponseEntity.ok(response);
             
         } catch (Exception e) {

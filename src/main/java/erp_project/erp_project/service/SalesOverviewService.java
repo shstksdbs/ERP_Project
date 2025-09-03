@@ -39,7 +39,7 @@ public class SalesOverviewService {
     private final MenuCategoryRepository menuCategoryRepository;
     private final MenuRepository menuRepository;
     
-    @Cacheable(value = "salesOverview", key = "'overview:' + #request.year + ':' + #request.month")
+    @Cacheable(value = "salesOverview", key = "'overview:v2:' + #request.year + ':' + #request.month")
     public SalesOverviewResponseDto getSalesOverview(SalesOverviewRequestDto request) {
         log.info("매출 개요 조회 시작 - 연도: {}, 월: {}", request.getYear(), request.getMonth());
         
@@ -191,7 +191,7 @@ public class SalesOverviewService {
     /**
      * 일별 매출 추이 조회 - Redis 캐싱 적용
      */
-    @Cacheable(value = "salesOverview", key = "'dailyTrend:' + #request.year + ':' + #request.month + ':' + (#branchId != null ? #branchId : 'all')")
+    @Cacheable(value = "salesOverview", key = "'dailyTrend:v2:' + #request.year + ':' + #request.month + ':' + (#branchId != null ? #branchId : 'all')")
     public DailySalesTrendResponseDto getDailySalesTrend(SalesOverviewRequestDto request, Long branchId) {
         log.info("일별 매출 추이 조회 시작 - 연도: {}, 월: {}, 가맹점 ID: {}", 
                 request.getYear(), request.getMonth(), branchId);
