@@ -72,4 +72,22 @@ public interface OrderRepository extends JpaRepository<Orders, Long> {
         @Param("startTime") LocalDateTime startTime,
         @Param("endTime") LocalDateTime endTime
     );
+    
+    // 매출 데이터 최적화를 위한 메서드들
+    List<Orders> findByBranchIdAndCreatedAtBetweenAndOrderStatusAndPaymentStatus(
+        Long branchId, 
+        LocalDateTime startTime, 
+        LocalDateTime endTime,
+        Orders.OrderStatus orderStatus,
+        Orders.PaymentStatus paymentStatus
+    );
+    
+    List<Orders> findByCreatedAtBefore(LocalDateTime dateTime);
+    
+    List<Orders> findByCreatedAtBetween(LocalDateTime startTime, LocalDateTime endTime);
+    
+    long countByCreatedAtBefore(LocalDateTime dateTime);
+    
+    @Query("SELECT DISTINCT o.branchId FROM Orders o")
+    List<Long> findDistinctBranchIds();
 }

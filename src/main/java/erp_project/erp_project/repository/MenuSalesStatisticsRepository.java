@@ -139,4 +139,17 @@ public interface MenuSalesStatisticsRepository extends JpaRepository<MenuSalesSt
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+    
+    // 대용량 처리를 위한 메서드들
+    List<MenuSalesStatistics> findByBranchIdAndStatisticDate(Long branchId, LocalDate date);
+    
+    List<MenuSalesStatistics> findByBranchIdAndStatisticDateBetween(Long branchId, LocalDate startDate, LocalDate endDate);
+    
+    List<MenuSalesStatistics> findByStatisticDateBefore(LocalDate date);
+    
+    List<MenuSalesStatistics> findByStatisticDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    long countByStatisticDateAfter(LocalDate date);
+    
+    long countByStatisticDateBefore(LocalDate date);
 }

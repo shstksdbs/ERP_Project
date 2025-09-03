@@ -73,4 +73,15 @@ public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics
            "WHERE s.branchId = :branchId AND s.statisticDate BETWEEN :startDate AND :endDate AND s.statisticHour IS NULL " +
            "GROUP BY s.statisticDate ORDER BY s.statisticDate ASC")
     List<Object[]> findWeeklySalesTrendByBranch(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
+    
+    // 대용량 처리를 위한 메서드들
+    List<SalesStatistics> findByBranchIdAndStatisticDateBetweenAndStatisticHourIsNull(Long branchId, LocalDate startDate, LocalDate endDate);
+    
+    List<SalesStatistics> findByStatisticDateBefore(LocalDate date);
+    
+    List<SalesStatistics> findByStatisticDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    long countByStatisticDateAfter(LocalDate date);
+    
+    long countByStatisticDateBefore(LocalDate date);
 }

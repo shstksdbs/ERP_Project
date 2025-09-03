@@ -55,9 +55,23 @@ public class RedisConfig {
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer))
                 .disableCachingNullValues();
 
-        // 매출 데이터용 캐시 설정 (더 긴 TTL)
+        // 매출 데이터용 캐시 설정 (계층별 TTL)
         RedisCacheConfiguration salesConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofHours(2)) // 매출 데이터 TTL: 2시간
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer))
+                .disableCachingNullValues();
+
+        // 실시간 매출 데이터용 캐시 설정 (짧은 TTL)
+        RedisCacheConfiguration realtimeSalesConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(5)) // 실시간 데이터 TTL: 5분
+                .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
+                .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer))
+                .disableCachingNullValues();
+
+        // 집계 데이터용 캐시 설정 (긴 TTL)
+        RedisCacheConfiguration aggregatedSalesConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofHours(6)) // 집계 데이터 TTL: 6시간
                 .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
                 .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer))
                 .disableCachingNullValues();
@@ -75,6 +89,8 @@ public class RedisConfig {
                 .withCacheConfiguration("salesStatistics", salesConfig)
                 .withCacheConfiguration("salesOverview", salesConfig)
                 .withCacheConfiguration("productSales", salesConfig)
+                .withCacheConfiguration("realtimeSales", realtimeSalesConfig)
+                .withCacheConfiguration("aggregatedSales", aggregatedSalesConfig)
                 .withCacheConfiguration("dashboardKpis", dashboardConfig)
                 .withCacheConfiguration("todaySales", dashboardConfig)
                 .withCacheConfiguration("weeklySalesTrend", dashboardConfig)

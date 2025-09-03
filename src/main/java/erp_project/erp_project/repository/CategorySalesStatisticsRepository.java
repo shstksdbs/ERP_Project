@@ -43,4 +43,17 @@ public interface CategorySalesStatisticsRepository extends JpaRepository<Categor
         @Param("startDate") LocalDate startDate,
         @Param("endDate") LocalDate endDate
     );
+    
+    // 대용량 처리를 위한 메서드들
+    List<CategorySalesStatistics> findByBranchIdAndStatisticDate(Long branchId, LocalDate date);
+    
+    List<CategorySalesStatistics> findByBranchIdAndStatisticDateBetween(Long branchId, LocalDate startDate, LocalDate endDate);
+    
+    List<CategorySalesStatistics> findByStatisticDateBefore(LocalDate date);
+    
+    List<CategorySalesStatistics> findByStatisticDateBetween(LocalDate startDate, LocalDate endDate);
+    
+    long countByStatisticDateAfter(LocalDate date);
+    
+    long countByStatisticDateBefore(LocalDate date);
 }

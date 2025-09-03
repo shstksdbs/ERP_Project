@@ -3,6 +3,7 @@ package erp_project.erp_project.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "orders")
@@ -68,6 +69,10 @@ public class Orders {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    // OrderItems와의 일대다 관계
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItems> orderItems;
+    
     // 기본 생성자
     public Orders() {
         this.createdAt = LocalDateTime.now();
@@ -129,6 +134,9 @@ public class Orders {
     
     public LocalDateTime getUpdatedAt() { return updatedAt; }
     public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
+    
+    public List<OrderItems> getOrderItems() { return orderItems; }
+    public void setOrderItems(List<OrderItems> orderItems) { this.orderItems = orderItems; }
     
     // Enum 클래스들
     public enum OrderStatus {

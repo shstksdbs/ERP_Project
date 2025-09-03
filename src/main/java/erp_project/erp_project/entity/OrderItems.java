@@ -72,6 +72,16 @@ public class OrderItems {
     @Column(name = "is_set_component")
     private Boolean isSetComponent = false;
     
+    // Menu와의 관계
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "menu_id", insertable = false, updatable = false)
+    private Menu menu;
+    
+    // Orders와의 관계
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "order_id", insertable = false, updatable = false)
+    private Orders order;
+    
     // 기본 생성자
     public OrderItems() {}
     
@@ -136,6 +146,12 @@ public class OrderItems {
     
     public Boolean getIsSetComponent() { return isSetComponent; }
     public void setIsSetComponent(Boolean isSetComponent) { this.isSetComponent = isSetComponent; }
+    
+    public Menu getMenu() { return menu; }
+    public void setMenu(Menu menu) { this.menu = menu; }
+    
+    public Orders getOrder() { return order; }
+    public void setOrder(Orders order) { this.order = order; }
     
     // Enum 클래스들
     public enum ItemType {
