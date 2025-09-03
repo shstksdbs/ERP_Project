@@ -359,9 +359,9 @@ export default function Header({ activeTab, setActiveTab, onLogout }) {
                   <span className={styles.alertBadge}>{unreadCount}</span>
                 )}
                 {/* 웹소켓 연결 상태 표시 */}
-                <div className={`${styles.websocketStatus} ${websocketConnected ? styles.connected : styles.disconnected}`} title={websocketConnected ? '실시간 알림 연결됨' : '실시간 알림 연결 끊김'}>
+                {/* <div className={`${styles.websocketStatus} ${websocketConnected ? styles.connected : styles.disconnected}`} title={websocketConnected ? '실시간 알림 연결됨' : '실시간 알림 연결 끊김'}>
                   <span className={styles.statusDot}></span>
-                </div>
+                </div> */}
               </div>
               
               {/* 알림 드롭다운 패널 */}

@@ -7,11 +7,13 @@ import erp_project.erp_project.entity.MenuCategory;
 import erp_project.erp_project.repository.MenuRepository;
 import erp_project.erp_project.repository.MenuCategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +30,7 @@ import org.springframework.cache.annotation.CacheEvict;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 @Transactional(readOnly = true)
 public class MenuService {
     
@@ -76,6 +79,13 @@ public class MenuService {
     
     // Menu 엔티티를 MenuResponseDto로 변환
     private MenuResponseDto convertToDto(Menu menu) {
+        // updatedAt이 null인 경우 현재 시간으로 설정
+        LocalDateTime updatedAt = menu.getUpdatedAt();
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+            log.warn("메뉴 {}의 updatedAt이 null입니다. 현재 시간으로 설정합니다.", menu.getName());
+        }
+        
         return MenuResponseDto.builder()
                 .id(menu.getId())
                 .name(menu.getName())
@@ -90,7 +100,7 @@ public class MenuService {
                 .displayOrder(menu.getDisplayOrder())
                 .imageUrl(menu.getImageUrl())
                 .createdAt(menu.getCreatedAt())
-                .updatedAt(menu.getUpdatedAt())
+                .updatedAt(updatedAt)
                 .build();
     }
     
@@ -346,6 +356,13 @@ public class MenuService {
      * Menu 엔티티를 MenuResponseDto로 변환
      */
     public MenuResponseDto convertToResponseDto(Menu menu) {
+        // updatedAt이 null인 경우 현재 시간으로 설정
+        LocalDateTime updatedAt = menu.getUpdatedAt();
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+            log.warn("메뉴 {}의 updatedAt이 null입니다. 현재 시간으로 설정합니다.", menu.getName());
+        }
+        
         return MenuResponseDto.builder()
                 .id(menu.getId())
                 .name(menu.getName())
@@ -360,7 +377,7 @@ public class MenuService {
                 .displayOrder(menu.getDisplayOrder())
                 .imageUrl(menu.getImageUrl())
                 .createdAt(menu.getCreatedAt())
-                .updatedAt(menu.getUpdatedAt())
+                .updatedAt(updatedAt)
                 .build();
     }
     

@@ -859,7 +859,7 @@ function NoticeDetailModal({ notice, onClose }) {
                       onClick={() => handleDownloadAttachment(attachment.id)}
                       title="다운로드"
                     >
-                      📥
+                      다운로드
                     </button>
                   </div>
                 ))}

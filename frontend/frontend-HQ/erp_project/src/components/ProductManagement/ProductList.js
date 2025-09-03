@@ -112,8 +112,30 @@ export default function ProductList() {
           Math.round(((menu.price - menu.basePrice) / menu.price) * 100) : 0,
         salesCount: Math.floor(Math.random() * 1000) + 100, // 임시 판매량
         rating: (Math.random() * 2 + 3).toFixed(1), // 임시 평점
-        createdAt: menu.createdAt ? menu.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
-        updatedAt: menu.updatedAt ? menu.updatedAt.split('T')[0] : new Date().toISOString().split('T')[0],
+        createdAt: (() => {
+          if (!menu.createdAt) return new Date().toISOString().split('T')[0];
+          if (typeof menu.createdAt === 'string') {
+            return menu.createdAt.split('T')[0];
+          }
+          try {
+            const date = new Date(menu.createdAt);
+            return isNaN(date.getTime()) ? new Date().toISOString().split('T')[0] : date.toISOString().split('T')[0];
+          } catch (e) {
+            return new Date().toISOString().split('T')[0];
+          }
+        })(),
+        updatedAt: (() => {
+          if (!menu.updatedAt) return new Date().toISOString().split('T')[0];
+          if (typeof menu.updatedAt === 'string') {
+            return menu.updatedAt.split('T')[0];
+          }
+          try {
+            const date = new Date(menu.updatedAt);
+            return isNaN(date.getTime()) ? new Date().toISOString().split('T')[0] : date.toISOString().split('T')[0];
+          } catch (e) {
+            return new Date().toISOString().split('T')[0];
+          }
+        })(),
         description: menu.description || '상품 설명이 없습니다.'
       }));
       

@@ -57,6 +57,14 @@ export default function ProductCost() {
         throw new Error('상품 판매가 데이터를 불러오는데 실패했습니다.');
       }
       const data = await response.json();
+      console.log('메뉴 데이터 응답:', data);
+      console.log('첫 번째 메뉴의 updatedAt:', data[0]?.updatedAt);
+      
+      // 각 메뉴의 updatedAt 값 확인
+      data.forEach((menu, index) => {
+        console.log(`메뉴 ${index + 1} (${menu.name}): updatedAt =`, menu.updatedAt, 'type:', typeof menu.updatedAt);
+      });
+      
       setProducts(data);
     } catch (err) {
       setError(err.message);
@@ -228,6 +236,58 @@ export default function ProductCost() {
     return (basePrice / price) * 100;
   };
 
+  // 날짜 형식화 함수
+  const formatDate = (dateInput) => {
+    if (!dateInput) {
+      return '-';
+    }
+    
+    try {
+      let date;
+      
+      // 배열 형태의 날짜인지 확인 (Java LocalDateTime 직렬화 형태)
+      if (Array.isArray(dateInput) && dateInput.length >= 6) {
+        // [year, month, day, hour, minute, second, nanosecond] 형태
+        const [year, month, day, hour, minute, second] = dateInput;
+        // Java의 month는 1-based이므로 JavaScript의 0-based로 변환
+        date = new Date(year, month - 1, day, hour, minute, second);
+        console.log('배열 형태 날짜 파싱:', dateInput, '->', date);
+      }
+      // 문자열인 경우
+      else if (typeof dateInput === 'string') {
+        // ISO 형식인지 확인
+        if (dateInput.includes('T')) {
+          date = new Date(dateInput);
+        } else if (dateInput.includes('-')) {
+          // 날짜만 있는 경우 시간 추가
+          date = new Date(dateInput + 'T00:00:00');
+        } else {
+          date = new Date(dateInput);
+        }
+      } 
+      // Date 객체인 경우
+      else {
+        date = new Date(dateInput);
+      }
+      
+      // 유효한 날짜인지 확인
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date:', dateInput);
+        return '-';
+      }
+      
+      // 한국어 형식으로 포맷
+      return date.toLocaleDateString('ko-KR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    } catch (error) {
+      console.error('Date formatting error:', error, 'Input:', dateInput);
+      return '-';
+    }
+  };
+
   if (loading && products.length === 0) {
     return <div className={styles.loading}>데이터를 불러오는 중...</div>;
   }
@@ -371,7 +431,7 @@ export default function ProductCost() {
                             {costRatio.toFixed(1)}%
                           </span>
                         </td>
-                        <td>{product.updatedAt ? new Date(product.updatedAt).toLocaleDateString() : '-'}</td>
+                        <td>{product.updatedAt ? formatDate(product.updatedAt) : '-'}</td>
                         <td>
                           <div className={styles['action-buttons']}>
                             <button
@@ -431,7 +491,7 @@ export default function ProductCost() {
                           </span>
                         </td>
                         <td>{history.reason || '-'}</td>
-                        <td>{history.changeDate ? new Date(history.changeDate).toLocaleDateString() : '-'}</td>
+                        <td>{history.changeDate ? formatDate(history.changeDate) : '-'}</td>
                         <td>{history.updatedBy || '-'}</td>
                       </tr>
                     ))}

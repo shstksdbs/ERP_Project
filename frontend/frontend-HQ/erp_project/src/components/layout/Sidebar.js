@@ -235,8 +235,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           </li>
           <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('employees')}>
-              <img src={productIcon} alt="상품/메뉴 관리" className={styles['sidebar-icon']} />
-              상품/메뉴 관리
+              <img src={productIcon} alt="메뉴관리" className={styles['sidebar-icon']} />
+              메뉴관리
               <img
                 src={activeTabs.includes('employees') || activeTabs.some(tab => isProductSubmenu(tab)) ? downIcon : rightIcon}
                 alt={activeTabs.includes('employees') || activeTabs.some(tab => isProductSubmenu(tab)) ? "접기" : "펼치기"}
@@ -316,8 +316,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           </li>
           <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('inventory')}>
-              <img src={truckIcon} alt="발주/물류 관리" className={styles['sidebar-icon']} />
-              발주/물류 관리
+              <img src={truckIcon} alt="발주관리" className={styles['sidebar-icon']} />
+              발주관리
               <img
                 src={activeTabs.includes('inventory') || activeTabs.some(tab => isInventorySubmenu(tab)) ? downIcon : rightIcon}
                 alt={activeTabs.includes('inventory') || activeTabs.some(tab => isInventorySubmenu(tab)) ? "접기" : "펼치기"}
@@ -369,8 +369,8 @@ export default function Sidebar({ activeTab, setActiveTab }) {
           </li>
           <li>
             <button className={`btn ${styles['sidebar-button']} btn-secondary`} onClick={() => handleTabClick('sales')}>
-              <img src={chartIcon} alt="매출 관리" className={styles['sidebar-icon']} />
-              매출/정산 관리
+              <img src={chartIcon} alt="매출관리" className={styles['sidebar-icon']} />
+              매출관리
               <img
                 src={activeTabs.includes('sales') || activeTabs.some(tab => isSalesSubmenu(tab)) ? downIcon : rightIcon}
                 alt={activeTabs.includes('sales') || activeTabs.some(tab => isSalesSubmenu(tab)) ? "접기" : "펼치기"}

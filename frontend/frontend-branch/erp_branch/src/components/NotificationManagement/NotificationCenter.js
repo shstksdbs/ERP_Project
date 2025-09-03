@@ -352,9 +352,9 @@ export default function NotificationCenter({ branchId }) {
         <h1 className={styles.title}>알림 센터</h1>
         <div className={styles.headerActions}>
           <div className={styles.statusInfo}>
-            <span className={`${styles.connectionStatus} ${isConnected ? styles.connected : styles.disconnected}`}>
+            {/* <span className={`${styles.connectionStatus} ${isConnected ? styles.connected : styles.disconnected}`}>
               {isConnected ? '🟢 실시간 연결됨' : '🔴 연결 끊김'}
-            </span>
+            </span> */}
             {newNotificationCount > 0 && (
               <span className={styles.newNotificationCount}>
                 새 알림: {newNotificationCount}개

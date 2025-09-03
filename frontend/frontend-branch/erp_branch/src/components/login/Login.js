@@ -172,7 +172,7 @@ export default function Login() {
                  <option value="">지점을 선택하세요</option>
                  {branches.map((branch) => (
                    <option key={branch.id} value={branch.id}>
-                     {branch.branchName} ({branch.branchCode}) - {branch.status}
+                     {branch.branchName} ({branch.branchCode})
                    </option>
                  ))}
                </select>
