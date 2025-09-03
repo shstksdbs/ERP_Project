@@ -57,16 +57,13 @@ public class DashboardService {
     public Map<String, Object> getTodaySales(Long branchId) {
         try {
             LocalDate today = LocalDate.now();
+            System.out.println("🔥🔥🔥 오늘 날짜: " + today + " (형식: YYYY-MM-DD) 🔥🔥🔥");
             
-            // 오늘 매출 통계 조회
-            SalesStatistics todayStats = salesStatisticsRepository
-                .findByBranchIdAndStatisticDateAndStatisticHourIsNull(branchId, today)
-                .orElse(null);
+            // 오늘 매출 통계 조회 (SUM 집계로 변경)
+            BigDecimal todaySales = salesStatisticsRepository
+                .findTodaySalesByBranch(branchId, today);
             
-            BigDecimal todaySales = BigDecimal.ZERO;
-            if (todayStats != null) {
-                todaySales = todayStats.getNetSales();
-            }
+            System.out.println("🔥🔥🔥 지점 " + branchId + " 오늘 매출: " + todaySales + " 🔥🔥🔥");
             
             // 전일 대비 증감률 계산 (현재는 사용하지 않음)
             // LocalDate yesterday = today.minusDays(1);
@@ -91,20 +88,12 @@ public class DashboardService {
     public Map<String, Object> getTodayOrders(Long branchId) {
         try {
             LocalDate today = LocalDate.now();
-            LocalDateTime startOfDay = today.atStartOfDay();
-            LocalDateTime endOfDay = today.plusDays(1).atStartOfDay();
+            System.out.println("🔥🔥🔥 오늘 주문수 조회 시작: branchId=" + branchId + ", today=" + today + " 🔥🔥🔥");
             
-            // 오늘 완료된 주문 수 조회
-            long todayOrderCount = orderRepository.countByBranchIdAndOrderStatusAndOrderTimeBetween(
-                branchId, Orders.OrderStatus.completed, startOfDay, endOfDay);
+            // SalesStatistics 테이블에서 오늘 주문 수 조회 (SUM 집계)
+            Long todayOrderCount = salesStatisticsRepository.findTodayOrdersByBranch(branchId, today);
             
-            // 전일 주문 수 조회 (현재는 사용하지 않음)
-            // LocalDate yesterday = today.minusDays(1);
-            // LocalDateTime yesterdayStart = yesterday.atStartOfDay();
-            // LocalDateTime yesterdayEnd = yesterday.plusDays(1).atStartOfDay();
-            // 
-            // long yesterdayOrderCount = orderRepository.countByBranchIdAndOrderStatusAndOrderTimeBetween(
-            //     branchId, Orders.OrderStatus.completed, yesterdayStart, yesterdayEnd);
+            System.out.println("🔥🔥🔥 지점 " + branchId + " 오늘 주문수: " + todayOrderCount + " 🔥🔥🔥");
             
             Map<String, Object> result = new HashMap<>();
             result.put("value", todayOrderCount);
@@ -189,10 +178,9 @@ public class DashboardService {
             LocalDate today = LocalDate.now();
             LocalDate weekAgo = today.minusDays(7);
             
-            // 오늘을 제외한 최근 7일간의 매출 통계 조회
-            List<SalesStatistics> weeklyStats = salesStatisticsRepository
-                .findByBranchIdAndStatisticDateBetweenAndStatisticHourIsNullOrderByStatisticDate(
-                    branchId, weekAgo, today.minusDays(1));
+            // 오늘을 제외한 최근 7일간의 매출 통계 조회 (SUM 집계)
+            List<Object[]> weeklyStats = salesStatisticsRepository
+                .findWeeklySalesTrendByBranch(branchId, weekAgo, today.minusDays(1));
             
             // 날짜별 매출 데이터 구성
             List<Map<String, Object>> chartData = new ArrayList<>();
@@ -204,11 +192,12 @@ public class DashboardService {
                 LocalDate date = today.minusDays(i);
                 String dateLabel = String.format("%d/%d", date.getMonthValue(), date.getDayOfMonth());
                 
-                // 해당 날짜의 매출 데이터 찾기
+                // 해당 날짜의 매출 데이터 찾기 (SUM 집계된 데이터)
                 BigDecimal dailySales = BigDecimal.ZERO;
-                for (SalesStatistics stat : weeklyStats) {
-                    if (stat.getStatisticDate().equals(date)) {
-                        dailySales = stat.getNetSales();
+                for (Object[] row : weeklyStats) {
+                    LocalDate statDate = (LocalDate) row[0];
+                    if (statDate.equals(date)) {
+                        dailySales = (BigDecimal) row[1];
                         break;
                     }
                 }

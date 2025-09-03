@@ -59,4 +59,18 @@ public interface SalesStatisticsRepository extends JpaRepository<SalesStatistics
     // 전지점 오늘 총 주문 수 조회 (statistic_hour이 null인 레코드 개수)
     @Query("SELECT COUNT(s) FROM SalesStatistics s WHERE s.statisticDate = :today AND s.statisticHour IS NULL")
     Long findTodayTotalOrdersByAllBranches(@Param("today") LocalDate today);
+    
+    // 특정 지점의 오늘 총매출 조회 (SUM 집계)
+    @Query("SELECT COALESCE(SUM(s.netSales), 0) FROM SalesStatistics s WHERE s.branchId = :branchId AND s.statisticDate = :today AND s.statisticHour IS NULL")
+    java.math.BigDecimal findTodaySalesByBranch(@Param("branchId") Long branchId, @Param("today") LocalDate today);
+    
+    // 특정 지점의 오늘 총 주문 수 조회 (SUM 집계)
+    @Query("SELECT COALESCE(SUM(s.totalOrders), 0) FROM SalesStatistics s WHERE s.branchId = :branchId AND s.statisticDate = :today AND s.statisticHour IS NULL")
+    Long findTodayOrdersByBranch(@Param("branchId") Long branchId, @Param("today") LocalDate today);
+    
+    // 특정 지점의 주간 매출 추이 조회 (일별 SUM 집계)
+    @Query("SELECT s.statisticDate, COALESCE(SUM(s.netSales), 0) FROM SalesStatistics s " +
+           "WHERE s.branchId = :branchId AND s.statisticDate BETWEEN :startDate AND :endDate AND s.statisticHour IS NULL " +
+           "GROUP BY s.statisticDate ORDER BY s.statisticDate ASC")
+    List<Object[]> findWeeklySalesTrendByBranch(@Param("branchId") Long branchId, @Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
 }
