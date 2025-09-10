@@ -101,7 +101,7 @@ flowchart LR
 <details>
   <summary>📊 ERD 보기</summary>
 
-  ![ERD](docs/erd.png)
+  ![ERD](erd.png)
 
   - 핵심 테이블: `branches`, `menus`, `orders`, `order_items`,  
     `sales_daily`, `inventory`, `purchase_orders` …
