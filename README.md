@@ -127,9 +127,13 @@ flowchart LR
 ---
 
 ## 🎥 구현 화면
-![본사 ERP 화면](docs/demo_hq.png)
-![가맹점 ERP 화면](docs/demo_branch.png)
-![키오스크 화면](docs/demo_kiosk.png)
+![키오스크 화면]
+(docs/demo_kiosk.png)
+![본사 ERP 화면]
+(docs/demo_hq.png)
+![가맹점 ERP 화면]
+(docs/demo_branch.png)
+
 
 ---
 
