@@ -116,13 +116,8 @@ flowchart LR
 ---
 
 ## 🗃 ERD
-<details>
-  <summary>📊 ERD 보기</summary>
-
   ![ERD](erd.png)
-
   - 핵심 테이블: `branches`, `menus`, `orders`, `order_items`, `sales_statistics`, `menu_sales_statistics`, `category_sales_statistics` 
-</details>
 
 ---
 
